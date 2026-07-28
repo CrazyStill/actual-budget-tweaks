@@ -2,6 +2,49 @@
 	// Standalone port of the "Actual Budget — Sidebar" Figma frame (node 46:890).
 	// Self-contained test component: Catppuccin Mocha palette, sample data below.
 	import emojiData from "unicode-emoji-json/data-by-group.json";
+	import "./ExperimentalSidebar.css";
+	// Icons: lucide-svelte (ISC license, https://lucide.dev), a maintained fork of
+	// Feather Icons (MIT) — a definitive, attributable source rather than
+	// hand-drawn/AI-authored art. The sync-status dot grammar below (statusIcon)
+	// is intentionally bespoke and has no library equivalent.
+	import {
+		Archive,
+		ArrowUpRight,
+		Calendar,
+		ChartColumn,
+		Check,
+		ChevronDown,
+		ChevronsUpDown,
+		CloudCheck,
+		CloudDownload,
+		CloudOff,
+		Download,
+		Ellipsis,
+		Landmark,
+		LayoutGrid,
+		Link,
+		List,
+		ListTree,
+		LogOut,
+		Moon,
+		PanelLeftClose,
+		PanelLeftOpen,
+		Pencil,
+		Plus,
+		RefreshCw,
+		Scale,
+		Search,
+		Settings,
+		SlidersHorizontal,
+		Smile,
+		Sun,
+		Tag,
+		Ungroup,
+		Unlink,
+		Upload,
+		Users,
+		X,
+	} from "lucide-svelte";
 
 	// Sync-status "dot grammar": fill = connection, motion = activity.
 	//   synced  → solid dot        manual → hollow dot
@@ -20,6 +63,7 @@
 		status: Status;
 		negative?: boolean;
 		icon?: AccountIcon;
+		uncategorized?: number; // count of transactions with no category
 	}
 
 	interface Group {
@@ -46,14 +90,20 @@
 				{
 					label: "",
 					accounts: [
-						{ name: "Everyday Checking", amount: "12,450.30", status: "synced" },
+						{ name: "Everyday Checking", amount: "12,450.30", status: "synced", uncategorized: 3 },
 						{ name: "Joint Checking", amount: "3,673.45", status: "synced" },
 					],
 				},
 				{
 					label: "Credit Cards",
 					accounts: [
-						{ name: "Sapphire Rewards Card", amount: "-1,245.67", status: "synced", negative: true },
+						{
+							name: "Sapphire Rewards Card",
+							amount: "-1,245.67",
+							status: "synced",
+							negative: true,
+							uncategorized: 12,
+						},
 						{ name: "Everyday Cashback Card", amount: "-892.33", status: "synced", negative: true },
 					],
 				},
@@ -74,7 +124,7 @@
 				{
 					label: "Investments",
 					accounts: [
-						{ name: "Brokerage Account", amount: "42,318.90", status: "synced" },
+						{ name: "Brokerage Account", amount: "42,318.90", status: "synced", uncategorized: 1 },
 						{ name: "Company RSUs", amount: "18,760.25", status: "synced" },
 						{ name: "Roth IRA", amount: "27,540.60", status: "synced" },
 						{ name: "401(k)", amount: "63,215.80", status: "syncing" },
@@ -112,8 +162,6 @@
 	let moreExpanded = $state(false);
 	let collapsedSections = $state<Record<string, boolean>>({});
 	let collapsedGroups = $state<Record<string, boolean>>({});
-	let query = $state("");
-	let searchEl = $state<HTMLInputElement | null>(null);
 	let groupAccounts = $state(true); // false = flat list under each section (no sub-categories)
 	// edge-fade mask for the scrollable accounts list. "top" = scrolled to the top
 	// (fade the bottom only), which is the correct state on load. "none" = the list
@@ -304,10 +352,6 @@
 	);
 	function expandSidebar() {
 		collapsed = false;
-	}
-	function expandAndSearch() {
-		collapsed = false;
-		requestAnimationFrame(() => requestAnimationFrame(() => searchEl?.focus()));
 	}
 	const accountInitials = (name: string) => {
 		const words = name.trim().split(/\s+/);
@@ -969,7 +1013,7 @@
 	// ---- resize ----
 	const MIN_WIDTH = 240;
 	const MAX_WIDTH = 560;
-	const DEFAULT_WIDTH = 300;
+	const DEFAULT_WIDTH = 325;
 	let sidebarWidth = $state(DEFAULT_WIDTH);
 	let resizing = $state(false);
 	let dragStartX = 0;
@@ -999,7 +1043,10 @@
 		sidebarWidth = DEFAULT_WIDTH;
 	}
 
-	const q = $derived(query.trim().toLowerCase());
+	// The sidebar list no longer filters by text — search opens the command
+	// palette instead. `q` stays so the force-expand / match plumbing keeps
+	// working (and could host a future inline filter again).
+	const q = "";
 
 	const accountMatches = (a: Account) => q === "" || a.name.toLowerCase().includes(q);
 	const visibleAccounts = (g: Group) => (q === "" ? g.accounts : g.accounts.filter(accountMatches));
@@ -1026,19 +1073,122 @@
 	// while searching, only show groups with matches
 	const showGroup = (g: Group) => (g.label ? q === "" || groupHasMatches(g) : groupHasMatches(g));
 
+	// ---- command palette (⌘K) ----
+	// The sidebar search box is a launcher only: it opens this centered
+	// quick-switcher (VS Code style) that unifies accounts, navigation and
+	// quick actions. Design mock — rows navigate, quick actions are inert.
+	interface QuickAction {
+		icon: string;
+		label: string;
+		hint?: string; // right-aligned keyboard hint
+	}
+	const QUICK_ACTIONS: QuickAction[] = [
+		{ icon: "plus", label: "Add new transaction", hint: "T" },
+		{ icon: "schedule", label: "Create new schedule" },
+		{ icon: "report", label: "Create new report" },
+		{ icon: "sync", label: "Sync all accounts", hint: "⇧S" },
+		{ icon: "import", label: "Import transactions…" },
+		{ icon: "bank", label: "Add new account" },
+		{ icon: "reconcile", label: "Reconcile account…" },
+	];
+	const NAV_PAGES = [...navItems, ...moreItems];
+
+	type PaletteItem =
+		| { kind: "action"; action: QuickAction }
+		| { kind: "nav"; page: string }
+		| { kind: "account"; account: Account };
+	interface PaletteGroup {
+		label: string;
+		items: PaletteItem[];
+	}
+
+	let paletteOpen = $state(false);
+	let paletteQuery = $state("");
+	let paletteIndex = $state(0); // index into the flattened item list
+	let paletteListEl = $state<HTMLElement | null>(null);
+
+	const pq = $derived(paletteQuery.trim().toLowerCase());
+	const allAccounts = $derived(sections.flatMap((s) => s.groups.flatMap((g) => g.accounts)));
+	const paletteGroups = $derived.by(() => {
+		const match = (s: string) => pq === "" || s.toLowerCase().includes(pq);
+		const accounts = allAccounts.filter((a) => match(a.name));
+		const groups: PaletteGroup[] = [
+			{
+				// resting state previews a handful; typing searches all of them
+				label: "Accounts",
+				items: (pq === "" ? accounts.slice(0, 5) : accounts).map((account) => ({
+					kind: "account" as const,
+					account,
+				})),
+			},
+			{
+				label: "Go to",
+				items: NAV_PAGES.filter(match).map((page) => ({ kind: "nav" as const, page })),
+			},
+			{
+				label: "Quick actions",
+				items: QUICK_ACTIONS.filter((a) => match(a.label)).map((action) => ({
+					kind: "action" as const,
+					action,
+				})),
+			},
+		];
+		return groups.filter((g) => g.items.length > 0);
+	});
+	const paletteItems = $derived(paletteGroups.flatMap((g) => g.items));
+	// global index of a group's first item, so rows can compare against paletteIndex
+	const paletteGroupBase = (gi: number) => paletteGroups.slice(0, gi).reduce((n, g) => n + g.items.length, 0);
+
+	function openPalette() {
+		closeBudget();
+		closeMenus();
+		closeIconPicker();
+		hideHoverCard();
+		paletteQuery = "";
+		paletteIndex = 0;
+		paletteOpen = true;
+	}
+	function closePalette() {
+		paletteOpen = false;
+	}
+	function runPaletteItem(item: PaletteItem) {
+		// Mock behavior: navigation rows navigate, quick actions just dismiss.
+		if (item.kind === "nav") activePage = item.page;
+		else if (item.kind === "account") activePage = `account:${item.account.name}`;
+		closePalette();
+	}
+	function movePaletteIndex(delta: number) {
+		const n = paletteItems.length;
+		if (!n) return;
+		paletteIndex = (paletteIndex + delta + n) % n;
+		paletteListEl?.querySelector(`[data-pidx="${paletteIndex}"]`)?.scrollIntoView({ block: "nearest" });
+	}
+	function onPaletteKeydown(e: KeyboardEvent) {
+		if (e.key === "ArrowDown") {
+			e.preventDefault();
+			movePaletteIndex(1);
+		} else if (e.key === "ArrowUp") {
+			e.preventDefault();
+			movePaletteIndex(-1);
+		} else if (e.key === "Enter") {
+			e.preventDefault();
+			const item = paletteItems[paletteIndex];
+			if (item) runPaletteItem(item);
+		}
+	}
+
 	function handleKeydown(e: KeyboardEvent) {
 		if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
 			e.preventDefault();
-			searchEl?.focus();
+			paletteOpen ? closePalette() : openPalette();
+		} else if (e.key === "Escape" && paletteOpen) {
+			closePalette();
 		} else if (e.key === "Escape" && iconAccount) {
 			closeIconPicker();
 		} else if (e.key === "Escape" && (menuAccount || menuGroup)) {
 			closeMenus();
 		} else if (e.key === "Escape" && budgetOpen) {
 			closeBudget();
-		} else if (e.key === "Escape" && query) {
-			query = "";
-			searchEl?.blur();
 		}
 	}
 </script>
@@ -1046,241 +1196,48 @@
 <svelte:window onkeydown={handleKeydown} onclick={handleWindowClick} />
 
 {#snippet caret(open: boolean)}
-	<svg class="caret" class:collapsed={!open} viewBox="0 0 7 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-		<path
-			d="M6 3.75L3.5 6.25L1 3.75"
-			stroke="#C9D1D9"
-			stroke-opacity="0.4"
-			stroke-width="1.5"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-		/>
-	</svg>
-{/snippet}
-
-{#snippet pageIcon()}
-	<svg class="page-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
-		<line x1="7" y1="17" x2="17" y2="7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-		<polyline points="8 7 17 7 17 16" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-	</svg>
+	<ChevronDown class={open ? "caret" : "caret collapsed"} color="var(--sb-fgm-a50)" strokeWidth={3} />
 {/snippet}
 
 {#snippet budgetStateIcon(state: BudgetState)}
-	<svg
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		stroke-width="2"
-		stroke-linecap="round"
-		stroke-linejoin="round"
-		xmlns="http://www.w3.org/2000/svg"
-	>
-		<!-- shared cloud -->
-		<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
-		{#if state === "syncing"}
-			<path d="m9 13 2 2 4-4" />
-		{:else if state === "downloadable"}
-			<path d="M12 10v6" />
-			<path d="m9 13 3 3 3-3" />
-		{:else}
-			<path d="m7 7 10 10" />
-		{/if}
-	</svg>
+	{#if state === "syncing"}
+		<CloudCheck strokeWidth={1.5} />
+	{:else if state === "downloadable"}
+		<CloudDownload strokeWidth={1.5} />
+	{:else}
+		<CloudOff strokeWidth={1.5} />
+	{/if}
 {/snippet}
 
 {#snippet groupToggleIcon(grouped: boolean)}
-	<svg
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		stroke-width="2"
-		stroke-linecap="round"
-		xmlns="http://www.w3.org/2000/svg"
-	>
-		{#if grouped}
-			<!-- indented rows = grouped by sub-category -->
-			<line x1="4" y1="6" x2="20" y2="6" />
-			<line x1="10" y1="12" x2="20" y2="12" />
-			<line x1="10" y1="18" x2="20" y2="18" />
-		{:else}
-			<!-- even rows = flat list -->
-			<line x1="4" y1="6" x2="20" y2="6" />
-			<line x1="4" y1="12" x2="20" y2="12" />
-			<line x1="4" y1="18" x2="20" y2="18" />
-		{/if}
-	</svg>
+	{#if grouped}
+		<!-- indented rows = grouped by sub-category -->
+		<ListTree strokeWidth={1.5} />
+	{:else}
+		<!-- even rows = flat list -->
+		<List strokeWidth={1.5} />
+	{/if}
 {/snippet}
 
 {#snippet navIcon(name: string)}
 	{#if name === "Budget"}
-		<svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-			<path
-				d="M5.625 1.875H2.5C2.155 1.875 1.875 2.155 1.875 2.5V5.625C1.875 5.97 2.155 6.25 2.5 6.25H5.625C5.97 6.25 6.25 5.97 6.25 5.625V2.5C6.25 2.155 5.97 1.875 5.625 1.875Z"
-				stroke="currentColor"
-				stroke-width="0.9375"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-			<path
-				d="M12.5 1.875H9.375C9.03 1.875 8.75 2.155 8.75 2.5V5.625C8.75 5.97 9.03 6.25 9.375 6.25H12.5C12.845 6.25 13.125 5.97 13.125 5.625V2.5C13.125 2.155 12.845 1.875 12.5 1.875Z"
-				stroke="currentColor"
-				stroke-width="0.9375"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-			<path
-				d="M5.625 8.75H2.5C2.155 8.75 1.875 9.03 1.875 9.375V12.5C1.875 12.845 2.155 13.125 2.5 13.125H5.625C5.97 13.125 6.25 12.845 6.25 12.5V9.375C6.25 9.03 5.97 8.75 5.625 8.75Z"
-				stroke="currentColor"
-				stroke-width="0.9375"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-			<path
-				d="M12.5 8.75H9.375C9.03 8.75 8.75 9.03 8.75 9.375V12.5C8.75 12.845 9.03 13.125 9.375 13.125H12.5C12.845 13.125 13.125 12.845 13.125 12.5V9.375C13.125 9.03 12.845 8.75 12.5 8.75Z"
-				stroke="currentColor"
-				stroke-width="0.9375"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-		</svg>
+		<LayoutGrid strokeWidth={1.5} />
 	{:else if name === "Reports"}
-		<svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-			<path
-				d="M11.25 12.5V6.25"
-				stroke="currentColor"
-				stroke-width="0.9375"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-			<path
-				d="M7.5 12.5V2.5"
-				stroke="currentColor"
-				stroke-width="0.9375"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-			<path
-				d="M3.75 12.5V8.75"
-				stroke="currentColor"
-				stroke-width="0.9375"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-		</svg>
+		<ChartColumn strokeWidth={1.5} />
 	{:else if name === "Schedules"}
-		<svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-			<path
-				d="M11.875 2.5H3.125C2.435 2.5 1.875 3.06 1.875 3.75V12.5C1.875 13.19 2.435 13.75 3.125 13.75H11.875C12.565 13.75 13.125 13.19 13.125 12.5V3.75C13.125 3.06 12.565 2.5 11.875 2.5Z"
-				stroke="currentColor"
-				stroke-width="0.9375"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-			<path
-				d="M10 1.25V3.75"
-				stroke="currentColor"
-				stroke-width="0.9375"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-			<path
-				d="M5 1.25V3.75"
-				stroke="currentColor"
-				stroke-width="0.9375"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-			<path
-				d="M1.875 6.25H13.125"
-				stroke="currentColor"
-				stroke-width="0.9375"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-		</svg>
+		<Calendar strokeWidth={1.5} />
 	{:else if name === "More"}
-		<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-			<circle cx="5" cy="12" r="1.9" />
-			<circle cx="12" cy="12" r="1.9" />
-			<circle cx="19" cy="12" r="1.9" />
-		</svg>
+		<Ellipsis strokeWidth={1.5} />
 	{:else if name === "Payees"}
-		<svg
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			xmlns="http://www.w3.org/2000/svg"
-		>
-			<path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-			<circle cx="9" cy="7" r="4" />
-			<path d="M22 20v-2a4 4 0 0 0-3-3.87" />
-			<path d="M16 3.13a4 4 0 0 1 0 7.75" />
-		</svg>
+		<Users strokeWidth={1.5} />
 	{:else if name === "Rules"}
-		<svg
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			xmlns="http://www.w3.org/2000/svg"
-		>
-			<line x1="4" y1="7" x2="14" y2="7" />
-			<line x1="18" y1="7" x2="20" y2="7" />
-			<circle cx="16" cy="7" r="2" />
-			<line x1="4" y1="17" x2="8" y2="17" />
-			<line x1="12" y1="17" x2="20" y2="17" />
-			<circle cx="10" cy="17" r="2" />
-		</svg>
+		<SlidersHorizontal strokeWidth={1.5} />
 	{:else if name === "Bank Sync"}
-		<svg
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			xmlns="http://www.w3.org/2000/svg"
-		>
-			<line x1="3" y1="21" x2="21" y2="21" />
-			<path d="M4 10h16" />
-			<path d="M12 3 20 8H4z" />
-			<line x1="6" y1="10" x2="6" y2="21" />
-			<line x1="12" y1="10" x2="12" y2="21" />
-			<line x1="18" y1="10" x2="18" y2="21" />
-		</svg>
+		<Landmark strokeWidth={1.5} />
 	{:else if name === "Tags"}
-		<svg
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			xmlns="http://www.w3.org/2000/svg"
-		>
-			<path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-			<line x1="7" y1="7" x2="7.01" y2="7" />
-		</svg>
+		<Tag strokeWidth={1.5} />
 	{:else if name === "Settings"}
-		<svg
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			xmlns="http://www.w3.org/2000/svg"
-		>
-			<circle cx="12" cy="12" r="3" />
-			<path
-				d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
-			/>
-		</svg>
+		<Settings strokeWidth={1.5} />
 	{/if}
 {/snippet}
 
@@ -1330,55 +1287,52 @@
 {/snippet}
 
 {#snippet ctxIcon(name: string)}
-	<svg
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		stroke-width="2"
-		stroke-linecap="round"
-		stroke-linejoin="round"
-		xmlns="http://www.w3.org/2000/svg"
-	>
-		{#if name === "rename"}
-			<path d="M12 20h9" />
-			<path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-		{:else if name === "sync"}
-			<path d="M21 2v6h-6" />
-			<path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
-			<path d="M3 22v-6h6" />
-			<path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
-		{:else if name === "reconcile"}
-			<path d="M12 3v18" />
-			<path d="M3 7l9-4 9 4" />
-			<path d="M6 7l-3 6a3 3 0 0 0 6 0Z" />
-			<path d="M18 7l3 6a3 3 0 0 1-6 0Z" />
-		{:else if name === "link"}
-			<path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-			<path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-		{:else if name === "emoji"}
-			<circle cx="12" cy="12" r="9" />
-			<path d="M8.5 14s1.2 2 3.5 2 3.5-2 3.5-2" />
-			<line x1="9" y1="9.5" x2="9.01" y2="9.5" />
-			<line x1="15" y1="9.5" x2="15.01" y2="9.5" />
-		{:else if name === "unlink"}
-			<path d="M18.84 12.25l1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-			<path d="M5.17 11.75l-1.71 1.71a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-			<line x1="8" y1="2" x2="8" y2="5" />
-			<line x1="2" y1="8" x2="5" y2="8" />
-			<line x1="16" y1="19" x2="16" y2="22" />
-			<line x1="19" y1="16" x2="22" y2="16" />
-		{:else if name === "close"}
-			<rect x="3" y="4" width="18" height="4" rx="1" />
-			<path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
-			<line x1="10" y1="12" x2="14" y2="12" />
-		{:else if name === "ungroup"}
-			<path d="M3 7a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-			<line x1="9" y1="13" x2="15" y2="13" />
-		{:else if name === "plus"}
-			<line x1="12" y1="5" x2="12" y2="19" />
-			<line x1="5" y1="12" x2="19" y2="12" />
-		{/if}
-	</svg>
+	{#if name === "rename"}
+		<Pencil strokeWidth={1.5} />
+	{:else if name === "sync"}
+		<RefreshCw strokeWidth={1.5} />
+	{:else if name === "reconcile"}
+		<Scale strokeWidth={1.5} />
+	{:else if name === "link"}
+		<Link strokeWidth={1.5} />
+	{:else if name === "emoji"}
+		<Smile strokeWidth={1.5} />
+	{:else if name === "unlink"}
+		<Unlink strokeWidth={1.5} />
+	{:else if name === "close"}
+		<Archive strokeWidth={1.5} />
+	{:else if name === "ungroup"}
+		<Ungroup strokeWidth={1.5} />
+	{:else if name === "plus"}
+		<Plus strokeWidth={1.5} />
+	{/if}
+{/snippet}
+
+<!-- command palette: quick-action icons -->
+{#snippet cpActionIcon(name: string)}
+	{#if name === "plus"}
+		<Plus strokeWidth={1.5} />
+	{:else if name === "schedule"}
+		<Calendar strokeWidth={1.5} />
+	{:else if name === "report"}
+		<ChartColumn strokeWidth={1.5} />
+	{:else if name === "sync"}
+		<RefreshCw strokeWidth={1.5} />
+	{:else if name === "import"}
+		<Download strokeWidth={1.5} />
+	{:else if name === "bank"}
+		<Landmark strokeWidth={1.5} />
+	{:else if name === "reconcile"}
+		<Scale strokeWidth={1.5} />
+	{/if}
+{/snippet}
+
+<!-- command palette: bold the part of a label that matches the query -->
+{#snippet hl(text: string)}
+	{@const i = pq === "" ? -1 : text.toLowerCase().indexOf(pq)}
+	{#if i === -1}{text}{:else}{text.slice(0, i)}<mark class="cp-mark">{text.slice(i, i + pq.length)}</mark>{text.slice(
+			i + pq.length,
+		)}{/if}
 {/snippet}
 
 {#snippet accountRow(a: Account)}
@@ -1439,6 +1393,16 @@
 				<span class="acct-glyph-edit" aria-hidden="true">{@render ctxIcon("emoji")}</span>
 			</span>
 			<span class="account-name" class:mauve={isSelected}>{a.name}</span>
+			{#if a.uncategorized}
+				<span
+					class="account-uncat"
+					aria-label={`${a.uncategorized} uncategorized transaction${a.uncategorized === 1 ? "" : "s"}`}
+					use:tooltip={{
+						text: `${a.uncategorized} uncategorized transaction${a.uncategorized === 1 ? "" : "s"}`,
+						placement: "top",
+					}}>{a.uncategorized}</span
+				>
+			{/if}
 			<span class="account-amount" class:mauve={isSelected} class:red={!isSelected && a.negative}>{a.amount}</span
 			>
 		</button>
@@ -1461,25 +1425,8 @@
 			aria-label={`${currentBudget} — expand`}
 			use:tooltip={`${currentBudget} — expand`}>{budgetInitials}</button
 		>
-		<button
-			type="button"
-			class="rail-icon"
-			onclick={expandAndSearch}
-			aria-label="Search"
-			use:tooltip={"Search (⌘K)"}
-		>
-			<svg
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				xmlns="http://www.w3.org/2000/svg"
-			>
-				<circle cx="11" cy="11" r="7" />
-				<line x1="21" y1="21" x2="16.65" y2="16.65" />
-			</svg>
+		<button type="button" class="rail-icon" onclick={openPalette} aria-label="Search" use:tooltip={"Search (⌘K)"}>
+			<Search />
 		</button>
 		<div class="rail-nav">
 			{#each navItems as item}
@@ -1533,17 +1480,7 @@
 		</div>
 		<div class="rail-foot">
 			<button type="button" class="rail-icon" aria-label="Add account" use:tooltip={"Add account"}>
-				<svg
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2.2"
-					stroke-linecap="round"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<line x1="12" y1="5" x2="12" y2="19" />
-					<line x1="5" y1="12" x2="19" y2="12" />
-				</svg>
+				<Plus strokeWidth={2.2} />
 			</button>
 			<button
 				type="button"
@@ -1552,18 +1489,7 @@
 				aria-label="Expand sidebar"
 				use:tooltip={"Expand sidebar"}
 			>
-				<svg
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<rect x="3" y="4" width="18" height="16" rx="2" />
-					<line x1="15" y1="4" x2="15" y2="20" />
-				</svg>
+				<PanelLeftOpen />
 			</button>
 		</div>
 	{:else}
@@ -1579,19 +1505,7 @@
 					}}
 				>
 					<span class="budget-name">{currentBudget}</span>
-					<svg
-						class="chevron-updown"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						xmlns="http://www.w3.org/2000/svg"
-					>
-						<polyline points="7 15 12 20 17 15" />
-						<polyline points="17 9 12 4 7 9" />
-					</svg>
+					<ChevronsUpDown class="chevron-updown" />
 				</button>
 			{:else}
 				<div class="budget-header" class:editing={editingBudget}>
@@ -1607,10 +1521,9 @@
 						<button
 							type="button"
 							class="budget-name-btn"
-							use:tooltip={{ text: "Click to rename", placement: "bottom" }}
 							onclick={(e) => {
 								e.stopPropagation();
-								startEdit();
+								budgetOpen = false;
 							}}
 						>
 							<span class="budget-name">{currentBudget}</span>
@@ -1626,30 +1539,9 @@
 						}}
 					>
 						{#if editingBudget}
-							<svg
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2.4"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								xmlns="http://www.w3.org/2000/svg"
-							>
-								<polyline points="20 6 9 17 4 12" />
-							</svg>
+							<Check strokeWidth={2.4} />
 						{:else}
-							<svg
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								xmlns="http://www.w3.org/2000/svg"
-							>
-								<path d="M12 20h9" />
-								<path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-							</svg>
+							<Pencil />
 						{/if}
 					</button>
 				</div>
@@ -1675,54 +1567,21 @@
 					{/each}
 					<div class="budget-menu-divider"></div>
 					<button type="button" class="budget-exit" onclick={closeFile}>
-						<svg
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							xmlns="http://www.w3.org/2000/svg"
-						>
-							<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-							<polyline points="16 17 21 12 16 7" />
-							<line x1="21" y1="12" x2="9" y2="12" />
-						</svg>
+						<LogOut />
 						<span>Close file</span>
 					</button>
 				</div>
 			{/if}
 		</div>
 
-		<!-- Search -->
-		<div class="search">
-			<div class="search-left">
-				<svg class="search-icon" viewBox="0 0 11.75 11.75" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path
-						d="M7.625 7.625L11.125 11.125M4.708 8.792C2.453 8.792 0.625 6.963 0.625 4.708C0.625 2.453 2.453 0.625 4.708 0.625C6.963 0.625 8.792 2.453 8.792 4.708C8.792 6.963 6.963 8.792 4.708 8.792Z"
-						stroke="#E6EDF3"
-						stroke-opacity="0.4"
-						stroke-width="1.25"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-				</svg>
-				<input
-					class="search-input"
-					type="text"
-					placeholder="Search..."
-					bind:this={searchEl}
-					bind:value={query}
-				/>
-			</div>
-			{#if query}
-				<button type="button" class="search-clear" aria-label="Clear search" onclick={() => (query = "")}
-					>✕</button
-				>
-			{:else}
-				<span class="search-kbd">⌘K</span>
-			{/if}
-		</div>
+		<!-- Search: a launcher, not a filter — opens the command palette -->
+		<button type="button" class="search" onclick={openPalette}>
+			<span class="search-left">
+				<Search class="search-icon" color="var(--sb-fg-muted)" strokeWidth={1.75} />
+				<span class="search-placeholder">Search...</span>
+			</span>
+			<span class="search-kbd">⌘K</span>
+		</button>
 
 		<!-- Nav -->
 		<nav class="nav">
@@ -1777,26 +1636,26 @@
 			style:-webkit-mask-image={accountsMask}
 			onscroll={handleAccountsScroll}
 		>
-			<div class="all-accounts">
-				<div class="all-accounts-left">
-					<span class="all-accounts-label">All Accounts</span>
-					<button
-						type="button"
-						class="group-toggle"
-						class:on={groupAccounts}
-						aria-pressed={groupAccounts}
-						use:tooltip={{
-							text: groupAccounts
-								? "Grouped by category — click for a flat list"
-								: "Flat list — click to group by category",
-							placement: "right",
-						}}
-						onclick={() => (groupAccounts = !groupAccounts)}
-					>
-						{@render groupToggleIcon(groupAccounts)}
-					</button>
-				</div>
-				<span class="all-accounts-total">{grandTotal}</span>
+			<div class="all-accounts section-head" class:active={activePage === "All Accounts"}>
+				<button type="button" class="section-nav" onclick={() => (activePage = "All Accounts")}>
+					<span class="group-label">All Accounts</span>
+					<span class="group-total">{grandTotal}</span>
+				</button>
+				<button
+					type="button"
+					class="group-toggle"
+					class:on={groupAccounts}
+					aria-pressed={groupAccounts}
+					use:tooltip={{
+						text: groupAccounts
+							? "Grouped by category — click for a flat list"
+							: "Flat list — click to group by category",
+						placement: "right",
+					}}
+					onclick={() => (groupAccounts = !groupAccounts)}
+				>
+					{@render groupToggleIcon(groupAccounts)}
+				</button>
 			</div>
 
 			{#each sections as section}
@@ -1816,7 +1675,6 @@
 							<button type="button" class="section-nav" onclick={() => (activePage = section.label)}>
 								<span class="group-label" class:dim={section.muted}>{section.label}</span>
 								{#if sectionCount(section)}<span class="group-count">{sectionCount(section)}</span>{/if}
-								{@render pageIcon()}
 								<span class="group-total">{section.total}</span>
 							</button>
 							{#if !section.muted}
@@ -1915,27 +1773,12 @@
 					</div>
 				{/if}
 			{/each}
-
-			{#if q !== "" && !sections.some(sectionHasMatches)}
-				<p class="no-results">No accounts match "{query}"</p>
-			{/if}
 		</div>
 
 		<!-- Footer -->
 		<div class="footer">
 			<button type="button" class="add-account">
-				<svg
-					class="plus"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2.2"
-					stroke-linecap="round"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<line x1="12" y1="5" x2="12" y2="19" />
-					<line x1="5" y1="12" x2="19" y2="12" />
-				</svg>
+				<Plus class="plus" strokeWidth={2.2} />
 				<span>Add account</span>
 			</button>
 			<button
@@ -1950,33 +1793,10 @@
 			>
 				{#if theme === "dark"}
 					<!-- sun: click to go light -->
-					<svg
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						xmlns="http://www.w3.org/2000/svg"
-					>
-						<circle cx="12" cy="12" r="4" />
-						<path
-							d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
-						/>
-					</svg>
+					<Sun />
 				{:else}
 					<!-- moon: click to go dark -->
-					<svg
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						xmlns="http://www.w3.org/2000/svg"
-					>
-						<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-					</svg>
+					<Moon />
 				{/if}
 			</button>
 			<button
@@ -1986,18 +1806,7 @@
 				use:tooltip={{ text: "Collapse sidebar", placement: "top" }}
 				onclick={() => (collapsed = true)}
 			>
-				<svg
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<rect x="3" y="4" width="18" height="16" rx="2" />
-					<line x1="9" y1="4" x2="9" y2="20" />
-				</svg>
+				<PanelLeftClose />
 			</button>
 		</div>
 	{/if}
@@ -2006,6 +1815,70 @@
 	{#if tip}
 		<div class="tooltip tip-{tip.placement}" style="left: {tip.x}px; top: {tip.y}px" role="tooltip">
 			{tip.text}
+		</div>
+	{/if}
+
+	<!-- Command palette (⌘K): centered quick-switcher over the whole app -->
+	{#if paletteOpen}
+		<div class="cp-backdrop" onclick={closePalette} aria-hidden="true"></div>
+		<div class="cp" role="dialog" aria-modal="true" aria-label="Command palette">
+			<div class="cp-search">
+				<Search class="cp-search-icon" />
+				<input
+					class="cp-input"
+					type="text"
+					placeholder="Search accounts, pages and actions…"
+					bind:value={paletteQuery}
+					use:autofocus
+					oninput={() => (paletteIndex = 0)}
+					onkeydown={onPaletteKeydown}
+				/>
+				<span class="cp-kbd">esc</span>
+			</div>
+			<div class="cp-body" bind:this={paletteListEl}>
+				{#each paletteGroups as group, gi (group.label)}
+					{@const base = paletteGroupBase(gi)}
+					<div class="cp-group-label">{group.label}</div>
+					{#each group.items as item, ii}
+						{@const idx = base + ii}
+						<button
+							type="button"
+							class="cp-item"
+							class:selected={idx === paletteIndex}
+							data-pidx={idx}
+							onmousemove={() => (paletteIndex = idx)}
+							onclick={() => runPaletteItem(item)}
+						>
+							{#if item.kind === "account"}
+								<span class="cp-item-glyph">
+									{@render statusIcon(item.account.status)}
+									{@render acctIcon(item.account)}
+								</span>
+								<span class="cp-item-label">{@render hl(item.account.name)}</span>
+								<span class="cp-item-amount" class:red={item.account.negative}
+									>{item.account.amount}</span
+								>
+							{:else if item.kind === "nav"}
+								<span class="cp-item-glyph cp-item-icon">{@render navIcon(item.page)}</span>
+								<span class="cp-item-label">{@render hl(item.page)}</span>
+								<ArrowUpRight class="cp-go" strokeWidth={2.2} />
+							{:else}
+								<span class="cp-item-glyph cp-item-icon">{@render cpActionIcon(item.action.icon)}</span>
+								<span class="cp-item-label">{@render hl(item.action.label)}</span>
+								{#if item.action.hint}<span class="cp-kbd">{item.action.hint}</span>{/if}
+							{/if}
+						</button>
+					{/each}
+				{/each}
+				{#if paletteItems.length === 0}
+					<p class="cp-empty">No results for “{paletteQuery.trim()}”</p>
+				{/if}
+			</div>
+			<div class="cp-foot">
+				<span class="cp-foot-hint"><span class="cp-kbd">↑</span><span class="cp-kbd">↓</span> navigate</span>
+				<span class="cp-foot-hint"><span class="cp-kbd">↵</span> select</span>
+				<span class="cp-foot-hint"><span class="cp-kbd">esc</span> close</span>
+			</div>
 		</div>
 	{/if}
 
@@ -2187,9 +2060,7 @@
 					>Upload</button
 				>
 				<button class="ipick-close" aria-label="Close" onclick={closeIconPicker}>
-					<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-						><path d="M4 4l8 8M12 4l-8 8" /></svg
-					>
+					<X size={16} />
 				</button>
 			</div>
 
@@ -2320,18 +2191,7 @@
 							<img src={uploadDataUrl} alt="preview" class="dropzone-img" />
 							<span class="ipick-hint">Click to replace</span>
 						{:else}
-							<svg
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="1.5"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								class="dropzone-icon"
-								><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline
-									points="17 8 12 3 7 8"
-								/><line x1="12" y1="3" x2="12" y2="15" /></svg
-							>
+							<Upload class="dropzone-icon" strokeWidth={1.5} />
 							<span class="ipick-hint">Drop image or click to browse</span>
 						{/if}
 					</div>
@@ -2355,2102 +2215,3 @@
 		</div>
 	{/if}
 </div>
-
-<style>
-	.sidebar,
-	.sidebar :global(*),
-	.sidebar :global(*::before),
-	.sidebar :global(*::after) {
-		box-sizing: border-box;
-	}
-
-	.sidebar {
-		/* ── Theme tokens (GitHub-dark defaults; .sidebar.light overrides) ── */
-		--sb-bg: #161b22;
-		--sb-canvas: #0d1117;
-		--sb-inset: #1c2129;
-		--sb-surface: #21262d;
-		--sb-surface-hover: #262c36;
-		--sb-neutral-muted: #30363d;
-		--sb-border: #30363d;
-		--sb-border-muted: #21262d;
-		--sb-border-strong: #3d444d;
-		--sb-fg: #e6edf3;
-		--sb-fg-default: #c9d1d9;
-		--sb-fg-muted: #8b949e;
-		--sb-fg-subtle: #6e7681;
-		--sb-fg-faint: #59636e;
-		--sb-accent: #58a6ff;
-		--sb-accent-emphasis: #1f6feb;
-		--sb-accent-muted: rgba(56, 139, 253, 0.15);
-		--sb-accent-wash: rgba(56, 139, 253, 0.14);
-		--sb-accent-subtle: rgba(56, 139, 253, 0.1);
-		--sb-accent-subtle2: rgba(56, 139, 253, 0.08);
-		--sb-accent-faint: rgba(56, 139, 253, 0.06);
-		--sb-accent-a60: rgba(88, 166, 255, 0.6);
-		--sb-success: #3fb950;
-		--sb-success-muted: rgba(63, 185, 80, 0.18);
-		--sb-danger: #f85149;
-		--sb-danger-muted: rgba(248, 81, 73, 0.12);
-		--sb-danger-subtle: rgba(248, 81, 73, 0.1);
-		--sb-attention: #d29922;
-		--sb-hover-0: rgba(255, 255, 255, 0.02);
-		--sb-hover-1: rgba(255, 255, 255, 0.05);
-		--sb-hover-2: rgba(255, 255, 255, 0.06);
-		--sb-hover-3: rgba(255, 255, 255, 0.08);
-		--sb-hover-4: rgba(255, 255, 255, 0.1);
-		--sb-hover-5: rgba(255, 255, 255, 0.12);
-		--sb-hover-6: rgba(255, 255, 255, 0.14);
-		--sb-fg-a95: rgba(230, 237, 243, 0.95);
-		--sb-fg-a50: rgba(230, 237, 243, 0.5);
-		--sb-fg-a40: rgba(230, 237, 243, 0.4);
-		--sb-fg-a32: rgba(230, 237, 243, 0.32);
-		--sb-fg-a22: rgba(230, 237, 243, 0.22);
-		--sb-fg-a18: rgba(230, 237, 243, 0.18);
-		--sb-fgd-a85: rgba(201, 209, 217, 0.85);
-		--sb-fgm-a100: rgba(139, 148, 158, 1);
-		--sb-fgm-a80: rgba(139, 148, 158, 0.8);
-		--sb-fgm-a75: rgba(139, 148, 158, 0.75);
-		--sb-fgm-a60: rgba(139, 148, 158, 0.6);
-		--sb-fgm-a55: rgba(139, 148, 158, 0.55);
-		--sb-fgm-a50: rgba(139, 148, 158, 0.5);
-		--sb-fgm-a45: rgba(139, 148, 158, 0.45);
-		--sb-fgm-a16: rgba(139, 148, 158, 0.16);
-		--sb-shadow: rgba(1, 4, 9, 0.6);
-		--sb-shadow-2: rgba(1, 4, 9, 0.55);
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-		width: 340px;
-		height: 100vh;
-		padding: 10px 8px;
-		background: var(--sb-bg);
-		border-right: 1px solid var(--sb-border-muted);
-		font-family:
-			"Inter",
-			-apple-system,
-			BlinkMacSystemFont,
-			"Segoe UI",
-			sans-serif;
-		/* explicit so the widget's row heights don't depend on the host page's
-		   inherited line-height (≈ Inter's `normal`, so no visual change) */
-		line-height: 1.3 !important;
-		font-feature-settings:
-			"lnum" 1,
-			"tnum" 1;
-		overflow: hidden;
-	}
-	/* ── Light theme ── */
-	.sidebar.light {
-		--sb-bg: #f6f8fa;
-		--sb-canvas: #ffffff;
-		--sb-inset: #f6f8fa;
-		--sb-surface: #ffffff;
-		--sb-surface-hover: #eff2f5;
-		--sb-neutral-muted: #eaeef2;
-		--sb-border: #d0d7de;
-		--sb-border-muted: #d8dee4;
-		--sb-border-strong: #afb8c1;
-		--sb-fg: #1f2328;
-		--sb-fg-default: #24292f;
-		--sb-fg-muted: #656d76;
-		--sb-fg-subtle: #6e7781;
-		--sb-fg-faint: #8c959f;
-		--sb-accent: #0969da;
-		--sb-accent-emphasis: #0969da;
-		--sb-accent-muted: rgba(9, 105, 218, 0.12);
-		--sb-accent-wash: rgba(9, 105, 218, 0.1);
-		--sb-accent-subtle: rgba(9, 105, 218, 0.08);
-		--sb-accent-subtle2: rgba(9, 105, 218, 0.06);
-		--sb-accent-faint: rgba(9, 105, 218, 0.05);
-		--sb-accent-a60: rgba(9, 105, 218, 0.5);
-		--sb-success: #1a7f37;
-		--sb-success-muted: rgba(26, 127, 55, 0.12);
-		--sb-danger: #cf222e;
-		--sb-danger-muted: rgba(207, 34, 46, 0.1);
-		--sb-danger-subtle: rgba(207, 34, 46, 0.08);
-		--sb-attention: #9a6700;
-		--sb-hover-0: rgba(31, 35, 40, 0.03);
-		--sb-hover-1: rgba(31, 35, 40, 0.04);
-		--sb-hover-2: rgba(31, 35, 40, 0.05);
-		--sb-hover-3: rgba(31, 35, 40, 0.06);
-		--sb-hover-4: rgba(31, 35, 40, 0.08);
-		--sb-hover-5: rgba(31, 35, 40, 0.1);
-		--sb-hover-6: rgba(31, 35, 40, 0.12);
-		--sb-fg-a95: rgba(31, 35, 40, 0.92);
-		--sb-fg-a50: rgba(31, 35, 40, 0.6);
-		--sb-fg-a40: rgba(31, 35, 40, 0.5);
-		--sb-fg-a32: rgba(31, 35, 40, 0.42);
-		--sb-fg-a22: rgba(31, 35, 40, 0.32);
-		--sb-fg-a18: rgba(31, 35, 40, 0.26);
-		--sb-fgd-a85: rgba(36, 41, 47, 0.8);
-		--sb-fgm-a100: #656d76;
-		--sb-fgm-a80: rgba(101, 109, 118, 0.85);
-		--sb-fgm-a75: rgba(101, 109, 118, 0.8);
-		--sb-fgm-a60: rgba(101, 109, 118, 0.72);
-		--sb-fgm-a55: rgba(101, 109, 118, 0.66);
-		--sb-fgm-a50: rgba(101, 109, 118, 0.62);
-		--sb-fgm-a45: rgba(101, 109, 118, 0.56);
-		--sb-fgm-a16: rgba(101, 109, 118, 0.24);
-		--sb-shadow: rgba(31, 35, 40, 0.16);
-		--sb-shadow-2: rgba(31, 35, 40, 0.12);
-	}
-
-	.sidebar.resizing {
-		user-select: none;
-	}
-
-	/* ===== Collapsed icon rail ===== */
-	.sidebar.collapsed {
-		align-items: center;
-		gap: 4px;
-		padding: 12px 0 8px;
-	}
-	.rail-avatar {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 34px;
-		height: 34px;
-		border-radius: 9px;
-		background: linear-gradient(135deg, var(--sb-accent-emphasis), var(--sb-accent));
-		color: #fff;
-		font-size: 12px;
-		font-weight: 800;
-		letter-spacing: 0.3px;
-		cursor: pointer;
-		flex-shrink: 0;
-		margin-bottom: 4px;
-	}
-	.rail-nav {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 3px;
-		width: 100%;
-	}
-	.rail-divider {
-		width: 40px;
-		height: 1px;
-		flex-shrink: 0;
-		margin: 6px 0;
-		background: var(--sb-neutral-muted);
-	}
-	.rail-list {
-		flex: 1 1 auto;
-		min-height: 0;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 3px;
-		width: 100%;
-		overflow-y: auto;
-		overflow-x: hidden;
-		scrollbar-width: none;
-	}
-	.rail-list::-webkit-scrollbar {
-		display: none;
-	}
-	.rail-section {
-		width: 44px;
-		margin: 6px 0 2px;
-		padding: 3px 0;
-		font-size: 8.5px;
-		font-weight: 800;
-		line-height: 1.15;
-		letter-spacing: 0.3px;
-		text-transform: uppercase;
-		text-align: center;
-		color: var(--sb-fg-subtle);
-	}
-	.rail-section small {
-		display: block;
-		font-size: 8px;
-		font-weight: 700;
-		color: var(--sb-fg-faint);
-	}
-	.rail-gsep {
-		width: 20px;
-		height: 1px;
-		margin: 4px 0;
-		background: var(--sb-surface-hover);
-	}
-	.rtile-wrap {
-		position: relative;
-		width: 40px;
-		height: 40px;
-		flex-shrink: 0;
-		cursor: pointer;
-	}
-	.rtile {
-		position: absolute;
-		inset: 3px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border-radius: 9px;
-		background: var(--sb-neutral-muted);
-		color: var(--sb-fg-default);
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.2px;
-		transition: filter 0.12s ease;
-	}
-	.rtile-emoji {
-		font-size: 18px;
-		line-height: 1;
-	}
-	.rtile-img {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		border-radius: 9px;
-	}
-	.rtile-wrap:hover .rtile {
-		filter: brightness(1.2);
-	}
-	.rtile-wrap.selected .rtile {
-		color: #fff;
-		box-shadow:
-			0 0 0 2px var(--sb-bg),
-			0 0 0 4px var(--sb-accent);
-	}
-	.rtile-badge {
-		position: absolute;
-		right: -2px;
-		bottom: -2px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 16px;
-		height: 16px;
-		border-radius: 50%;
-		background: var(--sb-bg);
-	}
-	.rtile-badge :global(.status) {
-		width: 18px;
-		height: 18px;
-	}
-	.rail-foot {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 3px;
-		width: 100%;
-		flex-shrink: 0;
-	}
-	.rail-icon {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 40px;
-		height: 38px;
-		border-radius: 9px;
-		color: var(--sb-fg-muted);
-		cursor: pointer;
-		flex-shrink: 0;
-		transition:
-			background 0.12s ease,
-			color 0.12s ease;
-	}
-	.rail-icon:hover {
-		background: var(--sb-hover-1);
-		color: var(--sb-fg);
-	}
-	.rail-icon.active {
-		background: var(--sb-accent-muted);
-		color: var(--sb-accent);
-	}
-	.rail-icon :global(svg) {
-		width: 18px;
-		height: 18px;
-	}
-
-	/* Resize handle on the right edge */
-	.resize-handle {
-		position: absolute;
-		top: 0;
-		right: 0;
-		width: 10px;
-		height: 100%;
-		cursor: col-resize;
-		z-index: 10;
-		touch-action: none;
-	}
-	.resize-handle::after {
-		content: "";
-		position: absolute;
-		top: 0;
-		right: 0;
-		width: 2px;
-		height: 100%;
-		background: transparent;
-		transition: background 0.12s ease;
-	}
-	.resize-handle:hover::after,
-	.resize-handle.active::after {
-		background: var(--sb-accent);
-		opacity: 0.85;
-	}
-
-	button {
-		font: inherit;
-		color: inherit;
-		background: none;
-		border: none;
-		cursor: pointer;
-	}
-
-	/* Budget selection */
-	.budget {
-		position: relative;
-		width: 100%;
-		flex-shrink: 0;
-	}
-	.budget-select {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		width: 100%;
-		box-sizing: border-box;
-		height: 40px;
-		padding: 0 10px;
-		/* fixed height + transparent border match the expanded header exactly → no layout shift */
-		border: 1px solid transparent;
-		border-radius: 8px;
-		text-align: left;
-		transition:
-			background 0.12s ease,
-			border-color 0.12s ease;
-	}
-	.budget-select:hover {
-		background: var(--sb-surface);
-		border-color: var(--sb-border);
-	}
-	.budget-name {
-		font-size: 16px;
-		font-weight: 600;
-		letter-spacing: 0.16px;
-		color: var(--sb-fg);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	.chevron-updown {
-		width: 15px;
-		height: 15px;
-		flex-shrink: 0;
-		color: var(--sb-fg-muted);
-	}
-	.budget-select:hover .chevron-updown {
-		color: var(--sb-fg-default);
-	}
-
-	/* Expanded budget switcher */
-	.budget-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 8px;
-		width: 100%;
-		box-sizing: border-box;
-		height: 40px;
-		padding: 0 8px 0 10px;
-		background: var(--sb-surface);
-		border: 1px solid var(--sb-border);
-		border-radius: 8px;
-	}
-	.budget-header.editing {
-		border-color: var(--sb-accent);
-	}
-	.budget-name-btn {
-		display: flex;
-		align-items: center;
-		flex: 1 1 auto;
-		min-width: 0;
-		height: 26px;
-		padding: 0 6px;
-		margin-left: -6px;
-		border-radius: 5px;
-		text-align: left;
-		transition: background 0.12s ease;
-	}
-	.budget-name-btn:hover {
-		background: var(--sb-hover-1);
-	}
-	.budget-edit {
-		flex: 1 1 auto;
-		min-width: 0;
-		font-family: inherit;
-		font-size: 16px;
-		font-weight: 600;
-		letter-spacing: 0.16px;
-		color: var(--sb-fg);
-		background: var(--sb-canvas);
-		border: 1px solid var(--sb-border);
-		border-radius: 5px;
-		padding: 3px 7px;
-		outline: none;
-	}
-	.budget-edit:focus {
-		border-color: var(--sb-accent);
-	}
-	.budget-edit-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-		width: 24px;
-		height: 24px;
-		border-radius: 5px;
-		color: var(--sb-fg-muted);
-		transition:
-			color 0.12s ease,
-			background 0.12s ease;
-	}
-	.budget-edit-btn:hover {
-		color: var(--sb-fg-default);
-		background: var(--sb-hover-1);
-	}
-	.budget-edit-btn svg {
-		width: 14px;
-		height: 14px;
-	}
-	.budget-menu {
-		position: absolute;
-		top: calc(100% + 6px);
-		left: 0;
-		right: 0;
-		z-index: 20;
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		box-sizing: border-box;
-		padding: 5px;
-		background: var(--sb-surface);
-		border: 1px solid var(--sb-border);
-		border-radius: 8px;
-		box-shadow: 0 8px 24px var(--sb-shadow-2);
-	}
-	.budget-item {
-		display: flex;
-		align-items: center;
-		gap: 9px;
-		width: 100%;
-		box-sizing: border-box;
-		padding: 6px 8px;
-		border-radius: 6px;
-		text-align: left;
-		transition: background 0.12s ease;
-	}
-	.budget-item:hover {
-		background: var(--sb-hover-1);
-	}
-	.budget-item.active {
-		background: var(--sb-accent-muted);
-	}
-	.budget-item-name {
-		flex: 1 1 auto;
-		font-size: 13px;
-		font-weight: 500;
-		letter-spacing: 0.13px;
-		color: var(--sb-fg-default);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	.budget-item.active .budget-item-name {
-		color: var(--sb-accent);
-	}
-	/* left dot: green marks the active budget, muted otherwise */
-	.budget-dot {
-		flex-shrink: 0;
-		width: 6px;
-		height: 6px;
-		margin: 0 1px;
-		border-radius: 50%;
-		background: var(--sb-fg-subtle);
-	}
-	.budget-dot.active {
-		width: 8px;
-		height: 8px;
-		margin: 0;
-		background: var(--sb-success);
-		box-shadow: 0 0 0 3px var(--sb-success-muted);
-	}
-	/* right: file-state icon */
-	.budget-state {
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 16px;
-		height: 16px;
-		color: var(--sb-fg-muted);
-	}
-	.budget-state svg {
-		width: 15px;
-		height: 15px;
-	}
-	.budget-menu-divider {
-		height: 1px;
-		margin: 4px 6px;
-		background: var(--sb-neutral-muted);
-	}
-	.budget-exit {
-		display: flex;
-		align-items: center;
-		gap: 9px;
-		width: 100%;
-		box-sizing: border-box;
-		padding: 6px 8px;
-		border-radius: 6px;
-		text-align: left;
-		color: var(--sb-fg-muted);
-		transition:
-			background 0.12s ease,
-			color 0.12s ease;
-	}
-	.budget-exit:hover {
-		background: var(--sb-hover-1);
-		color: var(--sb-fg);
-	}
-	.budget-exit svg {
-		flex-shrink: 0;
-		width: 15px;
-		height: 15px;
-	}
-	.budget-exit span {
-		font-size: 13px;
-		font-weight: 500;
-		letter-spacing: 0.13px;
-	}
-
-	/* Search */
-	.search {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 8px;
-		width: 100%;
-		box-sizing: border-box;
-		padding: 8px 13px;
-		background: var(--sb-surface);
-		border: 1px solid var(--sb-border);
-		border-radius: 11px;
-		transition: border-color 0.12s ease;
-	}
-	.search:focus-within {
-		border-color: var(--sb-accent);
-	}
-	.search-left {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		flex: 1 1 auto;
-		min-width: 0;
-	}
-	.search-icon {
-		width: 12.5px;
-		height: 12.5px;
-		flex-shrink: 0;
-	}
-	.search-input {
-		flex: 1 1 auto;
-		min-width: 0;
-		border: none;
-		outline: none;
-		background: transparent;
-		padding: 0;
-		font-family: inherit;
-		font-size: 15px;
-		font-weight: 400;
-		letter-spacing: 0.15px;
-		color: var(--sb-fg);
-	}
-	.search-input::placeholder {
-		color: var(--sb-fg-a40);
-	}
-	.search-kbd {
-		flex-shrink: 0;
-		padding: 3px 7px;
-		background: var(--sb-neutral-muted);
-		border-radius: 5px;
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.11px;
-		color: var(--sb-fg-a40);
-	}
-	.search-clear {
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 18px;
-		height: 18px;
-		border-radius: 4px;
-		font-size: 11px;
-		color: var(--sb-fg-a50);
-	}
-	.search-clear:hover {
-		background: var(--sb-neutral-muted);
-		color: var(--sb-fg);
-	}
-
-	/* Nav */
-	.nav {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-	.nav-link {
-		display: flex;
-		align-items: center;
-		gap: 13px;
-		width: 100%;
-		padding: 8px 8px;
-		border-radius: 6px;
-		text-align: left;
-		transition: background 0.12s ease;
-	}
-	.nav-link:hover {
-		background: var(--sb-hover-3);
-	}
-	.nav-link.active {
-		background: var(--sb-accent-muted);
-	}
-	.nav-icon {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 18px;
-		height: 18px;
-		flex-shrink: 0;
-		color: var(--sb-fgm-a60);
-	}
-	.nav-icon :global(svg) {
-		width: 17px;
-		height: 17px;
-	}
-	.nav-label {
-		font-size: 15px;
-		font-weight: 500;
-		letter-spacing: 0.16px;
-		color: var(--sb-fg);
-	}
-	.nav-link.active .nav-icon {
-		color: var(--sb-accent);
-	}
-	.nav-link.active .nav-label {
-		color: var(--sb-accent);
-	}
-
-	/* "More" disclosure caret + sub-links */
-	.nav-caret {
-		margin-left: auto;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: var(--sb-fgm-a50);
-	}
-	.nav-caret :global(.caret) {
-		width: 11px;
-		height: 14px;
-	}
-	.nav-sublist {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		margin: 2px 0 2px 17px;
-		padding-left: 10px;
-		border-left: 1px solid var(--sb-border-muted);
-	}
-	.nav-sublink {
-		gap: 11px;
-		padding: 6px 8px;
-	}
-	.nav-sublink .nav-icon {
-		width: 16px;
-		height: 16px;
-	}
-	.nav-sublink .nav-icon :global(svg) {
-		width: 15px;
-		height: 15px;
-	}
-	.nav-sublink .nav-label {
-		font-size: 14px;
-	}
-
-	.divider {
-		height: 1px;
-		width: 100%;
-		background: var(--sb-neutral-muted);
-		flex-shrink: 0;
-	}
-
-	/* Accounts */
-	.accounts {
-		display: flex;
-		flex-direction: column;
-		gap: 9px;
-		flex: 1 1 auto;
-		min-height: 0;
-		/* Extend the scroller 8px into the sidebar's right padding so the scrollbar
-		   sits in that gutter; padding the rows back keeps them flush with the
-		   nav/search/footer above and below. (calc width is needed because an
-		   explicit width:100% would otherwise cancel the negative margin.)
-		   The extra 6px on the left gives the active indicator a gutter to live
-		   in without being clipped by overflow-x. */
-		width: calc(100% + 14px);
-		margin-left: -6px;
-		margin-right: -8px;
-		padding-left: 6px;
-		padding-right: 8px;
-		overflow-y: auto;
-		overflow-x: hidden;
-		scrollbar-width: thin;
-		scrollbar-color: var(--sb-fg-a22) transparent;
-		padding-bottom: 2rem;
-		mask-image: linear-gradient(black 0%, black calc(100% - 34px), transparent 100%);
-		-webkit-mask-image: linear-gradient(black 0%, black calc(100% - 34px), transparent 100%);
-		transition:
-			mask-image 140ms ease,
-			-webkit-mask-image 140ms ease;
-	}
-	.accounts::-webkit-scrollbar {
-		width: 8px;
-	}
-	.accounts::-webkit-scrollbar-track {
-		background: transparent;
-	}
-	.accounts::-webkit-scrollbar-thumb {
-		background: var(--sb-fg-a18);
-		border-radius: 8px;
-		border: 2px solid transparent;
-		background-clip: padding-box;
-	}
-	.accounts::-webkit-scrollbar-thumb:hover {
-		background: var(--sb-fg-a32);
-		background-clip: padding-box;
-	}
-	.all-accounts {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		width: 100%;
-		box-sizing: border-box;
-		height: 38px;
-		padding: 8px;
-		border-radius: 6px;
-		flex-shrink: 0;
-	}
-	.all-accounts-label {
-		font-size: 13px;
-		font-weight: 600;
-		letter-spacing: 0.42px;
-		color: var(--sb-fg-a95);
-	}
-	.all-accounts-left {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-	}
-	.all-accounts-total {
-		font-size: 13px;
-		font-weight: 600;
-		letter-spacing: 0.14px;
-		text-transform: uppercase;
-		color: var(--sb-fg-default);
-		font-variant-numeric: tabular-nums;
-	}
-	/* grouped/flat account layout toggle */
-	.group-toggle {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 22px;
-		height: 22px;
-		border-radius: 5px;
-		color: var(--sb-fgm-a45);
-		transition:
-			background 0.12s ease,
-			color 0.12s ease;
-	}
-	.group-toggle:hover {
-		background: var(--sb-hover-4);
-		color: var(--sb-fg);
-	}
-	.group-toggle.on {
-		color: var(--sb-accent);
-	}
-	.group-toggle svg {
-		width: 15px;
-		height: 15px;
-	}
-
-	.section {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		width: 100%;
-	}
-	.group-header {
-		display: flex;
-		align-items: center;
-		gap: 5px;
-		width: 100%;
-		box-sizing: border-box;
-		padding: 6px 8px;
-		border-radius: 6px;
-		text-align: left;
-		cursor: default;
-		transition: background 0.12s ease;
-	}
-	/* sub-group headers stay a single whole-row toggle */
-	.group-header.toggleable {
-		cursor: pointer;
-	}
-	.group-header.toggleable:hover {
-		background: var(--sb-hover-2);
-	}
-
-	/* section caret = dedicated collapse button */
-	.caret-btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		margin: -2px 0;
-		height: 16px;
-		width: 16px;
-		border-radius: 5px;
-		cursor: pointer;
-		transition: background 0.12s ease;
-	}
-	.caret-btn:hover {
-		background: var(--sb-hover-6);
-	}
-	.caret-btn.disabled {
-		pointer-events: none;
-		opacity: 0.35;
-	}
-
-	/* whole section header row navigates; caret (above) is the collapse sub-control */
-	.section-head {
-		cursor: default;
-	}
-	.section-head:hover {
-		background: var(--sb-hover-2);
-	}
-	.section-head.active {
-		background: var(--sb-accent-muted);
-	}
-	.section-nav {
-		flex: 1 1 auto;
-		min-width: 0;
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		padding: 0;
-		background: transparent;
-		text-align: left;
-		cursor: pointer;
-	}
-	.section-nav .group-label {
-		flex: 0 0 auto;
-	}
-	.section-nav .group-total {
-		margin-left: auto;
-	}
-	.section-head.active .group-label {
-		color: var(--sb-accent);
-	}
-	.page-arrow {
-		width: 11px;
-		height: 11px;
-		flex-shrink: 0;
-		color: var(--sb-fgm-a75);
-		opacity: 0;
-		transition: opacity 0.12s ease;
-	}
-	.section-head:hover .page-arrow {
-		opacity: 0.6;
-	}
-	.section-head.active .page-arrow {
-		opacity: 0.9;
-		color: var(--sb-accent);
-	}
-	.group-header.sub {
-		padding-block: 4px;
-		padding-left: 17.5px;
-		transition:
-			background-color 0.3s ease,
-			color 0.3s ease;
-	}
-	.group-header.sub:hover {
-		background: transparent;
-		color: var(--sb-fgm-a100);
-	}
-	.group-header.sub:hover * {
-		color: var(--sb-fgm-a100);
-	}
-	.caret {
-		width: 8px;
-		height: 11px;
-		flex-shrink: 0;
-		transition: transform 0.15s ease;
-	}
-	.caret.collapsed {
-		transform: rotate(-90deg);
-	}
-	.group-label {
-		flex: 1 1 auto;
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.125px;
-		text-transform: uppercase;
-		color: var(--sb-fgm-a75);
-	}
-	.group-label.dim {
-		color: var(--sb-fgm-a75);
-	}
-	.sub-label {
-		flex: 0 1 auto;
-		font-size: 10.5px;
-		letter-spacing: 0.115px;
-		color: var(--sb-fgm-a50);
-	}
-	.group-total {
-		font-size: 12.5px;
-		font-weight: 600;
-		letter-spacing: 0.125px;
-		text-transform: uppercase;
-		color: var(--sb-fg-default);
-		font-variant-numeric: tabular-nums;
-	}
-	/* account-count badge next to a category label */
-	.group-count {
-		flex-shrink: 0;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 16px;
-		height: 15px;
-		padding: 0 5px;
-		border-radius: 8px;
-		background: var(--sb-fgm-a16);
-		font-size: 10px;
-		font-weight: 700;
-		letter-spacing: 0.2px;
-		color: var(--sb-fgd-a85);
-		font-variant-numeric: tabular-nums;
-	}
-	/* sub-category counts appear on hover only */
-	.sub-count {
-		opacity: 0;
-		transition: opacity 0.12s ease;
-	}
-	.group-header.sub.toggleable:hover .sub-count {
-		opacity: 1;
-	}
-
-	.account-list {
-		display: flex;
-		flex-direction: column;
-		gap: 1px;
-		width: 100%;
-	}
-	.account-list.indented {
-		padding-left: 9px;
-	}
-	/* accounts nested under a sub-category sit a touch tighter */
-	.account-list.indented .account {
-		padding-block: 4px;
-	}
-	.account {
-		display: flex;
-		align-items: center;
-		gap: 5px;
-		width: 100%;
-		box-sizing: border-box;
-		padding: 6px 8px 6px 13px;
-		border-radius: 7px;
-		text-align: left;
-		transition: background 0.12s ease;
-	}
-	.account:hover {
-		background: var(--sb-hover-3);
-	}
-	.account.selected {
-		background: var(--sb-accent-muted);
-	}
-	.no-results {
-		margin: 5px 8px;
-		font-size: 14px;
-		color: var(--sb-fg-a40);
-	}
-
-	/* Sync-status glyphs (dot grammar) */
-	.status {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 17px;
-		height: 17px;
-		flex-shrink: 0;
-	}
-	.status svg {
-		width: 100%;
-		height: 100%;
-		overflow: visible;
-	}
-	.status-synced {
-		color: var(--sb-success);
-	}
-	.status-syncing {
-		color: var(--sb-attention);
-	}
-	.status-error {
-		color: var(--sb-danger);
-	}
-	.status-manual {
-		color: var(--sb-fgm-a50);
-	}
-	.orbit {
-		transform-origin: 24px 24px;
-		animation: abt-orbit 0.95s linear infinite;
-	}
-	.ring-pulse {
-		transform-origin: center;
-		animation: abt-ring-pulse 1.7s ease-in-out infinite;
-	}
-	@keyframes abt-orbit {
-		to {
-			transform: rotate(360deg);
-		}
-	}
-	@keyframes abt-ring-pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.35;
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.orbit,
-		.ring-pulse {
-			animation: none;
-		}
-	}
-	.account-name {
-		flex: 1 1 auto;
-		font-size: 13px;
-		font-weight: 500;
-		letter-spacing: 0.145px;
-		color: var(--sb-fg-default);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	.account-amount {
-		font-size: 12.5px;
-		font-weight: 500;
-		letter-spacing: 0.14px;
-		text-transform: uppercase;
-		color: var(--sb-fgm-a75);
-		font-variant-numeric: tabular-nums;
-		flex-shrink: 0;
-	}
-	.mauve {
-		color: var(--sb-accent);
-	}
-	.red {
-		color: var(--sb-danger);
-	}
-
-	/* Footer */
-	.footer {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		width: 100%;
-		box-sizing: border-box;
-		padding: 0px 8px 0;
-		flex-shrink: 0;
-	}
-	.add-account {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 7.5px 10px;
-		background: var(--sb-surface);
-		border: 1px solid var(--sb-border);
-		border-radius: 9px;
-		font-size: 13.5px;
-		font-weight: 600;
-		color: var(--sb-fg);
-		white-space: nowrap;
-		transition:
-			background 0.12s ease,
-			border-color 0.12s ease;
-	}
-	.add-account:hover {
-		background: var(--sb-surface-hover);
-		border-color: var(--sb-border-strong);
-	}
-	.add-account span {
-		margin-bottom: 1px;
-	}
-	.plus {
-		width: 15px;
-		height: 15px;
-		flex-shrink: 0;
-		color: var(--sb-fg-muted);
-	}
-	.theme-toggle {
-		display: flex;
-		align-items: center;
-		margin-left: auto;
-		padding: 5px;
-		color: var(--sb-fg-muted);
-		border-radius: 6px;
-		transition:
-			color 0.12s ease,
-			background 0.12s ease;
-	}
-	.theme-toggle:hover {
-		color: var(--sb-fg-default);
-		background: var(--sb-hover-1);
-	}
-	.theme-toggle svg {
-		width: 17px;
-		height: 17px;
-	}
-	.collapse {
-		display: flex;
-		align-items: center;
-		padding: 5px;
-		color: var(--sb-fg-muted);
-		border-radius: 6px;
-		transition:
-			color 0.12s ease,
-			background 0.12s ease;
-	}
-	.collapse:hover {
-		color: var(--sb-fg-default);
-		background: var(--sb-hover-1);
-	}
-	.collapse svg {
-		width: 18px;
-		height: 18px;
-	}
-
-	/* ===== Custom tooltip ===== */
-	.tooltip {
-		position: fixed;
-		z-index: 200;
-		max-width: 240px;
-		padding: 5px 9px;
-		background: var(--sb-surface);
-		border: 1px solid var(--sb-border);
-		border-radius: 7px;
-		color: var(--sb-fg);
-		font-size: 12px;
-		font-weight: 600;
-		line-height: 1.35;
-		white-space: nowrap;
-		box-shadow: 0 6px 20px var(--sb-shadow);
-		pointer-events: none;
-		animation: tip-in 0.11s ease;
-	}
-	.tip-right {
-		transform: translateY(-50%);
-	}
-	.tip-left {
-		transform: translate(-100%, -50%);
-	}
-	.tip-top {
-		transform: translate(-50%, -100%);
-	}
-	.tip-bottom {
-		transform: translateX(-50%);
-	}
-	/* little arrow that points back to the anchor */
-	.tooltip::after {
-		content: "";
-		position: absolute;
-		width: 7px;
-		height: 7px;
-		background: var(--sb-surface);
-		border: 1px solid var(--sb-border);
-		transform: rotate(45deg);
-	}
-	.tip-right::after {
-		left: -4.5px;
-		top: 50%;
-		margin-top: -3.5px;
-		border-right: none;
-		border-top: none;
-	}
-	.tip-left::after {
-		right: -4.5px;
-		top: 50%;
-		margin-top: -3.5px;
-		border-left: none;
-		border-bottom: none;
-	}
-	.tip-top::after {
-		bottom: -4.5px;
-		left: 50%;
-		margin-left: -3.5px;
-		border-left: none;
-		border-top: none;
-	}
-	.tip-bottom::after {
-		top: -4.5px;
-		left: 50%;
-		margin-left: -3.5px;
-		border-right: none;
-		border-bottom: none;
-	}
-	@keyframes tip-in {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
-	}
-
-	/* ===== Account hover card ===== */
-	.acard {
-		position: fixed;
-		z-index: 60;
-		width: 292px;
-		padding: 12px 13px 11px;
-		background: var(--sb-inset);
-		border: 1px solid var(--sb-border);
-		border-radius: 12px;
-		box-shadow: 0 12px 34px var(--sb-shadow);
-		color: var(--sb-fg);
-		pointer-events: none;
-		animation: acard-in 0.13s ease;
-	}
-	@keyframes acard-in {
-		from {
-			opacity: 0;
-			transform: translateX(-4px);
-		}
-		to {
-			opacity: 1;
-			transform: none;
-		}
-	}
-	.acard.flip {
-		animation-name: acard-in-flip;
-	}
-	@keyframes acard-in-flip {
-		from {
-			opacity: 0;
-			transform: translateX(4px);
-		}
-		to {
-			opacity: 1;
-			transform: none;
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.acard {
-			animation: none;
-		}
-	}
-	.acard-head {
-		display: flex;
-		align-items: center;
-		gap: 9px;
-	}
-	.acard-status {
-		flex-shrink: 0;
-		display: flex;
-	}
-	.acard-status :global(.status) {
-		width: 15px;
-		height: 15px;
-	}
-	.acard-title {
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 3px;
-	}
-	.acard-name {
-		font-size: 14px;
-		font-weight: 650;
-		letter-spacing: 0.1px;
-		color: var(--sb-fg);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	.acard-sub {
-		font-size: 11px;
-		font-weight: 500;
-		color: var(--sb-fg-muted);
-	}
-	.acard-balrow {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		margin-top: 11px;
-	}
-	.acard-ballabel {
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.4px;
-		text-transform: uppercase;
-		color: var(--sb-fg-muted);
-	}
-	.acard-bal {
-		font-size: 19px;
-		font-weight: 500;
-		letter-spacing: 0.2px;
-		color: var(--sb-fg);
-		font-variant-numeric: tabular-nums;
-	}
-	.acard-bal.neg {
-		color: var(--sb-danger);
-	}
-	.acard-chart {
-		margin-top: 6px;
-	}
-	.acard-chart svg {
-		display: block;
-		width: 100%;
-		height: 52px;
-	}
-	.acard-chart svg.up {
-		color: var(--sb-success);
-	}
-	.acard-chart svg.down {
-		color: var(--sb-danger);
-	}
-	.acard-chart-foot {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-top: 3px;
-	}
-	.acard-period {
-		font-size: 11px;
-		font-weight: 500;
-		color: var(--sb-fg-subtle);
-	}
-	.acard-delta {
-		font-size: 11.5px;
-		font-weight: 650;
-		font-variant-numeric: tabular-nums;
-	}
-	.acard-delta.up {
-		color: var(--sb-success);
-	}
-	.acard-delta.down {
-		color: var(--sb-danger);
-	}
-	.acard-delta-abs {
-		margin-left: 3px;
-		font-weight: 600;
-		color: var(--sb-fg-muted);
-	}
-	.acard-div {
-		height: 1px;
-		margin: 11px -13px;
-		background: var(--sb-surface-hover);
-	}
-	.acard-lines {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-	}
-	.acard-line {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-	.acard-line .k {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-size: 12px;
-		color: var(--sb-fg-default);
-	}
-	.acard-line .v {
-		font-size: 12.5px;
-		font-weight: 600;
-		color: var(--sb-fg-default);
-		font-variant-numeric: tabular-nums;
-	}
-	.acard-line .v.neg {
-		color: var(--sb-danger);
-	}
-	.acard-badge {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 16px;
-		height: 16px;
-		padding: 0 4px;
-		border-radius: 8px;
-		background: var(--sb-neutral-muted);
-		font-size: 10px;
-		font-weight: 700;
-		color: var(--sb-fg-default);
-	}
-	.acard-block-label {
-		margin-bottom: 7px;
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.4px;
-		text-transform: uppercase;
-		color: var(--sb-fg-muted);
-	}
-	.acard-sched {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-	}
-	.acard-date {
-		flex-shrink: 0;
-		width: 42px;
-		font-size: 11px;
-		font-weight: 600;
-		color: var(--sb-fg-subtle);
-		font-variant-numeric: tabular-nums;
-	}
-	.acard-payee {
-		flex: 1 1 auto;
-		min-width: 0;
-		font-size: 12.5px;
-		color: var(--sb-fg-default);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	.acard-amt {
-		flex-shrink: 0;
-		font-size: 12px;
-		font-weight: 600;
-		color: var(--sb-success);
-		font-variant-numeric: tabular-nums;
-	}
-	.acard-amt.neg {
-		color: var(--sb-danger);
-	}
-	.acard-sync {
-		display: flex;
-		align-items: center;
-		gap: 7px;
-		margin-top: 11px;
-		font-size: 11.5px;
-		font-weight: 500;
-		color: var(--sb-fg-muted);
-	}
-	.acard-sync-dot {
-		display: flex;
-	}
-	.acard-sync-dot :global(.status) {
-		width: 12px;
-		height: 12px;
-	}
-	.acard-sync-error {
-		color: var(--sb-danger);
-	}
-	.acard-sync-syncing {
-		color: var(--sb-attention);
-	}
-
-	/* ===== Account context menu ===== */
-	.ctx {
-		position: fixed;
-		z-index: 70;
-		min-width: 190px;
-		display: flex;
-		flex-direction: column;
-		gap: 1px;
-		padding: 5px;
-		background: var(--sb-surface);
-		border: 1px solid var(--sb-border);
-		border-radius: 9px;
-		box-shadow: 0 12px 30px var(--sb-shadow);
-		animation: acard-in 0.1s ease;
-	}
-	.ctx-item {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		width: 100%;
-		padding: 7px 9px;
-		border-radius: 6px;
-		text-align: left;
-		font-size: 13px;
-		font-weight: 500;
-		letter-spacing: 0.13px;
-		color: var(--sb-fg);
-		transition: background 0.1s ease;
-	}
-	.ctx-item:hover {
-		background: var(--sb-hover-2);
-	}
-	.ctx-item svg {
-		width: 15px;
-		height: 15px;
-		flex-shrink: 0;
-		color: var(--sb-fg-muted);
-	}
-	.ctx-item:hover svg {
-		color: var(--sb-fg-default);
-	}
-	.ctx-item.danger {
-		color: var(--sb-danger);
-	}
-	.ctx-item.danger svg {
-		color: var(--sb-danger);
-	}
-	.ctx-item.danger:hover {
-		background: var(--sb-danger-muted);
-	}
-	.ctx-item.danger:hover svg {
-		color: var(--sb-danger);
-	}
-	.ctx-div {
-		height: 1px;
-		margin: 4px 4px;
-		background: var(--sb-neutral-muted);
-	}
-
-	/* ===== drag reorder ===== */
-	.account,
-	.group-header.sub.toggleable {
-		position: relative;
-	}
-	.account.dragging,
-	.group-header.dragging {
-		opacity: 0.4;
-	}
-
-	/* ===== active indicator ===== */
-	/* a short rounded accent pill just left of the active row's background */
-	.nav-link,
-	.section-head {
-		position: relative;
-	}
-	.nav-link.active::before,
-	.section-head.active::before,
-	.account.selected::before {
-		content: "";
-		position: absolute;
-		left: -6px;
-		top: 50%;
-		transform: translateY(-50%);
-		width: 3px;
-		height: 15px;
-		border-radius: 3px;
-		background: var(--sb-accent);
-	}
-	@media (prefers-reduced-motion: no-preference) {
-		.nav-link.active::before,
-		.section-head.active::before,
-		.account.selected::before {
-			animation: active-pop 0.16s ease;
-		}
-	}
-	@keyframes active-pop {
-		from {
-			opacity: 0;
-			height: 4px;
-		}
-		to {
-			opacity: 1;
-			height: 15px;
-		}
-	}
-	/* blue insertion line above/below the drop target */
-	.account.drop-before::after,
-	.account.drop-after::after,
-	.group-header.drop-before::after,
-	.group-header.drop-after::after {
-		content: "";
-		position: absolute;
-		left: 8px;
-		right: 8px;
-		height: 2px;
-		border-radius: 2px;
-		background: var(--sb-accent);
-		box-shadow: 0 0 4px var(--sb-accent-a60);
-		pointer-events: none;
-	}
-	.account.drop-before::after,
-	.group-header.drop-before::after {
-		top: -1px;
-	}
-	.account.drop-after::after,
-	.group-header.drop-after::after {
-		bottom: -1px;
-	}
-
-	/* inline account rename */
-	.account.editing {
-		display: flex;
-		align-items: center;
-		gap: 5px;
-		width: 100%;
-		box-sizing: border-box;
-		padding: 6px 8px 6px 13px;
-		border-radius: 7px;
-		background: var(--sb-accent-subtle);
-	}
-	.account-rename {
-		flex: 1 1 auto;
-		min-width: 0;
-		font-family: inherit;
-		font-size: 13px;
-		font-weight: 500;
-		letter-spacing: 0.145px;
-		color: var(--sb-fg);
-		background: var(--sb-canvas);
-		border: 1px solid var(--sb-accent);
-		border-radius: 5px;
-		padding: 2px 6px;
-		outline: none;
-	}
-
-	/* ===== category (sub-group) management ===== */
-	/* hover "+" on a section header — swapped with the total, so no layout shift */
-	.section-add {
-		position: absolute;
-		right: 4px;
-		top: 50%;
-		transform: translateY(-50%);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 22px;
-		height: 22px;
-		border-radius: 5px;
-		color: var(--sb-fg-muted);
-		opacity: 0;
-		pointer-events: none;
-		transition:
-			opacity 0.12s ease,
-			background 0.12s ease,
-			color 0.12s ease;
-	}
-	.section-add svg {
-		width: 15px;
-		height: 15px;
-	}
-	.section-head:hover .section-add {
-		opacity: 1;
-		pointer-events: auto;
-	}
-	.section-add:hover {
-		background: var(--sb-hover-4);
-		color: var(--sb-fg);
-	}
-	.section-head .group-total {
-		transition: opacity 0.12s ease;
-	}
-	.section-head:hover .group-total {
-		opacity: 0;
-	}
-
-	/* inline category rename */
-	.group-header.sub.editing-group {
-		display: flex;
-		align-items: center;
-		gap: 5px;
-	}
-	.group-rename {
-		flex: 1 1 auto;
-		min-width: 0;
-		font-family: inherit;
-		font-size: 10.5px;
-		font-weight: 600;
-		letter-spacing: 0.115px;
-		text-transform: uppercase;
-		color: var(--sb-fg);
-		background: var(--sb-canvas);
-		border: 1px solid var(--sb-accent);
-		border-radius: 5px;
-		padding: 2px 6px;
-		outline: none;
-	}
-
-	/* empty category placeholder / drop zone */
-	.group-empty-hint {
-		margin: 2px 0 3px 9px;
-		padding: 8px 10px;
-		border: 1px dashed var(--sb-border);
-		border-radius: 7px;
-		font-size: 12px;
-		font-weight: 500;
-		color: var(--sb-fgm-a55);
-		text-align: center;
-		transition:
-			border-color 0.12s ease,
-			color 0.12s ease,
-			background 0.12s ease;
-	}
-	.group-empty-hint.drop-before {
-		border-style: solid;
-		border-color: var(--sb-accent);
-		color: var(--sb-accent);
-		background: var(--sb-accent-subtle2);
-	}
-
-	/* ===== account leading glyph (status + icon), clickable to set an icon ===== */
-	.acct-glyph {
-		position: relative;
-		display: flex;
-		align-items: center;
-		gap: 5px;
-		flex-shrink: 0;
-		cursor: pointer;
-		outline: none;
-	}
-	/* the edit affordance sits over the status-dot slot only (never over the icon) */
-	.acct-glyph-edit {
-		position: absolute;
-		left: 0;
-		top: 0;
-		bottom: 0;
-		width: 17px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: var(--sb-fg-muted);
-		opacity: 0;
-		transition:
-			opacity 0.1s ease,
-			color 0.1s ease;
-		pointer-events: none;
-	}
-	.acct-glyph-edit svg {
-		width: 15px;
-		height: 15px;
-	}
-	/* accounts WITHOUT an icon: cross-fade the status dot to the "add icon" affordance */
-	.account:hover .acct-glyph:not(.has-icon) .status {
-		opacity: 0;
-	}
-	.account:hover .acct-glyph:not(.has-icon) .acct-glyph-edit {
-		opacity: 1;
-	}
-	.acct-glyph:not(.has-icon):hover .acct-glyph-edit {
-		color: var(--sb-fg);
-	}
-	/* accounts WITH an icon: keep it visible, just give it a subtle clickable highlight */
-	.acct-glyph.has-icon .acct-icon {
-		border-radius: 5px;
-		transition: background 0.1s ease;
-	}
-	.acct-glyph.has-icon:hover .acct-icon {
-		background: var(--sb-hover-5);
-	}
-
-	/* ===== account icon (avatar), left of the name ===== */
-	.acct-icon {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 16px;
-		height: 16px;
-		flex-shrink: 0;
-		margin-left: -1px;
-	}
-	.acct-icon-emoji {
-		font-size: 14px;
-		line-height: 1;
-	}
-	.acct-icon-img {
-		width: 16px;
-		height: 16px;
-		object-fit: cover;
-		border-radius: 2px;
-		background: var(--sb-neutral-muted);
-	}
-
-	/* ===== account icon picker ===== */
-	.ipick {
-		position: fixed;
-		z-index: 80;
-		width: 280px;
-		display: flex;
-		flex-direction: column;
-		background: var(--sb-inset);
-		border: 1px solid var(--sb-border);
-		border-radius: 12px;
-		box-shadow: 0 12px 34px var(--sb-shadow);
-		overflow: hidden;
-		animation: acard-in 0.12s ease;
-	}
-	.ipick-tabs {
-		display: flex;
-		align-items: center;
-		gap: 2px;
-		padding: 5px 6px;
-		border-bottom: 1px solid var(--sb-border-muted);
-	}
-	.ipick-tab {
-		padding: 6px 10px;
-		border-radius: 6px;
-		font-size: 12.5px;
-		font-weight: 600;
-		color: var(--sb-fg-muted);
-		transition:
-			background 0.1s ease,
-			color 0.1s ease;
-	}
-	.ipick-tab:hover {
-		color: var(--sb-fg);
-		background: var(--sb-hover-1);
-	}
-	.ipick-tab.active {
-		color: var(--sb-accent);
-		background: var(--sb-accent-muted);
-	}
-	.ipick-close {
-		margin-left: auto;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 24px;
-		height: 24px;
-		border-radius: 5px;
-		color: var(--sb-fg-muted);
-		transition:
-			background 0.1s ease,
-			color 0.1s ease;
-	}
-	.ipick-close:hover {
-		color: var(--sb-fg);
-		background: var(--sb-hover-2);
-	}
-	.ipick-close svg {
-		width: 12px;
-		height: 12px;
-	}
-	.ipick-pane {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		padding: 9px;
-	}
-	.ipick-input {
-		width: 100%;
-		box-sizing: border-box;
-		padding: 7px 9px;
-		font-family: inherit;
-		font-size: 12.5px;
-		color: var(--sb-fg);
-		background: var(--sb-canvas);
-		border: 1px solid var(--sb-border);
-		border-radius: 7px;
-		outline: none;
-		transition:
-			border-color 0.12s ease,
-			box-shadow 0.12s ease;
-	}
-	.ipick-input:focus {
-		border-color: var(--sb-accent);
-		box-shadow: 0 0 0 2px var(--sb-accent-muted);
-	}
-	.ipick-input::placeholder {
-		color: var(--sb-fg-a40);
-	}
-	.eg-tabs {
-		display: flex;
-		gap: 1px;
-		padding-bottom: 6px;
-		border-bottom: 1px solid var(--sb-border-muted);
-	}
-	.eg-tab {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 4px 0;
-		border-radius: 5px;
-		font-size: 14px;
-		line-height: 1;
-		opacity: 0.5;
-		transition:
-			opacity 0.08s ease,
-			background 0.08s ease;
-	}
-	.eg-tab:hover {
-		opacity: 0.85;
-		background: var(--sb-hover-1);
-	}
-	.eg-tab.active {
-		opacity: 1;
-		background: var(--sb-accent-muted);
-	}
-	.eg-grid-wrap {
-		max-height: 220px;
-		overflow-y: auto;
-		scrollbar-width: thin;
-		scrollbar-color: var(--sb-fg-a22) transparent;
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
-	.eg-label {
-		position: sticky;
-		top: 0;
-		z-index: 1;
-		padding: 4px 2px 3px;
-		font-size: 9px;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--sb-fg-muted);
-		background: var(--sb-inset);
-	}
-	.eg-grid {
-		display: grid;
-		grid-template-columns: repeat(8, 1fr);
-		gap: 1px;
-	}
-	.eg-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		aspect-ratio: 1;
-		border-radius: 5px;
-		font-size: 18px;
-		line-height: 1;
-		transition: background 0.08s ease;
-	}
-	.eg-btn:hover {
-		background: var(--sb-hover-4);
-	}
-	.logo-preview {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 6px;
-		width: 100%;
-		min-height: 84px;
-		padding: 12px;
-		border: 1px solid var(--sb-border);
-		border-radius: 8px;
-		background: var(--sb-hover-0);
-		cursor: default;
-		transition:
-			background 0.15s ease,
-			border-color 0.15s ease;
-	}
-	.logo-preview.loaded {
-		cursor: pointer;
-		border-color: var(--sb-accent);
-		background: var(--sb-accent-subtle2);
-	}
-	.logo-preview.loaded:hover {
-		background: var(--sb-accent-wash);
-	}
-	.logo-preview img {
-		width: 48px;
-		height: 48px;
-		object-fit: contain;
-		border-radius: 6px;
-	}
-	.logo-hint {
-		font-size: 10.5px;
-		font-weight: 600;
-		color: var(--sb-accent);
-	}
-	.logo-err {
-		font-size: 11px;
-		color: var(--sb-danger);
-	}
-	.dropzone {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 6px;
-		min-height: 104px;
-		padding: 12px;
-		border: 2px dashed var(--sb-border);
-		border-radius: 8px;
-		cursor: pointer;
-		transition:
-			border-color 0.15s ease,
-			background 0.15s ease;
-	}
-	.dropzone:hover,
-	.dropzone.over {
-		border-color: var(--sb-accent);
-		background: var(--sb-accent-faint);
-	}
-	.dropzone-icon {
-		width: 22px;
-		height: 22px;
-		opacity: 0.35;
-		color: var(--sb-fg);
-	}
-	.dropzone-img {
-		max-width: 100%;
-		max-height: 82px;
-		object-fit: contain;
-		border-radius: 6px;
-	}
-	.ipick-hint {
-		font-size: 11.5px;
-		color: var(--sb-fgm-a80);
-		text-align: center;
-		margin: 0;
-		padding: 4px 0;
-	}
-	.ipick-primary {
-		width: 100%;
-		padding: 8px;
-		border-radius: 7px;
-		font-size: 12.5px;
-		font-weight: 600;
-		color: #fff;
-		background: var(--sb-accent-emphasis);
-		transition: background 0.1s ease;
-	}
-	.ipick-primary:hover {
-		background: var(--sb-accent);
-	}
-	.ipick-foot {
-		padding: 6px 9px 9px;
-		border-top: 1px solid var(--sb-border-muted);
-	}
-	.ipick-remove {
-		width: 100%;
-		padding: 6px;
-		border-radius: 6px;
-		font-size: 11.5px;
-		font-weight: 500;
-		color: var(--sb-danger);
-		transition: background 0.1s ease;
-	}
-	.ipick-remove:hover {
-		background: var(--sb-danger-subtle);
-	}
-	.ipick-sr {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		overflow: hidden;
-		clip: rect(0, 0, 0, 0);
-	}
-</style>
