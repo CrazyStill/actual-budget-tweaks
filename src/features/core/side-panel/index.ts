@@ -216,5 +216,21 @@ export const sidePanel = {
 	},
 };
 
+/**
+ * Whether the side panel was left open on this exact route across a reload —
+ * i.e. what `sidePanel.init()` itself will restore. Consumers that want to
+ * repopulate the panel on startup must check this instead of `sidepanel.isOpen()`:
+ * that only reflects whether the (possibly still-empty) drawer shell has been
+ * created, and this feature's own `init()` — the thing that creates it from
+ * persisted state — runs concurrently with every other feature's `init()`
+ * (see runtime.ts's `bootstrapSettings`), so there's no ordering guarantee
+ * between the two. Reading the same persisted flag directly sidesteps that
+ * race instead of polling its racy DOM side-effect.
+ */
+export async function wasPanelPersistedOpen(): Promise<boolean> {
+	const persisted = await getValue<{ route: string } | null>(PERSIST_KEY, null);
+	return persisted?.route === location.pathname;
+}
+
 export { sidepanel } from "./api";
 export type { OpenOptions, SidePanelApi } from "./api";

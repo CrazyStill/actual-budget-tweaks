@@ -1,4 +1,4 @@
-import { sidepanel } from "@features/core/side-panel";
+import { sidepanel, wasPanelPersistedOpen } from "@features/core/side-panel";
 import { defineSetting } from "@features/types";
 import { icon } from "@lib/icons";
 import { loadCurrency } from "@lib/utilities/currency";
@@ -110,6 +110,19 @@ function openPanel(): void {
 	} else if (templatePlanState.activeTab === "priority" && !templatePlanState.priorityLoading && !templatePlanState.priorityData) {
 		refreshPriorityIfNeeded();
 	}
+}
+
+// Repopulates the panel if it was persisted open for this route, otherwise
+// falls back to just showing the trigger button. See wasPanelPersistedOpen's
+// doc for why this can't just check sidepanel.isOpen() instead.
+function reopenIfPersisted(): void {
+	wasPanelPersistedOpen().then((persisted) => {
+		if (persisted) {
+			if (!drawerOpen) openPanel();
+		} else if (!drawerOpen) {
+			ensureTriggerButton();
+		}
+	});
 }
 
 function closePanel(): void {
@@ -479,13 +492,9 @@ function tick(): void {
 	if (!wasOnBudgetPage) {
 		wasOnBudgetPage = true;
 		invalidateCategoriesCache();
-		// Panel may already be open from a persisted route match (side-panel's
-		// own rehydration) — populate it with our content instead of assuming closed.
-		if (sidepanel.isOpen()) {
-			openPanel();
-		} else if (!drawerOpen) {
-			ensureTriggerButton();
-		}
+		// Panel may already be persisted open from a previous session on this
+		// route — repopulate it with our content instead of assuming closed.
+		reopenIfPersisted();
 	}
 
 	// The side panel's built-in close (X) button has no notification hook,
@@ -539,11 +548,7 @@ export const templatePlan = defineSetting({
 
 		if (matchesPage(Page.Budget)) {
 			wasOnBudgetPage = true;
-			if (sidepanel.isOpen()) {
-				openPanel();
-			} else {
-				ensureTriggerButton();
-			}
+			reopenIfPersisted();
 		}
 
 		return () => {
