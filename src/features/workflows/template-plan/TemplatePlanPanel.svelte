@@ -6,6 +6,7 @@
 	import { setValue } from "@lib/utilities/store";
 	import BreakdownTab from "./BreakdownTab.svelte";
 	import { TAB_STORAGE_KEY } from "./constants";
+	import OverviewTab from "./OverviewTab.svelte";
 	import PriorityTab from "./PriorityTab.svelte";
 	import { templatePlanState } from "./state.svelte";
 
@@ -25,13 +26,16 @@
 	const title = $derived.by(() => {
 		const rawMonthLabel =
 			(templatePlanState.activeTab === "breakdown" && templatePlanState.breakdownState?.ctx.month) ||
+			(templatePlanState.activeTab === "overview" && templatePlanState.overviewData?.monthKey) ||
 			templatePlanState.priorityData?.month ||
 			null;
 		const monthLabel = monthLabelForHeader(rawMonthLabel ?? null);
 		const headerTitleText =
 			templatePlanState.activeTab === "breakdown" && templatePlanState.breakdownState
 				? actionLabel(templatePlanState.breakdownState.ctx.kind)
-				: "Template plan";
+				: templatePlanState.activeTab === "overview"
+					? "Overview"
+					: "Template plan";
 		return monthLabel ? `${headerTitleText} • ${monthLabel}` : headerTitleText;
 	});
 
@@ -44,15 +48,21 @@
 
 <Tabs
 	tabs={[
+		{ value: "overview", label: "Overview" },
 		{ value: "breakdown", label: "Breakdown" },
 		{ value: "priority", label: "Priority plan" },
 	]}
 	bind:value={templatePlanState.activeTab}
-	onChange={(tab) => setValue(TAB_STORAGE_KEY, tab)}
+	onChange={(tab) => {
+		setValue(TAB_STORAGE_KEY, tab);
+		templatePlanState.onTabChange?.(tab);
+	}}
 />
 
 <div class="abt-tab-body">
-	{#if templatePlanState.activeTab === "breakdown"}
+	{#if templatePlanState.activeTab === "overview"}
+		<OverviewTab />
+	{:else if templatePlanState.activeTab === "breakdown"}
 		<BreakdownTab />
 	{:else}
 		<PriorityTab />

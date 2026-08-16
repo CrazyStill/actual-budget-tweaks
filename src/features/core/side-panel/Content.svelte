@@ -169,7 +169,7 @@
 		flex: 1 1 auto;
 		min-height: 0;
 		overflow-y: auto;
-		background-color: var(--color-sidebarBackground);
+		background-color: var(--color-pageBackground);
 	}
 
 	.abt-side-drawer-close-button {

@@ -98,7 +98,6 @@ const CSS = `
 		max-width: ${MAX_SIDEBAR_WIDTH}px;
 		min-height: 0;
 		overflow-y: auto;
-		background: var(--ctp-secondary-sidebar);
 		border-left: var(--border);
 		animation: abt-side-drawer-enter 110ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}

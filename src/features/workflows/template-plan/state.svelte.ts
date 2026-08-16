@@ -1,5 +1,48 @@
 import type { BreakdownSummary, PriorityCache } from "@lib/utilities/template-plan/priority-plan";
 
+// ── Overview tab ──────────────────────────────────────────────────
+export interface MonthTrend {
+	monthKey: string;
+	budgeted: number;
+	spent: number;
+	toBudget: number;
+}
+
+export interface OverviewCategoryRow {
+	id: string;
+	name: string;
+	groupName: string;
+	leftover: number;
+	goal?: number;
+}
+
+export interface OverviewSchedule {
+	id: string;
+	name: string;
+	nextDate: string;
+}
+
+export interface OverviewData {
+	sheet: string;
+	monthKey: string;
+	availableFunds: number;
+	toBudget: number;
+	totalBudgeted: number;
+	totalSpent: number;
+	lastMonthOverspent: number;
+	bufferedSelected: number;
+	overspentCategories: OverviewCategoryRow[];
+	underfundedGoals: OverviewCategoryRow[];
+	fullyFundedGoalCount: number;
+	totalGoalCount: number;
+	upcomingSchedules: OverviewSchedule[];
+	// Trend & next-month
+	trend: MonthTrend[];
+	nextMonthKey: string;
+	nextMonthToBudget: number;
+	recentAvgSpending: number;
+}
+
 export type BreakdownGroup = {
 	id: string;
 	name: string;
@@ -36,7 +79,7 @@ export interface BreakdownState {
 }
 
 export const templatePlanState = $state({
-	activeTab: "priority" as "breakdown" | "priority",
+	activeTab: "overview" as "breakdown" | "priority" | "overview",
 	showAllRows: false,
 	breakdownState: null as BreakdownState | null,
 	breakdownLoading: false,
@@ -45,4 +88,9 @@ export const templatePlanState = $state({
 	// Plain object, not a Map — $state only deep-proxies plain objects/arrays,
 	// so a Map's .set() calls wouldn't trigger reactivity.
 	prioCollapseOverrides: {} as Record<string, boolean>,
+	overviewData: null as OverviewData | null,
+	overviewLoading: false,
+	// Callbacks registered by index.ts.
+	onTabChange: null as ((tab: string) => void) | null,
+	applyTemplates: null as (() => Promise<void>) | null,
 });

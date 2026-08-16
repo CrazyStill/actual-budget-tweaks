@@ -21,6 +21,8 @@ import {
 	type SnapshotDescriptor,
 } from "@lib/utilities/template-plan/actual-data";
 import { createPriorityPlanner } from "@lib/utilities/template-plan/priority-plan";
+import { query, send } from "@lib/utilities/actual-api";
+import type { Schedule } from "@lib/types/actual-schema";
 import { mountToNodeWithReturn } from "@lib/utilities/svelte";
 import { unmount } from "svelte";
 import {
@@ -31,7 +33,7 @@ import {
 	TRIGGER_LABELS,
 } from "./constants";
 import { CSS } from "./css";
-import { templatePlanState, type BreakdownState } from "./state.svelte";
+import { templatePlanState, type BreakdownState, type MonthTrend, type OverviewCategoryRow, type OverviewSchedule } from "./state.svelte";
 import TemplatePlanPanel from "./TemplatePlanPanel.svelte";
 
 const TRIGGER_ID = "abt-template-plan-trigger";
@@ -103,7 +105,9 @@ function openPanel(): void {
 	removeTriggerButton();
 	const bodyNode = ensurePanelMounted();
 	sidepanel.open({ bodyNode, persist: true, width: SIDE_PANEL_WIDTH });
-	if (templatePlanState.activeTab === "priority" && !templatePlanState.priorityLoading && !templatePlanState.priorityData) {
+	if (templatePlanState.activeTab === "overview" && !templatePlanState.overviewLoading && !templatePlanState.overviewData) {
+		refreshOverview();
+	} else if (templatePlanState.activeTab === "priority" && !templatePlanState.priorityLoading && !templatePlanState.priorityData) {
 		refreshPriorityIfNeeded();
 	}
 }
@@ -116,8 +120,8 @@ function closePanel(): void {
 
 // ── Persisted UI state ────────────────────────────────────────────────
 async function loadPersistedState(): Promise<void> {
-	const tab = await getValue<"breakdown" | "priority">(TAB_STORAGE_KEY, "priority");
-	if (tab === "breakdown" || tab === "priority") templatePlanState.activeTab = tab;
+	const tab = await getValue<"breakdown" | "priority" | "overview">(TAB_STORAGE_KEY, "overview");
+	if (tab === "breakdown" || tab === "priority" || tab === "overview") templatePlanState.activeTab = tab;
 
 	const collapse = await getValue<Record<string, boolean>>(PRIO_COLLAPSE_STORAGE_KEY, {});
 	for (const [k, v] of Object.entries(collapse)) {
@@ -131,6 +135,150 @@ async function loadPersistedState(): Promise<void> {
 function saveBreakdown(): void {
 	if (templatePlanState.breakdownState) {
 		setValue(BREAKDOWN_STORAGE_KEY, templatePlanState.breakdownState);
+	}
+}
+
+// ── Overview refresh ──────────────────────────────────────────────────
+async function refreshOverview(): Promise<void> {
+	if (!isBudgetPage()) return;
+	templatePlanState.overviewLoading = true;
+	try {
+		const sheet = getCurrentSheet();
+		if (!sheet) {
+			templatePlanState.overviewData = null;
+			return;
+		}
+
+		const cats = await loadCategories();
+		const visibleCats = cats.filter((c) => !c.hidden);
+
+		const cellNames = [
+			"to-budget",
+			"total-budgeted",
+			"available-funds",
+			"last-month-overspent",
+			"buffered-selected",
+			...visibleCats.map((c) => `sum-amount-${c.id}`),
+			...visibleCats.map((c) => `leftover-${c.id}`),
+			...visibleCats.map((c) => `goal-${c.id}`),
+		];
+
+		const [cells, schedulesResult] = await Promise.all([
+			getCells(sheet, cellNames),
+			query<Schedule[]>("schedules", { filter: { tombstone: false, completed: false } }),
+		]);
+
+		const toBudget = cells.get("to-budget") ?? 0;
+		const totalBudgeted = Math.abs(cells.get("total-budgeted") ?? 0);
+		const availableFunds = cells.get("available-funds") ?? (toBudget + totalBudgeted);
+		const lastMonthOverspent = cells.get("last-month-overspent") ?? 0;
+		const bufferedSelected = cells.get("buffered-selected") ?? 0;
+
+		let totalSpent = 0;
+		const overspentCategories: OverviewCategoryRow[] = [];
+		const underfundedGoals: OverviewCategoryRow[] = [];
+		let fullyFundedGoalCount = 0;
+		let totalGoalCount = 0;
+
+		for (const cat of visibleCats) {
+			const sumAmount = cells.get(`sum-amount-${cat.id}`) ?? 0;
+			const leftover = cells.get(`leftover-${cat.id}`) ?? 0;
+			const goal = cells.get(`goal-${cat.id}`) ?? 0;
+
+			if (sumAmount < 0) totalSpent += Math.abs(sumAmount);
+
+			if (leftover < 0) {
+				overspentCategories.push({ id: cat.id, name: cat.name, groupName: cat.group_name, leftover });
+			}
+
+			if (goal > 0) {
+				totalGoalCount++;
+				if (leftover >= goal) {
+					fullyFundedGoalCount++;
+				} else {
+					underfundedGoals.push({ id: cat.id, name: cat.name, groupName: cat.group_name, leftover, goal });
+				}
+			}
+		}
+
+		overspentCategories.sort((a, b) => a.leftover - b.leftover);
+		underfundedGoals.sort((a, b) => (a.leftover - (a.goal ?? 0)) - (b.leftover - (b.goal ?? 0)));
+
+		const today = new Date();
+		const todayStr = today.toISOString().slice(0, 10);
+		const futureStr = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+		const upcomingSchedules: OverviewSchedule[] = (schedulesResult ?? [])
+			.filter((s) => s.next_date && s.next_date >= todayStr && s.next_date <= futureStr)
+			.sort((a, b) => (a.next_date ?? "").localeCompare(b.next_date ?? ""))
+			.slice(0, 12)
+			.map((s) => ({ id: s.id, name: s.name ?? "Unnamed", nextDate: s.next_date! }));
+
+		// ── Historical trend + next-month coverage ────────────────────────
+		const currentMonthKey = sheetToMonthKey(sheet) ?? "";
+		const [currY, currM] = currentMonthKey.split("-").map(Number);
+
+		const offsetKey = (offsetMonths: number): string => {
+			const d = new Date(currY, currM - 1 + offsetMonths, 1);
+			return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+		};
+		const keyToSheet = (key: string) => `budget${key.replace("-", "")}`;
+
+		const pastKeys = [-5, -4, -3, -2, -1, 0].map(offsetKey);
+		const nextMonthKey = offsetKey(1);
+		const trendNames = ["to-budget", "total-budgeted", ...visibleCats.map((c) => `sum-amount-${c.id}`)];
+
+		const [pastResults, nextResult] = await Promise.all([
+			Promise.all(pastKeys.map((k) => getCells(keyToSheet(k), trendNames))),
+			getCells(keyToSheet(nextMonthKey), ["to-budget"]),
+		]);
+
+		const trend: MonthTrend[] = pastKeys.map((key, i) => {
+			const mc = i === 5 ? cells : pastResults[i]; // reuse current-month cells
+			let spent = 0;
+			for (const cat of visibleCats) {
+				const s = mc.get(`sum-amount-${cat.id}`) ?? 0;
+				if (s < 0) spent += Math.abs(s);
+			}
+			return {
+				monthKey: key,
+				budgeted: Math.abs(mc.get("total-budgeted") ?? 0),
+				toBudget: mc.get("to-budget") ?? 0,
+				spent,
+			};
+		});
+
+		const nonZeroRecent = trend.slice(0, 5).filter((t) => t.spent > 0).slice(-3);
+		const recentAvgSpending =
+			nonZeroRecent.length > 0
+				? nonZeroRecent.reduce((s, t) => s + t.spent, 0) / nonZeroRecent.length
+				: totalBudgeted;
+
+		const nextMonthToBudget = nextResult.get("to-budget") ?? 0;
+
+		templatePlanState.overviewData = {
+			sheet,
+			monthKey: currentMonthKey,
+			availableFunds,
+			toBudget,
+			totalBudgeted,
+			totalSpent,
+			lastMonthOverspent,
+			bufferedSelected,
+			overspentCategories,
+			underfundedGoals,
+			fullyFundedGoalCount,
+			totalGoalCount,
+			upcomingSchedules,
+			trend,
+			nextMonthKey,
+			nextMonthToBudget,
+			recentAvgSpending,
+		};
+	} catch (e) {
+		console.warn("[ABT] overview refresh failed", e);
+	} finally {
+		templatePlanState.overviewLoading = false;
 	}
 }
 
@@ -165,7 +313,11 @@ function classifyTrigger(target: EventTarget | null) {
 	return TRIGGER_LABELS.get(text) ?? null;
 }
 
-async function handleTrigger(kind: BreakdownState["ctx"]["kind"], beforeStarts: SnapshotDescriptor[]): Promise<void> {
+async function handleTrigger(
+	kind: BreakdownState["ctx"]["kind"],
+	beforeStarts: SnapshotDescriptor[],
+	doWork?: () => Promise<void>,
+): Promise<void> {
 	const seq = ++runSeq;
 	templatePlanState.breakdownLoading = true;
 	if (templatePlanState.activeTab !== "breakdown") {
@@ -183,6 +335,19 @@ async function handleTrigger(kind: BreakdownState["ctx"]["kind"], beforeStarts: 
 		return;
 	}
 
+	if (doWork) {
+		try {
+			await doWork();
+		} catch (e) {
+			console.warn("[ABT] template plan apply failed", e);
+			templatePlanState.breakdownLoading = false;
+			return;
+		}
+	}
+
+	// Wait for Actual's reactive spreadsheet + React to propagate the updated
+	// cell values to the DOM — whether triggered by a button click or a direct
+	// send() call.
 	try {
 		await waitForQuiescence();
 	} catch {
@@ -252,6 +417,7 @@ async function handleTrigger(kind: BreakdownState["ctx"]["kind"], beforeStarts: 
 	};
 	saveBreakdown();
 
+	templatePlanState.overviewData = null;
 	invalidatePriorityStatus();
 	refreshPriorityIfNeeded();
 }
@@ -289,8 +455,10 @@ function pollSheetChange(): void {
 	if (key === lastSheetKey) return;
 	lastSheetKey = key;
 	invalidatePriorityStatus();
-	if (drawerOpen && templatePlanState.activeTab === "priority") {
-		refreshPriorityIfNeeded();
+	templatePlanState.overviewData = null;
+	if (drawerOpen) {
+		if (templatePlanState.activeTab === "priority") refreshPriorityIfNeeded();
+		else if (templatePlanState.activeTab === "overview") refreshOverview();
 	}
 }
 
@@ -348,6 +516,22 @@ export const templatePlan = defineSetting({
 		// entire settings panel's mount, not just this feature.
 		loadCategories();
 
+		templatePlanState.onTabChange = (tab) => {
+			if (tab === "overview") refreshOverview();
+			else if (tab === "priority") refreshPriorityIfNeeded();
+		};
+
+		templatePlanState.applyTemplates = async () => {
+			if (!isBudgetPage()) return;
+			const sheet = getCurrentSheet();
+			const month = sheet ? sheetToMonthKey(sheet) : null;
+			if (!month) return;
+			const beforeStarts = startSnapshotAllVisible();
+			await handleTrigger("apply", beforeStarts, () =>
+				send("budget/apply-goal-template", { month }),
+			);
+		};
+
 		const stopClickListener = installClickListener();
 		const stopKeyboard = installKeyboard();
 		const unwatch = watchDom(tick);
@@ -369,6 +553,9 @@ export const templatePlan = defineSetting({
 			clearInterval(pollInterval);
 			removeTriggerButton();
 			teardownPanel();
+			templatePlanState.onTabChange = null;
+			templatePlanState.applyTemplates = null;
+			templatePlanState.overviewData = null;
 			drawerOpen = false;
 			wasOnBudgetPage = false;
 		};
