@@ -92,6 +92,17 @@ export async function send(method: string, args?: unknown): Promise<unknown> {
 	return request("abt:api:send", { method, args });
 }
 
+/**
+ * Dispatch one of Actual Budget's internal action-creators (e.g. pushModal) via the API bridge.
+ *
+ * @example
+ * await dispatch("pushModal", { modal: { name: "add-account", options: {} } });
+ */
+export async function dispatch<T = unknown>(action: string, args?: unknown): Promise<T> {
+	await waitForBudget();
+	return request("abt:api:dispatch", { action, args });
+}
+
 export function navigate(path: string, options?: Record<string, unknown>): void {
 	document.dispatchEvent(new CustomEvent("abt:api:navigate", { detail: JSON.stringify({ path, options }) }));
 }

@@ -6,6 +6,12 @@ export default defineUnlistedScript(async () => {
 		setTimeout(() => waitForApi(cb, retries - 1), 200);
 	}
 
+	function waitForActions(cb, retries = 50) {
+		if (window.__actionsForMenu) return cb();
+		if (retries <= 0) return;
+		setTimeout(() => waitForActions(cb, retries - 1), 200);
+	}
+
 	function parseDetail(e) {
 		const raw = e.detail;
 		return typeof raw === "string" ? JSON.parse(raw) : raw;
@@ -43,6 +49,20 @@ export default defineUnlistedScript(async () => {
 		waitForApi(async () => {
 			try {
 				const result = await window.$send(method, args);
+				respond(id, result, null);
+			} catch (err) {
+				respond(id, null, String(err));
+			}
+		});
+	});
+
+	document.addEventListener("abt:api:dispatch", (e) => {
+		const { id, action, args } = parseDetail(e);
+		if (!id || !action) return;
+
+		waitForActions(async () => {
+			try {
+				const result = await window.__actionsForMenu[action](args);
 				respond(id, result, null);
 			} catch (err) {
 				respond(id, null, String(err));
