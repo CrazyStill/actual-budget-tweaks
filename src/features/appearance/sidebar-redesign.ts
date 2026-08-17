@@ -592,7 +592,6 @@ export const sidebarRedesign = defineSetting({
 
 			/* Account dot — active state: keep color but prevent position shift */
 			a[href^="/accounts/"].active .dot {
-				background: var(--color-sidebarItemAccentSelected) !important;
 				transform: none !important;
 				left: auto !important;
 				position: static !important;
