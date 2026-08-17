@@ -404,7 +404,7 @@
 	box-sizing: border-box;
 	padding: 0.75rem;
 	/* transparent border matches the expanded header exactly → no layout shift */
-	border-bottom: var(--border);
+	border-bottom: 1px solid var(--sb-border);
 	text-align: left;
 	transition:
 		background 0.12s ease,
@@ -471,7 +471,7 @@
 	height: 3.75rem;
 	box-sizing: border-box;
 	padding: 0.75rem;
-	border-bottom: var(--border);
+	border-bottom: 1px solid var(--sb-border);
 }
 
 /* Budget icon (default: initials, matches .rail-avatar; customizable via the
@@ -1498,7 +1498,7 @@
 	padding: 0.75rem 8px 0;
 	/* same border token as .budget-select, just on top instead of bottom
 	   since this sits at the opposite end of the sidebar */
-	border-top: var(--border);
+	border-top: 1px solid var(--sb-border);
 	flex-shrink: 0;
 }
 .sidebar .footer-actions {
