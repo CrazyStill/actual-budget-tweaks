@@ -1,6 +1,44 @@
 # Changelog
 
 
+## v0.1.52
+
+[compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.51...v0.1.52)
+
+### 🚀 Enhancements
+
+- Add unicode-emoji-json dependency and update global.css font import ([3709481](https://github.com/aelxxs/actual-budget-tweaks/commit/3709481))
+- Implement custom tooltip functionality in ExperimentalSidebar ([c52406b](https://github.com/aelxxs/actual-budget-tweaks/commit/c52406b))
+- Add Overview tab to template plan side panel ([43a10d2](https://github.com/aelxxs/actual-budget-tweaks/commit/43a10d2))
+- Add a dispatch bridge for Actual's real action-creators ([6da937f](https://github.com/aelxxs/actual-budget-tweaks/commit/6da937f))
+- Rebuild the sidebar with live data (experimental) ([9855e09](https://github.com/aelxxs/actual-budget-tweaks/commit/9855e09))
+
+### 🩹 Fixes
+
+- Reload no longer reopens side panel empty ([0be5479](https://github.com/aelxxs/actual-budget-tweaks/commit/0be5479))
+- Update transaction color descriptions and styles for better clarity ([b8931b6](https://github.com/aelxxs/actual-budget-tweaks/commit/b8931b6))
+- Update Firefox installation link to point to latest release ([d941948](https://github.com/aelxxs/actual-budget-tweaks/commit/d941948))
+- Add missing lucide-svelte dependency for the sidebar ([1607c3a](https://github.com/aelxxs/actual-budget-tweaks/commit/1607c3a))
+- Let the active account dot show its real sync status color ([30cbae5](https://github.com/aelxxs/actual-budget-tweaks/commit/30cbae5))
+
+### 💅 Refactors
+
+- Reformat actual-schema.ts and drop unused SendMethodMap overloads ([75e1c8e](https://github.com/aelxxs/actual-budget-tweaks/commit/75e1c8e))
+
+### 🏡 Chore
+
+- Update Firefox auto-update manifest for v0.1.51 ([990ec9d](https://github.com/aelxxs/actual-budget-tweaks/commit/990ec9d))
+- Remove Star History section from README.md ([4858194](https://github.com/aelxxs/actual-budget-tweaks/commit/4858194))
+
+### 🎨 Styles
+
+- Align sidebar header height with the main app header ([e2d0397](https://github.com/aelxxs/actual-budget-tweaks/commit/e2d0397))
+- Remove hover shadow on the budget summary card ([9ae72ec](https://github.com/aelxxs/actual-budget-tweaks/commit/9ae72ec))
+
+### ❤️ Contributors
+
+- Alexis Vielma <alexis.vielma.us@gmail.com>
+
 ## v0.1.51
 
 [compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.50...v0.1.51)
