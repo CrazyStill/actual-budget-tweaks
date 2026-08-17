@@ -250,12 +250,3 @@ Use this space to list resources you find helpful and would like to give credit 
 [JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
 [JQuery-url]: https://jquery.com
 
-## Star History
-
-<a href="https://www.star-history.com/?repos=aelxxs%2Factual-budget-tweaks&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=aelxxs/actual-budget-tweaks&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=aelxxs/actual-budget-tweaks&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=aelxxs/actual-budget-tweaks&type=date&legend=top-left" />
- </picture>
-</a>
