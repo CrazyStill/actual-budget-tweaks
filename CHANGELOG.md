@@ -1,6 +1,26 @@
 # Changelog
 
 
+## v0.1.54
+
+[compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.53...v0.1.54)
+
+### 🚀 Enhancements
+
+- Budget icon becomes icon picker in vscode layout mode ([3fdd210](https://github.com/aelxxs/actual-budget-tweaks/commit/3fdd210))
+
+### 🩹 Fixes
+
+- Turn input into plain JSON before saving in setValue ([1eb3e6d](https://github.com/aelxxs/actual-budget-tweaks/commit/1eb3e6d))
+
+### 🏡 Chore
+
+- Update Firefox auto-update manifest for v0.1.53 ([f544817](https://github.com/aelxxs/actual-budget-tweaks/commit/f544817))
+
+### ❤️ Contributors
+
+- Alexis Vielma <alexis.vielma.us@gmail.com>
+
 ## v0.1.53
 
 [compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.52...v0.1.53)
