@@ -25,39 +25,32 @@ export type AmountInCents = number;
 
 // ── Entities ──────────────────────────────────────────────────────
 
-export type AccountType =
-  | "checking"
-  | "savings"
-  | "credit"
-  | "investment"
-  | "mortgage"
-  | "debt"
-  | "other";
+export type AccountType = "checking" | "savings" | "credit" | "investment" | "mortgage" | "debt" | "other";
 
 export interface Account {
-  id: UUID;
-  name: string;
-  type: AccountType;
-  offbudget: boolean;
-  closed: boolean;
-  tombstone?: boolean;
-  /** Display name of the linked bank, e.g. "Chase" — null for manual accounts. */
-  bankName?: string | null;
-  /** ISO timestamp of the last successful bank sync — null for manual accounts. */
-  last_sync?: string | null;
+	id: UUID;
+	name: string;
+	type: AccountType;
+	offbudget: boolean;
+	closed: boolean;
+	tombstone?: boolean;
+	/** Display name of the linked bank, e.g. "Chase" — null for manual accounts. */
+	bankName?: string | null;
+	/** ISO timestamp of the last successful bank sync — null for manual accounts. */
+	last_sync?: string | null;
 }
 
 export interface Category {
-  id: UUID;
-  name: string;
-  /** ID of the parent CategoryGroup */
-  group: UUID;
-  is_income: boolean;
-  hidden?: boolean;
-  sort_order?: number;
-  tombstone?: boolean;
-  /** JSON-stringified array of goal/template directives — see `GoalDefEntry`. */
-  goal_def?: string | null;
+	id: UUID;
+	name: string;
+	/** ID of the parent CategoryGroup */
+	group: UUID;
+	is_income: boolean;
+	hidden?: boolean;
+	sort_order?: number;
+	tombstone?: boolean;
+	/** JSON-stringified array of goal/template directives — see `GoalDefEntry`. */
+	goal_def?: string | null;
 }
 
 /**
@@ -66,82 +59,129 @@ export interface Category {
  * newer Actual versions) a dedicated template UI.
  */
 export type GoalDefEntry =
-  | { directive: "template"; type: "simple"; monthly: number | null; limit: { amount: number; hold: unknown; period: string; start: string | null } | null; priority: number | null }
-  | { directive: "template"; type: "schedule"; name: string; priority: number | null; full: boolean | null; scheduleId?: string; description?: string }
-  | { directive: "template"; type: "average"; numMonths: number; priority: number | null }
-  /** Recurring amount every N days/weeks/months/years. */
-  | { directive: "template"; type: "periodic"; amount: number; period: { period: "day" | "week" | "month" | "year"; amount: number }; starting: string; limit?: number | null; priority: number | null; description?: string }
-  /** Save a target amount by a given month, optionally repeating annually or every N months. */
-  | { directive: "template"; type: "by"; amount: number; month: string; from: string | null; annual?: boolean; repeat?: number; priority: number | null }
-  /** Save a target amount by a given month, spending starts accruing from a given month. */
-  | { directive: "template"; type: "spend"; amount: number; month: string; from: string; priority: number | null }
-  | { directive: "template"; type: "percentage"; percent: number; previous: boolean; category: string; priority: number | null }
-  | { directive: "template"; type: "copy"; lookBack: number; limit: number | null; priority: number | null }
-  | { directive: "template"; type: "remainder"; weight: number; limit?: number | null; priority: number | null }
-  /** Balance-limit rule from the "Automate budget" UI — a spending cap, not itself a monthly target. */
-  | { directive: "template"; type: "limit"; amount: number; hold: boolean | null; period: string; start: string | null; priority: number | null }
-  /** Paired with a preceding "limit" entry: refill the category back up to that limit each period. */
-  | { directive: "template"; type: "refill"; priority: number | null }
-  | { directive: "goal"; type: "goal"; amount: number; priority: number | null };
+	| {
+			directive: "template";
+			type: "simple";
+			monthly: number | null;
+			limit: { amount: number; hold: unknown; period: string; start: string | null } | null;
+			priority: number | null;
+	  }
+	| {
+			directive: "template";
+			type: "schedule";
+			name: string;
+			priority: number | null;
+			full: boolean | null;
+			scheduleId?: string;
+			description?: string;
+	  }
+	| { directive: "template"; type: "average"; numMonths: number; priority: number | null }
+	/** Recurring amount every N days/weeks/months/years. */
+	| {
+			directive: "template";
+			type: "periodic";
+			amount: number;
+			period: { period: "day" | "week" | "month" | "year"; amount: number };
+			starting: string;
+			limit?: number | null;
+			priority: number | null;
+			description?: string;
+	  }
+	/** Save a target amount by a given month, optionally repeating annually or every N months. */
+	| {
+			directive: "template";
+			type: "by";
+			amount: number;
+			month: string;
+			from: string | null;
+			annual?: boolean;
+			repeat?: number;
+			priority: number | null;
+	  }
+	/** Save a target amount by a given month, spending starts accruing from a given month. */
+	| { directive: "template"; type: "spend"; amount: number; month: string; from: string; priority: number | null }
+	| {
+			directive: "template";
+			type: "percentage";
+			percent: number;
+			previous: boolean;
+			category: string;
+			priority: number | null;
+	  }
+	| { directive: "template"; type: "copy"; lookBack: number; limit: number | null; priority: number | null }
+	| { directive: "template"; type: "remainder"; weight: number; limit?: number | null; priority: number | null }
+	/** Balance-limit rule from the "Automate budget" UI — a spending cap, not itself a monthly target. */
+	| {
+			directive: "template";
+			type: "limit";
+			amount: number;
+			hold: boolean | null;
+			period: string;
+			start: string | null;
+			priority: number | null;
+	  }
+	/** Paired with a preceding "limit" entry: refill the category back up to that limit each period. */
+	| { directive: "template"; type: "refill"; priority: number | null }
+	| { directive: "goal"; type: "goal"; amount: number; priority: number | null };
 
 export interface CategoryGroup {
-  id: UUID;
-  name: string;
-  is_income: boolean;
-  sort_order?: number;
-  tombstone?: boolean;
-  /** Populated when queried via getCategoryGroups() with nested option */
-  categories?: Category[];
+	id: UUID;
+	name: string;
+	is_income: boolean;
+	sort_order?: number;
+	tombstone?: boolean;
+	/** Populated when queried via getCategoryGroups() with nested option */
+	categories?: Category[];
 }
 
 export interface Transaction {
-  id: UUID;
-  account: UUID;
-  date: ISODate;
-  amount: AmountInCents;
-  payee?: UUID | null;
-  /** Only present on create — resolved to payee id afterwards */
-  payee_name?: string | null;
-  imported_payee?: string | null;
-  category?: UUID | null;
-  notes?: string | null;
-  imported_id?: string | null;
-  transfer_id?: UUID | null;
-  cleared?: boolean;
-  tombstone?: boolean;
-  is_parent?: boolean;
-  is_child?: boolean;
-  parent_id?: UUID | null;
-  /** ID of the schedule that generated this transaction */
-  schedule?: UUID | null;
-  /** Only present on split transactions */
-  subtransactions?: Transaction[];
+	id: UUID;
+	account: UUID;
+	date: ISODate;
+	amount: AmountInCents;
+	payee?: UUID | null;
+	/** Only present on create — resolved to payee id afterwards */
+	payee_name?: string | null;
+	imported_payee?: string | null;
+	category?: UUID | null;
+	notes?: string | null;
+	imported_id?: string | null;
+	transfer_id?: UUID | null;
+	cleared?: boolean;
+	tombstone?: boolean;
+	is_parent?: boolean;
+	is_child?: boolean;
+	parent_id?: UUID | null;
+	/** ID of the schedule that generated this transaction */
+	schedule?: UUID | null;
+	/** Only present on split transactions */
+	subtransactions?: Transaction[];
 }
 
 export interface Payee {
-  id: UUID;
-  name: string;
-  category?: UUID | null;
-  /** Set when this payee represents a transfer to another account */
-  transfer_acct?: UUID | null;
-  tombstone?: boolean;
+	id: UUID;
+	name: string;
+	category?: UUID | null;
+	/** Set when this payee represents a transfer to another account */
+	transfer_acct?: UUID | null;
+	tombstone?: boolean;
 }
 
 export type RuleStage = "pre" | "default" | "post";
 export type RuleConditionsOp = "and" | "or";
 
 export interface ConditionOrAction {
-  field: string;
-  op: string;
-  value: unknown;
+	field: string;
+	op: string;
+	value: unknown;
 }
 
 export interface Rule {
-  id: UUID;
-  stage: RuleStage;
-  conditionsOp?: RuleConditionsOp;
-  conditions?: ConditionOrAction[];
-  actions?: ConditionOrAction[];
+	id: UUID;
+	stage: RuleStage;
+	conditionsOp?: RuleConditionsOp;
+	conditions?: ConditionOrAction[];
+	actions?: ConditionOrAction[];
 }
 
 export type ScheduleAmountOp = "is" | "isapprox" | "isbetween";
@@ -150,58 +190,58 @@ export type RecurEndMode = "never" | "after_n_occurrences" | "on_date";
 export type WeekendSolveMode = "before" | "after";
 
 export interface RecurPattern {
-  type?: string;
-  value?: number;
+	type?: string;
+	value?: number;
 }
 
 export interface RecurConfig {
-  frequency: RecurFrequency;
-  start: string;
-  endMode: RecurEndMode;
-  interval?: number;
-  patterns?: RecurPattern[];
-  skipWeekend?: boolean;
-  endOccurrences?: number;
-  endDate?: string;
-  weekendSolveMode?: WeekendSolveMode;
+	frequency: RecurFrequency;
+	start: string;
+	endMode: RecurEndMode;
+	interval?: number;
+	patterns?: RecurPattern[];
+	skipWeekend?: boolean;
+	endOccurrences?: number;
+	endDate?: string;
+	weekendSolveMode?: WeekendSolveMode;
 }
 
 export interface Schedule {
-  id: UUID;
-  name?: string | null;
-  rule?: UUID | null;
-  next_date?: ISODate | null;
-  completed?: boolean;
-  posts_transaction?: boolean;
-  tombstone?: boolean;
-  /**
-   * Virtual fields — populated when select("*") is used.
-   * These are denormalized from the schedule's rule conditions.
-   */
-  _payee?: UUID | null;
-  _account?: UUID | null;
-  _amount?: AmountInCents | { num1: AmountInCents; num2: AmountInCents } | null;
-  _amountOp?: ScheduleAmountOp | null;
-  _date?: ISODate | RecurConfig | null;
+	id: UUID;
+	name?: string | null;
+	rule?: UUID | null;
+	next_date?: ISODate | null;
+	completed?: boolean;
+	posts_transaction?: boolean;
+	tombstone?: boolean;
+	/**
+	 * Virtual fields — populated when select("*") is used.
+	 * These are denormalized from the schedule's rule conditions.
+	 */
+	_payee?: UUID | null;
+	_account?: UUID | null;
+	_amount?: AmountInCents | { num1: AmountInCents; num2: AmountInCents } | null;
+	_amountOp?: ScheduleAmountOp | null;
+	_date?: ISODate | RecurConfig | null;
 }
 
 export interface Note {
-  id: UUID;
-  note: string;
+	id: UUID;
+	note: string;
 }
 
 export interface Preference {
-  id: string;
-  value: string;
+	id: string;
+	value: string;
 }
 
 export interface Tag {
-  id: UUID;
-  tag: string;
-  color?: string | null;
-  description?: string | null;
-  hidden?: boolean;
-  tombstone?: boolean;
+	id: UUID;
+	tag: string;
+	color?: string | null;
+	description?: string | null;
+	hidden?: boolean;
+	tombstone?: boolean;
 }
 
 // ── Table map ────────────────────────────────────────────────────
@@ -214,16 +254,16 @@ export interface Tag {
  * query<Pick<ActualTable["accounts"], "id" | "offbudget">[]>("accounts")
  */
 export interface ActualTable {
-  accounts: Account;
-  categories: Category;
-  category_groups: CategoryGroup;
-  transactions: Transaction;
-  payees: Payee;
-  schedules: Schedule;
-  notes: Note;
-  preferences: Preference;
-  tags: Tag;
-  rules: Rule;
+	accounts: Account;
+	categories: Category;
+	category_groups: CategoryGroup;
+	transactions: Transaction;
+	payees: Payee;
+	schedules: Schedule;
+	notes: Note;
+	preferences: Preference;
+	tags: Tag;
+	rules: Rule;
 }
 
 export type TableName = keyof ActualTable;
@@ -238,19 +278,19 @@ export type TableName = keyof ActualTable;
 export type BudgetSheetName = `budget${number}`;
 
 export type BudgetCellName =
-  | "available-funds"          // Total available to budget ("To Budget")
-  | "to-budget"                // Alias for available-funds
-  | "last-month-overspent"     // Overspent amount carried from previous month
-  | "total-budgeted"           // Sum of all category budgeted amounts
-  | "buffered-selected"        // Amount held for next month
-  | `budget-${UUID}`           // Budgeted amount for a specific category
-  | `leftover-${UUID}`         // Remaining (available) for a specific category
-  | `goal-${UUID}`             // Goal amount for a specific category
-  | `sum-amount-${UUID}`;      // Total spent for a specific category
+	| "available-funds" // Total available to budget ("To Budget")
+	| "to-budget" // Alias for available-funds
+	| "last-month-overspent" // Overspent amount carried from previous month
+	| "total-budgeted" // Sum of all category budgeted amounts
+	| "buffered-selected" // Amount held for next month
+	| `budget-${UUID}` // Budgeted amount for a specific category
+	| `leftover-${UUID}` // Remaining (available) for a specific category
+	| `goal-${UUID}` // Goal amount for a specific category
+	| `sum-amount-${UUID}`; // Total spent for a specific category
 
 /** Response shape from send("get-cell", { sheetName, name }) */
 export interface CellValue {
-  value: AmountInCents;
+	value: AmountInCents;
 }
 
 // ── Internal send methods ────────────────────────────────────────
@@ -259,19 +299,6 @@ export interface CellValue {
  * Typed overloads for the send() bridge function.
  * Covers the internal methods this extension uses.
  */
-export interface SendMethodMap {
-  "get-cell": {
-    args: { sheetName: BudgetSheetName | string; name: BudgetCellName | string };
-    result: CellValue;
-  };
-  "category-update": {
-    args: { id: UUID; name?: string; group_id?: UUID; is_income?: boolean; hidden?: boolean };
-    result: null;
-  };
-  "budget/dry-run-category-template": {
-    args: { month: ISOMonth; categoryId: UUID; templates: unknown[] };
-    result: { perTemplate: number[] };
-  };
-}
+export interface SendMethodMap {}
 
 export type SendMethod = keyof SendMethodMap;
