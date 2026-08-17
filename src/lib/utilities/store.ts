@@ -30,7 +30,8 @@ export async function hasValue(key: string): Promise<boolean> {
 export function setValue(key: string, value: unknown) {
 	if (isContextInvalidated()) return Promise.resolve();
 	try {
-		return browser.storage.local.set({ ["local:" + key]: value });
+		const plain = JSON.parse(JSON.stringify(value));
+		return browser.storage.local.set({ ["local:" + key]: plain });
 	} catch {
 		return Promise.resolve();
 	}
