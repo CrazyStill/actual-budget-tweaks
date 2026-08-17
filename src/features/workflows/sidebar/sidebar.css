@@ -159,6 +159,7 @@
 	padding: 12px 0 8px;
 }
 .sidebar .rail-avatar {
+	position: relative;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -170,9 +171,16 @@
 	font-size: 12px;
 	font-weight: 800;
 	letter-spacing: 0.3px;
+	overflow: hidden;
 	cursor: pointer;
 	flex-shrink: 0;
 	margin-bottom: 4px;
+}
+.sidebar .rail-avatar .budget-icon-img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
 }
 .sidebar .rail-nav {
 	display: flex;

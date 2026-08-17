@@ -303,6 +303,7 @@
 		<div class="activity-bar">
 			<Rail
 				{budgetName}
+				{budgetId}
 				{accounts}
 				{icons}
 				onExpand={expandSidebar}

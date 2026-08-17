@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { AccountIconData } from "@features/appearance/account-icon-picker";
 	import { closeCalendar, isCalendarOpen, openCalendar } from "@features/workflows/spending-calendar";
+	import IconPickerPopover from "@lib/components/IconPickerPopover.svelte";
 	import { dispatch, navigate } from "@lib/utilities/actual-api";
 	import { watchDom } from "@lib/utilities/dom-watcher";
 	import { Page, matchesPage } from "@lib/utilities/pages";
@@ -23,6 +24,8 @@
 	} from "lucide-svelte";
 	import { scrollFade } from "../actions/scroll-fade";
 	import { tooltip } from "../actions/tooltip.svelte";
+	import type { BudgetIcon } from "../lib/budgets";
+	import { loadBudgetIcon, removeBudgetIcon, setBudgetIcon } from "../lib/budgets";
 	import type { SidebarAccount } from "../lib/data";
 	import { triggerSearch } from "../lib/search";
 
@@ -59,6 +62,7 @@
 
 	const {
 		budgetName,
+		budgetId,
 		accounts,
 		icons,
 		onExpand,
@@ -68,6 +72,7 @@
 		onSwitchLayout,
 	}: {
 		budgetName: string;
+		budgetId?: string;
 		accounts: SidebarAccount[];
 		icons: Record<string, AccountIconData>;
 		onExpand: () => void;
@@ -81,6 +86,37 @@
 		onTogglePanel?: () => void;
 		onSwitchLayout?: () => void;
 	} = $props();
+
+	let budgetIcon = $state<BudgetIcon | undefined>(undefined);
+	let iconBtnEl = $state<HTMLButtonElement | undefined>();
+	let iconPickerOpen = $state(false);
+	let iconAnchorRect = $state<DOMRect | undefined>(undefined);
+
+	$effect(() => {
+		if (!budgetId) {
+			budgetIcon = undefined;
+			return;
+		}
+		loadBudgetIcon(budgetId).then((icon) => (budgetIcon = icon));
+	});
+
+	function openIconPicker(): void {
+		if (!iconBtnEl) return;
+		iconAnchorRect = iconBtnEl.getBoundingClientRect();
+		iconPickerOpen = true;
+	}
+
+	async function handleIconSelect(result: BudgetIcon): Promise<void> {
+		budgetIcon = result;
+		iconPickerOpen = false;
+		if (budgetId) await setBudgetIcon(budgetId, result);
+	}
+
+	async function handleIconRemove(): Promise<void> {
+		budgetIcon = undefined;
+		iconPickerOpen = false;
+		if (budgetId) await removeBudgetIcon(budgetId);
+	}
 
 	const navItems = [
 		{ label: "Budget", page: Page.Budget, icon: LayoutGrid },
@@ -131,12 +167,30 @@
 <button
 	type="button"
 	class="rail-avatar"
-	onclick={onExpand}
-	aria-label={`${budgetName} — expand`}
-	use:tooltip={`${budgetName} — expand`}
+	class:has-icon={vscode && !!budgetIcon}
+	bind:this={iconBtnEl}
+	onclick={vscode ? openIconPicker : onExpand}
+	aria-label={vscode ? "Change budget icon" : `${budgetName} — expand`}
+	use:tooltip={vscode ? "Change budget icon" : `${budgetName} — expand`}
 >
-	{budgetInitials}
+	{#if vscode && budgetIcon?.type === "emoji"}
+		<span class="budget-icon-emoji">{budgetIcon.value}</span>
+	{:else if vscode && budgetIcon}
+		<img class="budget-icon-img" src={budgetIcon.value} alt="" />
+	{:else}
+		{budgetInitials}
+	{/if}
 </button>
+
+{#if iconPickerOpen && iconAnchorRect}
+	<IconPickerPopover
+		anchorRect={iconAnchorRect}
+		hasIcon={!!budgetIcon}
+		onSelect={handleIconSelect}
+		onRemove={budgetIcon ? handleIconRemove : undefined}
+		onClose={() => (iconPickerOpen = false)}
+	/>
+{/if}
 <button type="button" class="rail-icon" onclick={triggerSearch} aria-label="Search" use:tooltip={"Search (⌘K)"}>
 	<Search strokeWidth={1.5} />
 </button>
