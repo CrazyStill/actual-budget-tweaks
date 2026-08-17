@@ -48,7 +48,7 @@
     <br />
     <br />
     <b>Install from your browser's extension store:</b><br />
-    <a href="https://addons.mozilla.org/en/firefox/addon/actual-budget-tweaks/">Firefox Add-ons</a> |
+    <a href="https://github.com/aelxxs/actual-budget-tweaks/releases/latest">Firefox (.xpi)</a> |
     <a href="https://chromewebstore.google.com/detail/actual-budget-%E2%80%93-tweaks/oknpncidmkhkphpbkamccnobdpibegmm">Chrome Web Store</a>
     <br />
     <br />
