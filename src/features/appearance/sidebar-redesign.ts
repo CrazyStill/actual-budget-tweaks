@@ -292,7 +292,7 @@ export const sidebarRedesign = defineSetting({
                 padding-block: 1rem;
                 padding-inline: .25rem;
                 margin: 0px;
-                height: 3.25rem;
+                height: 3.75rem;
                 margin-bottom: 0.75rem;
                 flex-shrink: 0;
             }
