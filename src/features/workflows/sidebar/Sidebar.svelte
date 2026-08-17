@@ -275,8 +275,11 @@
 
 		try {
 			await loadCurrency();
-			refreshBudgetContext();
-			const [loadedAccounts, loadedIcons] = await Promise.all([loadSidebarAccounts(), loadIconCache()]);
+			const [, loadedAccounts, loadedIcons] = await Promise.all([
+				refreshBudgetContext(),
+				loadSidebarAccounts(),
+				loadIconCache(),
+			]);
 			accounts = loadedAccounts;
 			icons = loadedIcons;
 		} catch (err) {
