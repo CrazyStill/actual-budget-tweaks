@@ -13,10 +13,6 @@ const CSS = `
 		transition: box-shadow 0.15s, border-color 0.15s;
 	}
 
-	[data-testid="budget-summary"]:hover {
-		box-shadow: 0 2px 12px color-mix(in srgb, var(--color-pageText) 8%, transparent);
-	}
-
 	.abt-flow-hidden {
 		display: none !important;
 	}
