@@ -204,13 +204,14 @@
 		if (!kind) return;
 		const created = createGroup(groups, kind);
 		groups = created.groups;
-		saveGroups(budgetId, groups);
+		saveGroups(budgetId, created.groups);
 		editingGroupId = created.id;
 	}
 
 	function commitRename(id: string, label: string) {
-		groups = renameGroup(groups, id, label);
-		saveGroups(budgetId, groups);
+		const next = renameGroup(groups, id, label);
+		groups = next;
+		saveGroups(budgetId, next);
 		editingGroupId = null;
 	}
 
@@ -234,8 +235,8 @@
 		const result = removeGroup(groups, assignments, group.id);
 		groups = result.groups;
 		assignments = result.assignments;
-		saveGroups(budgetId, groups);
-		saveAssignments(budgetId, assignments);
+		saveGroups(budgetId, result.groups);
+		saveAssignments(budgetId, result.assignments);
 		closeMenu();
 	}
 
@@ -281,8 +282,9 @@
 	function onGroupDrop(e: DragEvent, groupId: string) {
 		if (!dragSrcId) return;
 		e.preventDefault();
-		assignments = assignAccount(assignments, dragSrcId, groupId);
-		saveAssignments(budgetId, assignments);
+		const next = assignAccount(assignments, dragSrcId, groupId);
+		assignments = next;
+		saveAssignments(budgetId, next);
 		endDrag();
 	}
 
@@ -298,8 +300,9 @@
 		e.preventDefault();
 
 		if (bucketOf(dragSrcId) !== targetGroupId) {
-			assignments = assignAccount(assignments, dragSrcId, targetGroupId);
-			saveAssignments(budgetId, assignments);
+			const nextAssignments = assignAccount(assignments, dragSrcId, targetGroupId);
+			assignments = nextAssignments;
+			saveAssignments(budgetId, nextAssignments);
 		}
 
 		const ids = sectionItems.map((a) => a.id);
