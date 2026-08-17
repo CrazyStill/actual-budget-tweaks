@@ -41,6 +41,10 @@ export interface Account {
   offbudget: boolean;
   closed: boolean;
   tombstone?: boolean;
+  /** Display name of the linked bank, e.g. "Chase" — null for manual accounts. */
+  bankName?: string | null;
+  /** ISO timestamp of the last successful bank sync — null for manual accounts. */
+  last_sync?: string | null;
 }
 
 export interface Category {

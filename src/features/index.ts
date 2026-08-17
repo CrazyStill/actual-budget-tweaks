@@ -37,6 +37,7 @@ import { themeSelector } from "./theme/theme";
 import { themeLoader } from "./theme/themeLoader";
 import type { Setting } from "./types";
 import { categoryTemplateInsights } from "./workflows/category-template-insights";
+import { experimentalSidebar } from "./workflows/sidebar";
 import { spendingCalendar } from "./workflows/spending-calendar";
 import { templatePlan } from "./workflows/template-plan";
 
@@ -80,6 +81,8 @@ const appearance = [
 
 const workflows = [categoryTemplateInsights, templatePlan, spendingCalendar];
 
+const experimental = [experimentalSidebar];
+
 export const coreScripts = [
 	sidePanel,
 	scheduleHighlight,
@@ -114,6 +117,11 @@ export const scriptSections = [
 		title: "Workflows",
 		description: "Behavioral and workflow improvements",
 		items: workflows,
+	},
+	{
+		title: "Experimental",
+		description: "Early previews of in-progress features",
+		items: experimental,
 	},
 ];
 
@@ -150,5 +158,6 @@ export const scripts: Setting<any>[][] = [
 		budgetPageBorders,
 		budgetTotalsLabelStyling,
 		themeLoader,
+		experimentalSidebar,
 	],
 ];

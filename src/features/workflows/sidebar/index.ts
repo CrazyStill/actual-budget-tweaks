@@ -1,0 +1,70 @@
+import { defineSetting } from "@features/types";
+import { watchDom } from "@lib/utilities/dom-watcher";
+import { mountToNodeWithReturn } from "@lib/utilities/svelte";
+import { unmount } from "svelte";
+import Sidebar from "./Sidebar.svelte";
+
+const NATIVE_ROOT_ATTR = "data-abt-native-sidebar-root";
+const MOUNT_ATTR = "data-abt-live-sidebar";
+
+function findNativeSidebarRoot(): HTMLElement | null {
+	const anchor = document.querySelector('[data-testid="sidebar-all-accounts-balance"]');
+	let el = anchor?.parentElement ?? null;
+	while (el) {
+		if (el.style.flexShrink === "0" && el.style.minWidth) return el;
+		el = el.parentElement;
+	}
+	return null;
+}
+
+// No fixed width here — Sidebar.svelte's own `.sidebar` root manages its width
+// (resizable, collapsible) via inline style. This wrapper just needs to be a
+// non-shrinking flex child and let its content size it.
+const CSS = `
+	[${NATIVE_ROOT_ATTR}] {
+		display: none !important;
+	}
+	[${MOUNT_ATTR}] {
+		display: flex;
+		height: 100%;
+		flex-shrink: 0;
+	}
+`;
+
+export const experimentalSidebar = defineSetting({
+	type: "checkbox",
+	label: "Live sidebar (experimental)",
+	description: "Replace the native sidebar with a rebuilt one wired to live account data.",
+	group: "Sidebar",
+	context: {
+		key: "experimental-sidebar",
+		defaultValue: false,
+	},
+	css: () => CSS,
+	init: () => {
+		let instance: unknown = null;
+
+		const sync = () => {
+			const native = findNativeSidebarRoot();
+			if (!native) return;
+			native.setAttribute(NATIVE_ROOT_ATTR, "1");
+
+			if (instance && document.querySelector(`[${MOUNT_ATTR}]`)) return;
+
+			const mounted = mountToNodeWithReturn(Sidebar, {});
+			mounted.node.setAttribute(MOUNT_ATTR, "1");
+			instance = mounted.instance;
+			native.parentElement?.insertBefore(mounted.node, native);
+		};
+
+		const unwatch = watchDom(sync);
+
+		return () => {
+			unwatch();
+			document.querySelector(`[${MOUNT_ATTR}]`)?.remove();
+			document.querySelector(`[${NATIVE_ROOT_ATTR}]`)?.removeAttribute(NATIVE_ROOT_ATTR);
+			if (instance) unmount(instance);
+			instance = null;
+		};
+	},
+});

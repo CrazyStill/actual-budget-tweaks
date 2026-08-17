@@ -8,7 +8,7 @@ import IconPickerModal from "./Modal.svelte";
 
 const ROOT_TOGGLE_ATTR = "data-abt-account-icons";
 const STORAGE_KEY_PREFIX = "abt-account-icons";
-const ACCOUNT_NAME_SELECTOR = ':scope > div:last-of-type > div:first-of-type';
+const ACCOUNT_NAME_SELECTOR = ":scope > div:last-of-type > div:first-of-type";
 const ACCOUNT_TITLE_SELECTOR = '[data-testid="account-name"]';
 const ACCOUNT_ICON_IMG_CLASS = "abt-account-icon-img";
 const PICKER_BUTTON_ATTR = "data-abt-picker-button";
@@ -98,13 +98,13 @@ export function splitEmojiGraphemes(source: string): string[] {
 	return Array.from(source);
 }
 
-async function setAccountIcon(accountId: string, iconData: AccountIconData): Promise<void> {
+export async function setAccountIcon(accountId: string, iconData: AccountIconData): Promise<void> {
 	const icons = await loadIconCache();
 	icons[accountId] = iconData;
 	await setValue(STORAGE_KEY_PREFIX, icons);
 }
 
-async function removeAccountIcon(accountId: string): Promise<void> {
+export async function removeAccountIcon(accountId: string): Promise<void> {
 	const icons = await loadIconCache();
 	delete icons[accountId];
 	await setValue(STORAGE_KEY_PREFIX, icons);

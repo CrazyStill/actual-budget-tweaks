@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { icon } from "@lib/icons";
+	import { getFaviconUrl } from "@lib/utilities/favicon";
 	import { getValue, setValue } from "@lib/utilities/store";
 	import { mount, unmount } from "svelte";
 	import InlineWidget from "./components/InlineWidget.svelte";
 	import ShortcutsModal from "./components/Modal.svelte";
 	import ToolPopover from "./components/ToolPopover.svelte";
-	import { getFaviconUrl } from "@lib/utilities/favicon";
 	import type { BuiltinTool, BuiltinWidget, Shortcut, ToolId, WidgetId } from "./types";
+
+	const { noPadding }: { noPadding: boolean } = $props();
 
 	const STORAGE_KEY = "abt-sidebar-shortcuts";
 	const COLORS = [
@@ -162,7 +164,11 @@
 		if (dragIdx == null || !barEl) return;
 
 		const items = barEl.querySelectorAll<HTMLElement>(".item");
-		let closest: { idx: number; side: "before" | "after"; dist: number } | null = null as { idx: number; side: "before" | "after"; dist: number } | null;
+		let closest: { idx: number; side: "before" | "after"; dist: number } | null = null as {
+			idx: number;
+			side: "before" | "after";
+			dist: number;
+		} | null;
 
 		items.forEach((el, idx) => {
 			if (idx === dragIdx) return;
@@ -212,7 +218,14 @@
 	}
 </script>
 
-<div class="bar" role="list" bind:this={barEl} ondragover={onBarDragOver} ondrop={onBarDrop}>
+<div
+	class="bar"
+	style:padding={noPadding ? "0px" : "4px 12px 2px"}
+	role="list"
+	bind:this={barEl}
+	ondragover={onBarDragOver}
+	ondrop={onBarDrop}
+>
 	{#each shortcuts as shortcut, idx (shortcut.id)}
 		{@const color = getColor(idx)}
 
@@ -228,7 +241,9 @@
 				class:is-drop-before={dropTarget?.idx === idx && dropTarget?.side === "before"}
 				class:is-drop-after={dropTarget?.idx === idx && dropTarget?.side === "after"}
 				role="listitem"
-				style="--sc-bg: {color.bg}; --sc-bg-hover: {isDataWidget ? color.hover : color.bg}; --sc-shadow: {color.shadow}; cursor: {isDataWidget ? 'pointer' : 'default'}"
+				style="--sc-bg: {color.bg}; --sc-bg-hover: {isDataWidget
+					? color.hover
+					: color.bg}; --sc-shadow: {color.shadow}; cursor: {isDataWidget ? 'pointer' : 'default'}"
 				title={shortcut.label}
 				draggable="true"
 				ondragstart={(e) => onDragStart(idx, e)}
@@ -313,8 +328,8 @@
 
 	.item:hover {
 		background: var(--sc-bg-hover);
-		transform: scale(1.05);
-		box-shadow: 0 2px 8px var(--sc-shadow);
+		transform: scale(1.0105);
+		box-shadow: 0 1px 4px var(--sc-shadow);
 	}
 
 	.item.is-small {
@@ -413,7 +428,6 @@
 		height: auto;
 		min-height: 38px;
 	}
-
 
 	.favicon {
 		border-radius: 4px;

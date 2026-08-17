@@ -1,0 +1,139 @@
+<script lang="ts">
+	import { closeCalendar, isCalendarOpen, openCalendar } from "@features/workflows/spending-calendar";
+	import { navigate } from "@lib/utilities/actual-api";
+	import { watchDom } from "@lib/utilities/dom-watcher";
+	import { Page, matchesPage } from "@lib/utilities/pages";
+	import { getValue, setValue } from "@lib/utilities/store";
+	import {
+		Calendar,
+		CalendarDays,
+		ChartColumn,
+		ChevronDown,
+		Ellipsis,
+		LayoutGrid,
+		Settings,
+		SlidersHorizontal,
+		Tag,
+		Users,
+	} from "lucide-svelte";
+
+	const navItems = [
+		{ label: "Budget", page: Page.Budget, icon: LayoutGrid },
+		{ label: "Reports", page: Page.Reports, icon: ChartColumn },
+		{ label: "Schedules", page: Page.Schedules, icon: Calendar },
+	];
+
+	// Only shown if the user has the Spending Calendar feature enabled — reads
+	// its checkbox setting directly (getValue/setValue is a flat 1:1 mapping
+	// to storage keyed by the setting's own context.key, per features/runtime.ts,
+	// so this is safe to read from an unrelated feature).
+	let calendarFeatureEnabled = $state(false);
+
+	$effect(() => {
+		getValue<boolean>("spending-calendar-enabled", false).then((v) => (calendarFeatureEnabled = v));
+	});
+
+	// The spending calendar isn't a real Actual route — it's a DOM overlay this
+	// extension itself manages (see spending-calendar/index.ts) — so opening it
+	// goes through its own exported trigger rather than navigate()/__navigate.
+	function openSpendingCalendar() {
+		openCalendar();
+	}
+
+	// Mirrors spending-calendar's own attachCloseListeners(): its overlay only
+	// auto-closes on route changes it can detect itself (its own pushState
+	// call, or real browser back/forward) — a real Actual navigation
+	// triggered through the bridge's window.__navigate happens in the main
+	// world and isn't visible to that check, so anything in this nav that
+	// navigates elsewhere has to close the overlay itself first.
+	function go(page: Page) {
+		if (isCalendarOpen()) closeCalendar();
+		navigate(`/${page}`);
+	}
+
+	const moreItems = [
+		{ label: "Payees", page: Page.Payees, icon: Users },
+		{ label: "Rules", page: Page.Rules, icon: SlidersHorizontal },
+		{ label: "Tags", page: Page.Tags, icon: Tag },
+		{ label: "Settings", page: Page.Settings, icon: Settings },
+	];
+
+	const MORE_KEY = "experimental-sidebar-more-expanded";
+	let moreExpanded = $state(false);
+
+	$effect(() => {
+		getValue<boolean>(MORE_KEY, false).then((stored) => (moreExpanded = stored));
+	});
+
+	function toggleMore() {
+		moreExpanded = !moreExpanded;
+		setValue(MORE_KEY, moreExpanded);
+	}
+
+	// Content scripts run in an isolated JS world — patching `history.pushState`
+	// there (what `watchRoute` relies on) never sees Actual's own React-Router
+	// navigation, which calls pushState in the main world. DOM mutations,
+	// though, are genuinely shared across both worlds, so watching for those
+	// is what actually catches route changes here (same pattern already used
+	// elsewhere in this extension, e.g. account-icon-picker).
+	//
+	// A fresh object each time, not a counter: a naive `tick += 1` would read
+	// `tick` during this same effect's synchronous execution (since the
+	// listener fires immediately on subscribe) — making the effect depend on
+	// the very value it writes, and re-triggering itself forever. Reassigning
+	// to a new object is a pure write, so the effect never tracks `tick`.
+	let tick = $state({});
+
+	$effect(() => {
+		return watchDom(() => (tick = {}));
+	});
+
+	// Svelte 5 tracks dependencies per-expression, not per enclosing block —
+	// a sibling `{@const _ = tick}` doesn't make THIS expression re-run just
+	// because it's nearby. `tick` has to be read inside the same expression
+	// that's actually reactive here; `tick` is always truthy (a plain `{}`),
+	// so this reduces to `matchesPage(page)` while still tracking `tick`.
+	function isActive(page: Page): boolean {
+		return Boolean(tick) && matchesPage(page);
+	}
+</script>
+
+<nav class="nav">
+	{#each navItems as item (item.page)}
+		<button type="button" class="nav-link" class:active={isActive(item.page)} onclick={() => go(item.page)}>
+			<span class="nav-icon"><item.icon strokeWidth={1.5} /></span>
+			<span class="nav-label">{item.label}</span>
+		</button>
+	{/each}
+
+	{#if calendarFeatureEnabled}
+		<button type="button" class="nav-link" class:active={isActive(Page.Calendar)} onclick={openSpendingCalendar}>
+			<span class="nav-icon"><CalendarDays strokeWidth={1.5} /></span>
+			<span class="nav-label">Calendar</span>
+		</button>
+	{/if}
+
+	<button type="button" class="nav-link" aria-expanded={moreExpanded} onclick={toggleMore}>
+		<span class="nav-icon"><Ellipsis strokeWidth={1.5} /></span>
+		<span class="nav-label">More</span>
+		<span class="nav-caret">
+			<ChevronDown class={moreExpanded ? "caret" : "caret collapsed"} color="var(--sb-fgm-a50)" strokeWidth={3} />
+		</span>
+	</button>
+
+	{#if moreExpanded}
+		<div class="nav-sublist">
+			{#each moreItems as sub (sub.page)}
+				<button
+					type="button"
+					class="nav-link nav-sublink"
+					class:active={isActive(sub.page)}
+					onclick={() => go(sub.page)}
+				>
+					<span class="nav-icon"><sub.icon strokeWidth={1.5} /></span>
+					<span class="nav-label">{sub.label}</span>
+				</button>
+			{/each}
+		</div>
+	{/if}
+</nav>

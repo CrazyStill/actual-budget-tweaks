@@ -1,5 +1,5 @@
-import { defineSetting } from "@features/types";
 import { sidepanel } from "@features/core/side-panel";
+import { defineSetting } from "@features/types";
 import { watchDom } from "@lib/utilities/dom-watcher";
 import { Page, matchesPage } from "@lib/utilities/pages";
 import { watchRoute } from "@lib/utilities/route-watcher";
@@ -18,7 +18,7 @@ let previousPath: string | null = null;
 
 const CONTENT_CONTAINER = `div:has(> div:nth-child(4)):has([data-testid='budget-table'], [role='main'], [data-testid='account-name'])`;
 
-function isCalendarOpen(): boolean {
+export function isCalendarOpen(): boolean {
 	return matchesPage(Page.Calendar);
 }
 
@@ -31,7 +31,13 @@ function updateActiveState(): void {
 	document.body.classList.toggle("abt-calendar-open", open);
 }
 
-function openCalendar(): void {
+/**
+ * Exported so other features can trigger the same calendar overlay without
+ * duplicating its DOM-manipulation logic — the experimental sidebar's
+ * PrimaryNav uses this instead of cloning a native sidebar link (this
+ * feature's own trigger mechanism), since it isn't a real `<a href>` element.
+ */
+export function openCalendar(): void {
 	if (calendarContainer) return;
 
 	const target = document.querySelector(CONTENT_CONTAINER) as HTMLElement;
@@ -72,7 +78,7 @@ function openCalendar(): void {
 	updateActiveState();
 }
 
-function closeCalendar(): void {
+export function closeCalendar(): void {
 	if (!calendarContainer) return;
 
 	sidepanel.close();
