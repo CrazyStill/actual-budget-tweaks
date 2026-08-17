@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v0.1.53
+
+[compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.52...v0.1.53)
+
+### 🩹 Fixes
+
+- Optimize loading of sidebar accounts and icons by refreshing budget context concurrently ([2338e0b](https://github.com/aelxxs/actual-budget-tweaks/commit/2338e0b))
+- Ensure correct group and assignment updates by using returned values from related functions ([60ebda3](https://github.com/aelxxs/actual-budget-tweaks/commit/60ebda3))
+
+### 🏡 Chore
+
+- Update Firefox auto-update manifest for v0.1.52 ([d1c76ec](https://github.com/aelxxs/actual-budget-tweaks/commit/d1c76ec))
+
+### ❤️ Contributors
+
+- Alexis Vielma <alexis.vielma.us@gmail.com>
+
 ## v0.1.52
 
 [compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.51...v0.1.52)
