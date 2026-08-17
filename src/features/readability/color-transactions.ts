@@ -35,7 +35,7 @@ function cleanup() {
 export const colorTransactions = defineSetting({
 	type: "checkbox",
 	label: "Color Transactions",
-	description: "Color upcoming scheduled transaction rows.",
+	description: "Color negative and positive transactions.",
 	group: "Transactions",
 	icon: "palette",
 	context: {
@@ -44,10 +44,10 @@ export const colorTransactions = defineSetting({
 	},
 	css: () => `
 		*[data-testid='credit'] {
-			color: var(--color-noticeBackground) !important;
+			color: var(--color-numberPositive) !important;
 		}
 		*[data-testid='debit'] {
-			color: var(--color-errorText) !important;
+			color: var(--color-numberNegative) !important;
 		}
 	`,
 	init: () => {
