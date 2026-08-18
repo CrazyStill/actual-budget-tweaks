@@ -1034,7 +1034,7 @@ export const CSS = `
 		align-items: center;
 		gap: 4px;
 		position: fixed;
-		top: 55px;
+		top: 61px;
 		right: 0;
 		padding: 0 8px 0 6px;
 		height: 32px;
