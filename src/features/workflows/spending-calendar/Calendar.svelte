@@ -4,12 +4,16 @@
 	import { query } from "@lib/utilities/actual-api";
 	import { getCategoryColor, loadCategoryColors } from "@lib/utilities/category-colors";
 	import { fmtMoney, loadCurrency } from "@lib/utilities/currency";
+	import { onOutsideClick, positionPopover } from "@lib/utilities/popover";
+	import { getValue, setValue } from "@lib/utilities/store";
 	import { mount, onMount, unmount } from "svelte";
 	import DayDetail from "./DayDetail.svelte";
 	import DayHeader from "./DayHeader.svelte";
 	import type { DayTransaction } from "./types";
 
 	const { onClose } = $props<{ onClose: () => void }>();
+
+	const HIDE_OFFBUDGET_KEY = "spending-calendar-hide-offbudget";
 
 	interface DayData {
 		date: number;
@@ -23,9 +27,16 @@
 	let month = $state(new Date().getMonth());
 	let days = $state<DayData[]>([]);
 	let loading = $state(true);
+	let hasLoadedOnce = $state(false);
 	let payeeMap = new Map<string, string>();
+	let payeeTransferAcctMap = new Map<string, string | null>();
 	let categoryMap = $state(new Map<string, string>());
 	let accountMap = new Map<string, string>();
+	let accountOffbudgetMap = new Map<string, boolean>();
+	let hideOffBudget = $state(true);
+	let filtersOpen = $state(false);
+	let filterButton = $state<HTMLElement | null>(null);
+	let filterMenu = $state<HTMLElement | null>(null);
 	let detailInstance: ReturnType<typeof mount> | null = null;
 	let detailContainer: HTMLElement | null = null;
 	let headerInstance: ReturnType<typeof mount> | null = null;
@@ -101,6 +112,13 @@
 		return 0;
 	}
 
+	async function setHideOffBudget(hidden: boolean) {
+		hideOffBudget = hidden;
+		closeDayPanel();
+		await setValue(HIDE_OFFBUDGET_KEY, hidden);
+		loadMonth();
+	}
+
 	function dedupeTransactions(txs: DayTransaction[]): (DayTransaction & { count: number })[] {
 		const map = new Map<string, DayTransaction & { count: number }>();
 		for (const tx of txs) {
@@ -136,12 +154,14 @@
 
 			if (payees) {
 				payeeMap = new Map(payees.map((p) => [p.id, p.name]));
+				payeeTransferAcctMap = new Map(payees.map((p) => [p.id, p.transfer_acct ?? null]));
 			}
 			if (categories) {
 				categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 			}
 			if (accounts) {
 				accountMap = new Map(accounts.map((a) => [a.id, a.name]));
+				accountOffbudgetMap = new Map(accounts.map((a) => [a.id, a.offbudget]));
 			}
 
 			const today = new Date();
@@ -149,9 +169,34 @@
 			const daysInMonth = new Date(year, month + 1, 0).getDate();
 			const daysInPrevMonth = new Date(year, month, 0).getDate();
 
+			// A transfer between two accounts with the same on/off-budget status is
+			// just money moving between buckets (no real spending), so it's excluded
+			// entirely; a transfer crossing the on/off-budget boundary acts like a
+			// real expense/income and is kept.
+			const transactionById = new Map(transactions.map((t) => [t.id, t]));
+			function isPureTransfer(t: Transaction): boolean {
+				if (!t.transfer_id) return false;
+				const other = transactionById.get(t.transfer_id);
+				if (!other) return false;
+				const fromOff = accountOffbudgetMap.get(t.account);
+				const toOff = accountOffbudgetMap.get(other.account);
+				if (fromOff == null || toOff == null) return false;
+				return fromOff === toOff;
+			}
+			function isPureTransferSchedule(s: Schedule): boolean {
+				if (!s._payee) return false;
+				const transferAcct = payeeTransferAcctMap.get(s._payee);
+				if (!transferAcct) return false;
+				const fromOff = accountOffbudgetMap.get(s._account || "");
+				const toOff = accountOffbudgetMap.get(transferAcct);
+				if (fromOff == null || toOff == null) return false;
+				return fromOff === toOff;
+			}
+
 			const byDay = new Map<number, DayTransaction[]>();
 			for (const t of transactions) {
-				if (!t.date) continue;
+				if (!t.date || isPureTransfer(t)) continue;
+				if (hideOffBudget && accountOffbudgetMap.get(t.account)) continue;
 				const day = parseInt(t.date.split("-")[2]);
 				if (!byDay.has(day)) byDay.set(day, []);
 				byDay.get(day)!.push({
@@ -167,6 +212,8 @@
 			// Add upcoming schedules to the calendar
 			for (const s of schedules) {
 				if (s.completed || s.tombstone || !s.next_date) continue;
+				if (isPureTransferSchedule(s)) continue;
+				if (hideOffBudget && s._account && accountOffbudgetMap.get(s._account)) continue;
 				const [sy, sm, sd] = s.next_date.split("-").map(Number);
 				if (sy !== year || sm !== month + 1) continue;
 				if (!byDay.has(sd)) byDay.set(sd, []);
@@ -230,6 +277,7 @@
 			console.warn("[ABT Calendar]", e);
 		} finally {
 			loading = false;
+			hasLoadedOnce = true;
 		}
 	}
 
@@ -290,11 +338,24 @@
 		cleanupPanel();
 	}
 
+	$effect(() => {
+		if (!filtersOpen || !filterMenu || !filterButton) return;
+		positionPopover(filterMenu, filterButton, { align: "right" });
+		return onOutsideClick([filterMenu, filterButton], () => (filtersOpen = false));
+	});
+
 	onMount(() => {
-		Promise.all([loadCurrency(), loadCategoryColors()]).then(() => loadMonth());
+		Promise.all([loadCurrency(), loadCategoryColors(), getValue(HIDE_OFFBUDGET_KEY, true)]).then(([, , off]) => {
+			hideOffBudget = off;
+			loadMonth();
+		});
 
 		function onKey(e: KeyboardEvent) {
 			if (e.key === "Escape") {
+				if (filtersOpen) {
+					filtersOpen = false;
+					return;
+				}
 				closeDayPanel();
 				onClose();
 			}
@@ -313,6 +374,27 @@
 			<h2 class="cal-title">{monthNames[month]} {year}</h2>
 		</div>
 		<div class="cal-header__right">
+			<button
+				type="button"
+				class="cal-nav"
+				class:is-active={filtersOpen}
+				aria-label="Filters"
+				aria-expanded={filtersOpen}
+				bind:this={filterButton}
+				onclick={() => (filtersOpen = !filtersOpen)}
+			>
+				<svg
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg
+				>
+			</button>
+			<span class="cal-header__sep"></span>
 			<button class="cal-nav" aria-label="Previous month" onclick={prevMonth}>
 				<svg
 					width="16"
@@ -341,7 +423,7 @@
 		</div>
 	</div>
 
-	{#if loading}
+	{#if loading && !hasLoadedOnce}
 		<div class="cal-loading">Loading…</div>
 	{:else}
 		<div class="cal-grid" role="main">
@@ -428,6 +510,26 @@
 			{/each}
 		</div>
 	{/if}
+
+	{#if filtersOpen}
+		<div class="cal-filters" bind:this={filterMenu}>
+			<div class="cal-filters__title">Show</div>
+			<label class="cal-filters__row">
+				<span>Off-budget accounts</span>
+				<span class="cal-switch">
+					<input
+						type="checkbox"
+						class="cal-switch__input"
+						checked={!hideOffBudget}
+						onchange={(e) => setHideOffBudget(!e.currentTarget.checked)}
+					/>
+					<span class="cal-switch__track">
+						<span class="cal-switch__thumb"></span>
+					</span>
+				</span>
+			</label>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -487,6 +589,107 @@
 	.cal-nav:hover:not(:disabled) {
 		opacity: 1;
 		background: var(--color-tableRowBackgroundHover);
+	}
+
+	.cal-nav.is-active {
+		opacity: 1;
+		background: var(--color-tableRowBackgroundHover);
+	}
+
+	.cal-header__sep {
+		width: 1px;
+		height: 18px;
+		margin: 0 2px;
+		background: var(--color-tableBorder);
+	}
+
+	.cal-filters {
+		position: fixed;
+		z-index: 9999;
+		min-width: 200px;
+		padding: 4px;
+		border: 1px solid var(--color-tableBorder);
+		border-radius: 6px;
+		background: var(--color-tooltipBackground, var(--color-pageBackground));
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+	}
+
+	.cal-filters__title {
+		padding: 5px 8px 4px;
+		font-size: 10px;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--color-pageTextSubdued);
+	}
+
+	.cal-filters__row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 5px 8px;
+		border-radius: 4px;
+		font-size: 13px;
+		cursor: pointer;
+	}
+
+	.cal-filters__row:hover {
+		background: var(--color-tableRowBackgroundHover);
+	}
+
+	.cal-switch {
+		position: relative;
+		display: inline-flex;
+		flex-shrink: 0;
+		width: 32px;
+		height: 19px;
+	}
+
+	.cal-switch__input {
+		position: absolute;
+		inset: 0;
+		margin: 0;
+		opacity: 0;
+		cursor: pointer;
+	}
+
+	.cal-switch__track {
+		position: absolute;
+		inset: 0;
+		border-radius: 999px;
+		background-color: var(--color-tableBackground);
+		border: 1px solid var(--color-formInputBorder);
+		transition:
+			background-color 0.15s,
+			border-color 0.15s;
+	}
+
+	.cal-switch__thumb {
+		position: absolute;
+		top: 1px;
+		left: 1px;
+		width: 15px;
+		height: 15px;
+		border-radius: 50%;
+		background: var(--color-pageTextSubdued);
+		transition:
+			transform 0.15s,
+			background-color 0.15s;
+	}
+
+	.cal-switch__input:checked ~ .cal-switch__track {
+		background-color: var(--color-sidebarItemAccentSelected);
+		border-color: var(--color-sidebarItemAccentSelected);
+	}
+
+	.cal-switch__input:checked ~ .cal-switch__track .cal-switch__thumb {
+		transform: translateX(13px);
+		background: white;
+	}
+
+	.cal-switch__input:focus-visible ~ .cal-switch__track {
+		outline: 2px solid var(--color-formInputBorderSelected);
+		outline-offset: 2px;
 	}
 
 	.cal-nav:disabled,
