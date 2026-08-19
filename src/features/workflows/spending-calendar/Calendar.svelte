@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { sidepanel } from "@features/core/side-panel";
+	import Switch from "@lib/components/Switch.svelte";
 	import type { Account, Category, Payee, Schedule, Transaction } from "@lib/types/actual-schema";
 	import { query } from "@lib/utilities/actual-api";
 	import { getCategoryColor, loadCategoryColors } from "@lib/utilities/category-colors";
@@ -516,17 +517,7 @@
 			<div class="cal-filters__title">Show</div>
 			<label class="cal-filters__row">
 				<span>Off-budget accounts</span>
-				<span class="cal-switch">
-					<input
-						type="checkbox"
-						class="cal-switch__input"
-						checked={!hideOffBudget}
-						onchange={(e) => setHideOffBudget(!e.currentTarget.checked)}
-					/>
-					<span class="cal-switch__track">
-						<span class="cal-switch__thumb"></span>
-					</span>
-				</span>
+				<Switch checked={!hideOffBudget} onCheckedChange={(checked) => setHideOffBudget(!checked)} />
 			</label>
 		</div>
 	{/if}
@@ -635,61 +626,6 @@
 
 	.cal-filters__row:hover {
 		background: var(--color-tableRowBackgroundHover);
-	}
-
-	.cal-switch {
-		position: relative;
-		display: inline-flex;
-		flex-shrink: 0;
-		width: 32px;
-		height: 19px;
-	}
-
-	.cal-switch__input {
-		position: absolute;
-		inset: 0;
-		margin: 0;
-		opacity: 0;
-		cursor: pointer;
-	}
-
-	.cal-switch__track {
-		position: absolute;
-		inset: 0;
-		border-radius: 999px;
-		background-color: var(--color-tableBackground);
-		border: 1px solid var(--color-formInputBorder);
-		transition:
-			background-color 0.15s,
-			border-color 0.15s;
-	}
-
-	.cal-switch__thumb {
-		position: absolute;
-		top: 1px;
-		left: 1px;
-		width: 15px;
-		height: 15px;
-		border-radius: 50%;
-		background: var(--color-pageTextSubdued);
-		transition:
-			transform 0.15s,
-			background-color 0.15s;
-	}
-
-	.cal-switch__input:checked ~ .cal-switch__track {
-		background-color: var(--color-sidebarItemAccentSelected);
-		border-color: var(--color-sidebarItemAccentSelected);
-	}
-
-	.cal-switch__input:checked ~ .cal-switch__track .cal-switch__thumb {
-		transform: translateX(13px);
-		background: white;
-	}
-
-	.cal-switch__input:focus-visible ~ .cal-switch__track {
-		outline: 2px solid var(--color-formInputBorderSelected);
-		outline-offset: 2px;
 	}
 
 	.cal-nav:disabled,

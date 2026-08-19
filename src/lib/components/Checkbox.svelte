@@ -4,6 +4,7 @@
 	import { applySettingChange } from "../../features/runtime";
 	import { getValue } from "../utilities/store";
 	import Icon from "./Icon.svelte";
+	import Switch from "./Switch.svelte";
 	import type { IconName } from "../icons";
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,8 +18,7 @@
 		value = Boolean(saved);
 	});
 
-	async function handleChange(event: Event) {
-		const newValue = (event.target as HTMLInputElement).checked;
+	async function handleChange(newValue: boolean) {
 		await applySettingChange(setting, newValue);
 		value = newValue;
 	}
@@ -34,12 +34,7 @@
 			<span class="switch-row__desc">{setting.description}</span>
 		{/if}
 	</span>
-	<span class="switch">
-		<input type="checkbox" class="switch__input" bind:checked={value} onchange={handleChange} />
-		<span class="switch__track">
-			<span class="switch__thumb"></span>
-		</span>
-	</span>
+	<Switch checked={value} onCheckedChange={handleChange} />
 </label>
 
 <style>
@@ -87,58 +82,4 @@
 		color: var(--color-pageTextSubdued);
 	}
 
-	.switch {
-		position: relative;
-		display: inline-flex;
-		flex-shrink: 0;
-		width: 32px;
-		height: 19px;
-	}
-
-	.switch__input {
-		position: absolute;
-		inset: 0;
-		margin: 0;
-		opacity: 0;
-		cursor: pointer;
-	}
-
-	.switch__track {
-		position: absolute;
-		inset: 0;
-		border-radius: 999px;
-		background-color: var(--color-tableBackground);
-		border: 1px solid var(--color-formInputBorder);
-		transition:
-			background-color 0.15s,
-			border-color 0.15s;
-	}
-
-	.switch__thumb {
-		position: absolute;
-		top: 1px;
-		left: 1px;
-		width: 15px;
-		height: 15px;
-		border-radius: 50%;
-		background: var(--color-pageTextSubdued);
-		transition:
-			transform 0.15s,
-			background-color 0.15s;
-	}
-
-	.switch__input:checked ~ .switch__track {
-		background-color: var(--color-sidebarItemAccentSelected);
-		border-color: var(--color-sidebarItemAccentSelected);
-	}
-
-	.switch__input:checked ~ .switch__track .switch__thumb {
-		transform: translateX(13px);
-		background: white;
-	}
-
-	.switch__input:focus-visible ~ .switch__track {
-		outline: 2px solid var(--color-formInputBorderSelected);
-		outline-offset: 2px;
-	}
 </style>
