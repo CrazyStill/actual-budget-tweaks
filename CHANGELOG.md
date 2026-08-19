@@ -1,6 +1,33 @@
 # Changelog
 
 
+## v0.1.56
+
+[compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.55...v0.1.56)
+
+### 🚀 Enhancements
+
+- Add filter for off-budget accounts in spending calendar ([47d0ebe](https://github.com/aelxxs/actual-budget-tweaks/commit/47d0ebe))
+- Implement Switch component for improved toggle functionality ([9f64384](https://github.com/aelxxs/actual-budget-tweaks/commit/9f64384))
+- Add @types/d3 and extend SendMethodMap interface for budget cell operations ([7a9c3ff](https://github.com/aelxxs/actual-budget-tweaks/commit/7a9c3ff))
+
+### 🩹 Fixes
+
+- Resolve issue with transaction query only respecting upper bound on date ([042223c](https://github.com/aelxxs/actual-budget-tweaks/commit/042223c))
+- Limit displayed transactions to three and update more indicator accordingly ([bead75f](https://github.com/aelxxs/actual-budget-tweaks/commit/bead75f))
+
+### 💅 Refactors
+
+- Replace inline type definitions with imported types for transactions ([6ee384d](https://github.com/aelxxs/actual-budget-tweaks/commit/6ee384d))
+
+### 🏡 Chore
+
+- Update Firefox auto-update manifest for v0.1.55 ([b86ef73](https://github.com/aelxxs/actual-budget-tweaks/commit/b86ef73))
+
+### ❤️ Contributors
+
+- Alexis Vielma <alexis.vielma.us@gmail.com>
+
 ## v0.1.55
 
 [compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.54...v0.1.55)
