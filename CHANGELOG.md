@@ -1,6 +1,30 @@
 # Changelog
 
 
+## v0.1.55
+
+[compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.54...v0.1.55)
+
+### 🚀 Enhancements
+
+- Implement command palette and integrate with sidebar search functionality ([39a3192](https://github.com/aelxxs/actual-budget-tweaks/commit/39a3192))
+
+### 🩹 Fixes
+
+- Update sidebar borders to use computed color ([33a6961](https://github.com/aelxxs/actual-budget-tweaks/commit/33a6961))
+- Adjust padding-right for sidebar account drop target ([c1682e1](https://github.com/aelxxs/actual-budget-tweaks/commit/c1682e1))
+- Adjust top position for fixed element in template plan CSS ([533430b](https://github.com/aelxxs/actual-budget-tweaks/commit/533430b))
+- Defer focus and select calls to ensure element is laid out ([592cae4](https://github.com/aelxxs/actual-budget-tweaks/commit/592cae4))
+- Defer focus call to ensure element is laid out before focusing ([6dbae8f](https://github.com/aelxxs/actual-budget-tweaks/commit/6dbae8f))
+
+### 🏡 Chore
+
+- Update Firefox auto-update manifest for v0.1.54 ([4044713](https://github.com/aelxxs/actual-budget-tweaks/commit/4044713))
+
+### ❤️ Contributors
+
+- Alexis Vielma <alexis.vielma.us@gmail.com>
+
 ## v0.1.54
 
 [compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.53...v0.1.54)
