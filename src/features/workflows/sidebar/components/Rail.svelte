@@ -27,7 +27,6 @@
 	import type { BudgetIcon } from "../lib/budgets";
 	import { loadBudgetIcon, removeBudgetIcon, setBudgetIcon } from "../lib/budgets";
 	import type { SidebarAccount } from "../lib/data";
-	import { triggerSearch } from "../lib/search";
 
 	// See PrimaryNav.svelte for why this watches DOM mutations rather than
 	// `watchRoute`/history — cross-world navigation isn't observable there,
@@ -66,6 +65,7 @@
 		accounts,
 		icons,
 		onExpand,
+		onSearch,
 		vscode = false,
 		panelCollapsed = false,
 		onTogglePanel,
@@ -76,6 +76,7 @@
 		accounts: SidebarAccount[];
 		icons: Record<string, AccountIconData>;
 		onExpand: () => void;
+		onSearch: () => void;
 		// vscode: this rail is the always-on activity bar of the VS Code-style
 		// layout (see Sidebar.svelte) rather than the classic layout's
 		// collapsed-rail substitute — it carries the full nav (moreItems below)
@@ -191,7 +192,7 @@
 		onClose={() => (iconPickerOpen = false)}
 	/>
 {/if}
-<button type="button" class="rail-icon" onclick={triggerSearch} aria-label="Search" use:tooltip={"Search (⌘K)"}>
+<button type="button" class="rail-icon" onclick={onSearch} aria-label="Search" use:tooltip={"Search (⌘K)"}>
 	<Search strokeWidth={1.5} />
 </button>
 <div class="rail-nav">

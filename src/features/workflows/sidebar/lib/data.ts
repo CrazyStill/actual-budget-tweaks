@@ -240,3 +240,25 @@ export async function closeAccount(accountId: string): Promise<void> {
 		},
 	});
 }
+
+// Real per-account bank sync — the same "accounts-bank-sync" RPC and
+// setAccountsSyncing bracketing the native app's own sync mutation uses
+// (accounts/mutations.ts's useSyncAccountsMutation), minus its React Query
+// cache invalidation, since this sidebar already re-derives its own state
+// off the same accountsSyncing dot Redux tracks (see Sidebar.svelte's
+// syncingIds effect / readNativeSyncingAccountIds). Dispatching plain
+// "sync" (the file-level cloud sync, Titlebar's button) doesn't touch bank
+// accounts at all — that was the earlier, wrong action for this.
+export async function syncAllAccounts(accounts: SidebarAccount[]): Promise<void> {
+	const ids = accounts.filter((a) => a.status !== "manual" && !a.closed).map((a) => a.id);
+	if (!ids.length) return;
+	await dispatch("setAccountsSyncing", { ids });
+	for (const id of ids) {
+		try {
+			await send("accounts-bank-sync", { ids: [id] });
+		} catch {
+			// best-effort — one broken/unreachable account shouldn't block the rest
+		}
+	}
+	await dispatch("setAccountsSyncing", { ids: [] });
+}

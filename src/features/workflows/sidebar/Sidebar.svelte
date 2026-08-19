@@ -12,6 +12,7 @@
 	import AccountList from "./components/AccountList.svelte";
 	import AccountListSkeleton from "./components/AccountListSkeleton.svelte";
 	import BudgetHeader from "./components/BudgetHeader.svelte";
+	import CommandPalette from "./components/CommandPalette.svelte";
 	import Footer from "./components/Footer.svelte";
 	import PrimaryNav from "./components/PrimaryNav.svelte";
 	import Rail from "./components/Rail.svelte";
@@ -28,8 +29,13 @@
 		refreshUncategorizedCounts,
 		renameAccount,
 	} from "./lib/data";
-	import { isMac, triggerSearch } from "./lib/search";
+	import { isMac } from "./lib/search";
 	import "./sidebar.css";
+
+	let paletteRef: CommandPalette | undefined = $state();
+	function openPalette(): void {
+		paletteRef?.openPalette();
+	}
 
 	let loading = $state(true);
 	let failed = $state(false);
@@ -307,6 +313,7 @@
 				{accounts}
 				{icons}
 				onExpand={expandSidebar}
+				onSearch={openPalette}
 				vscode
 				panelCollapsed={collapsed}
 				onTogglePanel={() => (collapsed ? expandSidebar() : collapseSidebar())}
@@ -319,7 +326,7 @@
 				<div
 					style="padding-inline: 0.65rem; padding-block: 0.65rem; display: flex; gap: 0.5rem; flex-direction: column;"
 				>
-					<button type="button" class="search" onclick={triggerSearch}>
+					<button type="button" class="search" onclick={openPalette}>
 						<span class="search-left">
 							<Search class="search-icon" color="var(--sb-fg-muted)" strokeWidth={1.75} />
 							<span class="search-placeholder">Search...</span>
@@ -351,11 +358,11 @@
 			</div>
 		{/if}
 	{:else if collapsed}
-		<Rail {budgetName} {accounts} {icons} onExpand={expandSidebar} />
+		<Rail {budgetName} {budgetId} {accounts} {icons} onExpand={expandSidebar} onSearch={openPalette} />
 	{:else}
 		<BudgetHeader name={budgetName} onBudgetChange={refreshBudgetContext} />
 		<div class="body">
-			<button type="button" class="search" onclick={triggerSearch}>
+			<button type="button" class="search" onclick={openPalette}>
 				<span class="search-left">
 					<Search class="search-icon" color="var(--sb-fg-muted)" strokeWidth={1.75} />
 					<span class="search-placeholder">Search...</span>
@@ -401,6 +408,8 @@
 			ondblclick={resetWidth}
 		></div>
 	{/if}
+
+	<CommandPalette bind:this={paletteRef} {accounts} {icons} />
 
 	{#if tipState.value}
 		<div

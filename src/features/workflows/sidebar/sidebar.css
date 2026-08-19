@@ -742,7 +742,10 @@
 .sidebar .cp-backdrop {
 	position: fixed;
 	inset: 0;
-	z-index: 90;
+	/* Rendered via a body-level portal (portal.ts) — needs to beat Actual's
+	   own stacking contexts, not just other sidebar elements. Maxed (not just
+	   above the other portaled overlays) since this is a full modal. */
+	z-index: 2147483647;
 	background: var(--sb-shadow-2);
 	backdrop-filter: blur(2px);
 	-webkit-backdrop-filter: blur(2px);
@@ -753,7 +756,7 @@
 	left: 50%;
 	top: 14vh;
 	transform: translateX(-50%);
-	z-index: 91;
+	z-index: 2147483647;
 	display: flex;
 	flex-direction: column;
 	width: min(600px, calc(100vw - 48px));
@@ -792,6 +795,19 @@
 	flex-shrink: 0;
 	color: var(--sb-fg-a40);
 }
+.sidebar .cp-back {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	padding: 0;
+	background: none;
+	border: none;
+	cursor: pointer;
+}
+.sidebar .cp-back:hover .cp-search-icon {
+	color: var(--sb-fg);
+}
 .sidebar .cp-input {
 	flex: 1 1 auto;
 	min-width: 0;
@@ -818,6 +834,7 @@
 }
 .sidebar .cp-body {
 	flex: 1 1 auto;
+	overflow-x: hidden;
 	overflow-y: auto;
 	overscroll-behavior: contain;
 	padding: 6px;
@@ -838,6 +855,18 @@
 .sidebar .cp-body::-webkit-scrollbar-thumb:hover {
 	background: var(--sb-fg-a32);
 	background-clip: padding-box;
+}
+/* Only a root↔sub-page *transition* animates — the {#key page} block gives
+   the body a fresh DOM node each time so this replays on every transition,
+   not just the dialog's initial open. */
+@keyframes cp-page-enter {
+	from {
+		opacity: 0;
+		transform: translateX(8px);
+	}
+}
+.sidebar .cp-body.cp-page-enter {
+	animation: cp-page-enter 0.14s ease;
 }
 .sidebar .cp-group-label {
 	padding: 9px 10px 4px;
@@ -887,6 +916,9 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
+.sidebar .cp-item.viewall .cp-item-label {
+	color: var(--sb-fgm-a75);
+}
 .sidebar .cp-mark {
 	background: none;
 	color: var(--sb-accent);
@@ -924,7 +956,8 @@
 	flex-shrink: 0;
 	padding: 9px 15px;
 	border-top: 1px solid var(--sb-border-muted);
-	background: var(--sb-hover-0);
+	/* Flat, like the rail/activity-bar — no distinct-colored strip. */
+	background: var(--sb-bg);
 }
 .sidebar .cp-foot-hint {
 	display: inline-flex;
@@ -2013,7 +2046,7 @@
 	display: none;
 }
 .sidebar.vscode .accounts {
-	width: calc(100% + 8px);
+	width: 100%;
 	margin-left: 0;
 	padding-left: 0;
 	padding-right: 0;
