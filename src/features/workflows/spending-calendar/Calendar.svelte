@@ -3,7 +3,7 @@
 	import type { Account, Category, Payee, Schedule, Transaction } from "@lib/types/actual-schema";
 	import { query } from "@lib/utilities/actual-api";
 	import { getCategoryColor, loadCategoryColors } from "@lib/utilities/category-colors";
-	import { loadCurrency, fmtMoney } from "@lib/utilities/currency";
+	import { fmtMoney, loadCurrency } from "@lib/utilities/currency";
 	import { mount, onMount, unmount } from "svelte";
 	import DayDetail from "./DayDetail.svelte";
 	import DayHeader from "./DayHeader.svelte";
@@ -116,7 +116,6 @@
 		return Array.from(map.values());
 	}
 
-
 	async function loadMonth() {
 		loading = true;
 
@@ -127,7 +126,7 @@
 
 			const [transactions, schedules, payees, categories, accounts] = await Promise.all([
 				query<Transaction[]>("transactions", {
-					filter: { date: { $gte: startDate, $lte: endDate } },
+					filter: { $and: [{ date: { $gte: startDate } }, { date: { $lte: endDate } }] },
 				}),
 				query<Schedule[]>("schedules"),
 				payeeMap.size ? Promise.resolve(null) : query<Payee[]>("payees"),
