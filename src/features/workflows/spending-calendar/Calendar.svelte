@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { sidepanel } from "@features/core/side-panel";
+	import type { Account, Category, Payee, Schedule, Transaction } from "@lib/types/actual-schema";
 	import { query } from "@lib/utilities/actual-api";
 	import { getCategoryColor, loadCategoryColors } from "@lib/utilities/category-colors";
 	import { loadCurrency, fmtMoney } from "@lib/utilities/currency";
@@ -10,60 +11,13 @@
 
 	const { onClose } = $props<{ onClose: () => void }>();
 
-	interface Transaction {
-		id: string;
-		date: string;
-		payee: string;
-		amount: number;
-		category: string;
-		account: string;
-		notes: string;
-	}
-
-	interface Payee {
-		id: string;
-		name: string;
-	}
-
-	interface Category {
-		id: string;
-		name: string;
-	}
-
-	interface Account {
-		id: string;
-		name: string;
-	}
-
-	interface Schedule {
-		id: string;
-		name: string;
-		next_date: string;
-		completed: boolean;
-		tombstone: boolean;
-		_payee: string;
-		_account: string;
-		_amount: unknown;
-	}
-
-	interface DayTx {
-		payee: string;
-		amount: number;
-		categoryId: string;
-		categoryName: string;
-		accountName: string;
-		notes: string;
-		upcoming?: boolean;
-	}
-
 	interface DayData {
 		date: number;
 		total: number;
-		transactions: DayTx[];
+		transactions: DayTransaction[];
 		isToday: boolean;
 		isCurrentMonth: boolean;
 	}
-
 
 	let year = $state(new Date().getFullYear());
 	let month = $state(new Date().getMonth());
@@ -147,8 +101,8 @@
 		return 0;
 	}
 
-	function dedupeTransactions(txs: DayTx[]): (DayTx & { count: number })[] {
-		const map = new Map<string, DayTx & { count: number }>();
+	function dedupeTransactions(txs: DayTransaction[]): (DayTransaction & { count: number })[] {
+		const map = new Map<string, DayTransaction & { count: number }>();
 		for (const tx of txs) {
 			const key = `${tx.payee}|${tx.upcoming ? "u" : "r"}`;
 			const existing = map.get(key);
@@ -196,16 +150,16 @@
 			const daysInMonth = new Date(year, month + 1, 0).getDate();
 			const daysInPrevMonth = new Date(year, month, 0).getDate();
 
-			const byDay = new Map<number, DayTx[]>();
+			const byDay = new Map<number, DayTransaction[]>();
 			for (const t of transactions) {
 				if (!t.date) continue;
 				const day = parseInt(t.date.split("-")[2]);
 				if (!byDay.has(day)) byDay.set(day, []);
 				byDay.get(day)!.push({
-					payee: payeeMap.get(t.payee) || "Unknown",
+					payee: (t.payee && payeeMap.get(t.payee)) || "Unknown",
 					amount: typeof t.amount === "number" ? t.amount : 0,
 					categoryId: t.category || "",
-					categoryName: categoryMap.get(t.category) || "",
+					categoryName: (t.category && categoryMap.get(t.category)) || "",
 					accountName: accountMap.get(t.account) || "",
 					notes: t.notes || "",
 				});
@@ -218,7 +172,7 @@
 				if (sy !== year || sm !== month + 1) continue;
 				if (!byDay.has(sd)) byDay.set(sd, []);
 				const existing = byDay.get(sd)!;
-				const payeeName = s.name || payeeMap.get(s._payee) || "Unknown";
+				const payeeName = s.name || (s._payee && payeeMap.get(s._payee)) || "Unknown";
 				// Skip if a real transaction with the same payee already exists on this day
 				if (existing.some((t) => !t.upcoming && t.payee === payeeName)) continue;
 				existing.push({
@@ -226,7 +180,7 @@
 					amount: parseScheduleAmount(s._amount),
 					categoryId: "",
 					categoryName: "",
-					accountName: accountMap.get(s._account) || "",
+					accountName: (s._account && accountMap.get(s._account)) || "",
 					notes: "",
 					upcoming: true,
 				});
@@ -321,7 +275,7 @@
 			target: detailContainer,
 			props: {
 				date,
-				transactions: day.transactions as DayTransaction[],
+				transactions: day.transactions,
 			},
 		});
 
