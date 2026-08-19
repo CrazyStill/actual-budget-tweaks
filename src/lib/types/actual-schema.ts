@@ -299,6 +299,15 @@ export interface CellValue {
  * Typed overloads for the send() bridge function.
  * Covers the internal methods this extension uses.
  */
-export interface SendMethodMap {}
+export interface SendMethodMap {
+	"get-cell": {
+		args: { sheetName: string; name: BudgetCellName | string };
+		result: CellValue;
+	};
+	"budget/dry-run-category-template": {
+		args: { month: string; categoryId: string; templates: unknown[] };
+		result: { perTemplate: number[] };
+	};
+}
 
 export type SendMethod = keyof SendMethodMap;

@@ -33,7 +33,7 @@ function renderBar(): void {
 	barContainer = document.createElement("div");
 	barContainer.setAttribute(BAR_ATTR, "1");
 
-	barInstance = mount(ShortcutsBar, { target: barContainer });
+	barInstance = mount(ShortcutsBar, { target: barContainer, props: { noPadding: false } });
 
 	nav.parentElement?.insertBefore(barContainer, nav.nextSibling);
 }

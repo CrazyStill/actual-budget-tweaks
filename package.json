@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@tsconfig/svelte": "^5.0.5",
+    "@types/d3": "^7.4.3",
     "@wxt-dev/module-svelte": "^2.0.3",
     "svelte": "^5.38.6",
     "svelte-check": "^4.3.1",
