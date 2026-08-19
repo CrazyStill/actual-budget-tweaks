@@ -389,7 +389,7 @@
 					{#if day.isCurrentMonth && day.transactions.length > 0}
 						{@const deduped = dedupeTransactions(day.transactions)}
 						<div class="cal-cell__txs">
-							{#each deduped.slice(0, 4) as tx}
+							{#each deduped.slice(0, 3) as tx}
 								<div class="cal-tx" class:is-upcoming={tx.upcoming}>
 									<span
 										class="cal-tx__dot"
@@ -403,8 +403,8 @@
 									{/if}
 								</div>
 							{/each}
-							{#if deduped.length > 4}
-								<div class="cal-tx cal-tx--more">+{deduped.length - 4} more</div>
+							{#if deduped.length > 3}
+								<div class="cal-tx cal-tx--more">+{deduped.length - 3} more</div>
 							{/if}
 						</div>
 
