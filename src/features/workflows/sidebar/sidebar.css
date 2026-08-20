@@ -1383,6 +1383,9 @@
 .sidebar .account.selected {
 	background: var(--sb-accent-muted);
 }
+.sidebar .account.selected .account-name {
+	color: var(--sb-accent);
+}
 .sidebar.vscode .account {
 	border-radius: 0;
 }
