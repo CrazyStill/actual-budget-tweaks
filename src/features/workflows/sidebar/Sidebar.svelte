@@ -58,6 +58,10 @@
 	const RAIL_WIDTH = "4.25rem"; // matches .activity-bar's width in sidebar.css
 	let collapsed = $state(false);
 
+	// Gates .sidebar.transitions-ready (sidebar.css) so hydrating a persisted
+	// collapsed/width value on mount doesn't itself animate.
+	let transitionsReady = $state(false);
+
 	function expandSidebar() {
 		collapsed = false;
 		setValue(COLLAPSED_KEY, false);
@@ -278,6 +282,7 @@
 		sidebarWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, storedWidth));
 		groupAccounts = storedGroupMode;
 		layoutMode = storedLayoutMode;
+		requestAnimationFrame(() => (transitionsReady = true));
 
 		try {
 			await loadCurrency();
@@ -300,6 +305,7 @@
 <div
 	class="sidebar"
 	class:resizing
+	class:transitions-ready={transitionsReady}
 	class:vscode={layoutMode === "vscode"}
 	class:collapsed={collapsed && layoutMode === "full"}
 	bind:this={sidebarEl}

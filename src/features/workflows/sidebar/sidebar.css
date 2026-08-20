@@ -117,6 +117,36 @@
 	user-select: none;
 }
 
+/* ===== collapse/expand animation =====
+   .transitions-ready (Sidebar.svelte) skips the width transition on the
+   first paint that hydrates a persisted collapsed/width value. */
+@media (prefers-reduced-motion: no-preference) {
+	.sidebar.transitions-ready:not(.resizing) {
+		transition: width 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+	.sidebar > .budget,
+	.sidebar > .body,
+	.sidebar .vscode-panel,
+	.sidebar.collapsed > .rail-avatar,
+	.sidebar.collapsed > .rail-icon,
+	.sidebar.collapsed > .rail-nav,
+	.sidebar.collapsed > .rail-divider,
+	.sidebar.collapsed > .rail-list,
+	.sidebar.collapsed > .rail-foot {
+		animation: sidebar-content-in 0.12s ease;
+	}
+}
+@keyframes sidebar-content-in {
+	from {
+		opacity: 0;
+		transform: translateY(-2px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
 /* ===== VS Code-style layout: icon activity bar + accounts subsidebar =====
    .activity-bar deliberately mirrors .sidebar.collapsed's own shape (same
    align-items/gap/padding, same .rail-* classes below) — same visual weight
