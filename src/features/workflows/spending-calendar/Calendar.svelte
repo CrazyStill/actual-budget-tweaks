@@ -2,7 +2,7 @@
 	import { sidepanel } from "@features/core/side-panel";
 	import Switch from "@lib/components/Switch.svelte";
 	import type { Account, Category, Payee, Schedule, Transaction } from "@lib/types/actual-schema";
-	import { query } from "@lib/utilities/actual-api";
+	import { query, send } from "@lib/utilities/actual-api";
 	import { getCategoryColor, loadCategoryColors } from "@lib/utilities/category-colors";
 	import { fmtMoney, loadCurrency } from "@lib/utilities/currency";
 	import { onOutsideClick, positionPopover } from "@lib/utilities/popover";
@@ -15,6 +15,8 @@
 	const { onClose } = $props<{ onClose: () => void }>();
 
 	const HIDE_OFFBUDGET_KEY = "spending-calendar-hide-offbudget";
+	/** How far ahead the month nav can go, so paging forward stays bounded. */
+	const MAX_FUTURE_MONTHS = 12;
 
 	interface DayData {
 		date: number;
@@ -34,6 +36,8 @@
 	let categoryMap = $state(new Map<string, string>());
 	let accountMap = new Map<string, string>();
 	let accountOffbudgetMap = new Map<string, boolean>();
+	/** Expanded recurrence dates per schedule id, grown as the user pages further ahead. */
+	const upcomingDates = new Map<string, { count: number; dates: string[] }>();
 	let hideOffBudget = $state(true);
 	let filtersOpen = $state(false);
 	let filterButton = $state<HTMLElement | null>(null);
@@ -63,6 +67,14 @@
 		const now = new Date();
 		return year === now.getFullYear() && month === now.getMonth();
 	});
+
+	/** Months between the displayed month and the current one — negative for the past. */
+	function monthsFromNow(): number {
+		const now = new Date();
+		return (year - now.getFullYear()) * 12 + (month - now.getMonth());
+	}
+
+	const isAtMaxMonth = $derived(() => monthsFromNow() >= MAX_FUTURE_MONTHS);
 
 	function prevMonth() {
 		if (month === 0) {
@@ -111,6 +123,25 @@
 			if (typeof obj.value === "number") return obj.value;
 		}
 		return 0;
+	}
+
+	/**
+	 * A schedule only carries `next_date` — its single next occurrence — so a month
+	 * further out would otherwise come up empty. Actual expands the recurrence rule
+	 * itself (patterns, intervals, end conditions, weekend skipping), so ask it
+	 * rather than reimplementing those rules here.
+	 */
+	async function loadUpcomingDates(s: Schedule, count: number): Promise<string[]> {
+		const cached = upcomingDates.get(s.id);
+		if (cached && cached.count >= count) return cached.dates;
+		let dates: string[] = [];
+		try {
+			dates = await send<string[]>("schedule/get-upcoming-dates", { config: s._date, count });
+		} catch (e) {
+			console.warn("[ABT Calendar] could not expand schedule", s.id, e);
+		}
+		upcomingDates.set(s.id, { count, dates });
+		return dates;
 	}
 
 	async function setHideOffBudget(hidden: boolean) {
@@ -211,26 +242,60 @@
 			}
 
 			// Add upcoming schedules to the calendar
-			for (const s of schedules) {
-				if (s.completed || s.tombstone || !s.next_date) continue;
-				if (isPureTransferSchedule(s)) continue;
-				if (hideOffBudget && s._account && accountOffbudgetMap.get(s._account)) continue;
-				const [sy, sm, sd] = s.next_date.split("-").map(Number);
-				if (sy !== year || sm !== month + 1) continue;
-				if (!byDay.has(sd)) byDay.set(sd, []);
-				const existing = byDay.get(sd)!;
+			const visibleSchedules = schedules.filter(
+				(s) =>
+					!s.completed &&
+					!s.tombstone &&
+					!isPureTransferSchedule(s) &&
+					!(hideOffBudget && s._account && accountOffbudgetMap.get(s._account)),
+			);
+
+			const monthPrefix = `${year}-${String(month + 1).padStart(2, "0")}-`;
+			const scheduleDays = new Map<string, Set<number>>();
+			for (const s of visibleSchedules) {
+				if (s.next_date?.startsWith(monthPrefix)) {
+					scheduleDays.set(s.id, new Set([Number(s.next_date.slice(-2))]));
+				}
+			}
+
+			// `next_date` already covers the current month, so only a future month
+			// needs the recurrence expanded to reach occurrences beyond the next one.
+			const monthsAhead = monthsFromNow();
+			if (monthsAhead > 0) {
+				const count = Math.min((monthsAhead + 1) * 31 + 1, 400);
+				await Promise.all(
+					visibleSchedules.map(async (s) => {
+						// A one-off schedule stores a plain date, not a recurrence to expand.
+						if (!s._date || typeof s._date === "string") return;
+						const dates = await loadUpcomingDates(s, count);
+						const days = scheduleDays.get(s.id) ?? new Set<number>();
+						for (const d of dates) {
+							if (d.startsWith(monthPrefix)) days.add(Number(d.slice(-2)));
+						}
+						if (days.size) scheduleDays.set(s.id, days);
+					}),
+				);
+			}
+
+			for (const s of visibleSchedules) {
+				const days = scheduleDays.get(s.id);
+				if (!days) continue;
 				const payeeName = s.name || (s._payee && payeeMap.get(s._payee)) || "Unknown";
-				// Skip if a real transaction with the same payee already exists on this day
-				if (existing.some((t) => !t.upcoming && t.payee === payeeName)) continue;
-				existing.push({
-					payee: payeeName,
-					amount: parseScheduleAmount(s._amount),
-					categoryId: "",
-					categoryName: "",
-					accountName: (s._account && accountMap.get(s._account)) || "",
-					notes: "",
-					upcoming: true,
-				});
+				for (const sd of days) {
+					if (!byDay.has(sd)) byDay.set(sd, []);
+					const existing = byDay.get(sd)!;
+					// Skip if a real transaction with the same payee already exists on this day
+					if (existing.some((t) => !t.upcoming && t.payee === payeeName)) continue;
+					existing.push({
+						payee: payeeName,
+						amount: parseScheduleAmount(s._amount),
+						categoryId: "",
+						categoryName: "",
+						accountName: (s._account && accountMap.get(s._account)) || "",
+						notes: "",
+						upcoming: true,
+					});
+				}
 			}
 
 			const grid: DayData[] = [];
@@ -409,7 +474,7 @@
 				>
 			</button>
 			<button class="cal-today" onclick={goToday} disabled={isAtCurrentMonth()}>Today</button>
-			<button class="cal-nav" aria-label="Next month" onclick={nextMonth} disabled={isAtCurrentMonth()}>
+			<button class="cal-nav" aria-label="Next month" onclick={nextMonth} disabled={isAtMaxMonth()}>
 				<svg
 					width="16"
 					height="16"
