@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v0.1.57
+
+[compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.56...v0.1.57)
+
+### 🚀 Enhancements
+
+- Browse future months in spending calendar ([ca46c30](https://github.com/aelxxs/actual-budget-tweaks/commit/ca46c30))
+
+### 🏡 Chore
+
+- Update Firefox auto-update manifest for v0.1.56 ([abf8eb6](https://github.com/aelxxs/actual-budget-tweaks/commit/abf8eb6))
+
+### ❤️ Contributors
+
+- CrazyStill ([@CrazyStill](https://github.com/CrazyStill))
+
 ## v0.1.56
 
 [compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.55...v0.1.56)
