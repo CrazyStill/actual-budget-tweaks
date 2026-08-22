@@ -1,6 +1,26 @@
 # Changelog
 
 
+## v0.1.58
+
+[compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.57...v0.1.58)
+
+### 🚀 Enhancements
+
+- Enhance sidebar transition handling for improved user experience ([32401d5](https://github.com/aelxxs/actual-budget-tweaks/commit/32401d5))
+- Update active account text color ([e4db545](https://github.com/aelxxs/actual-budget-tweaks/commit/e4db545))
+- Implement custom overlay scrollbar for improved scrolling experience in accounts ([14cee4f](https://github.com/aelxxs/actual-budget-tweaks/commit/14cee4f))
+- Add padding to scrollable accounts section in sidebar ([7ac0cb7](https://github.com/aelxxs/actual-budget-tweaks/commit/7ac0cb7))
+- Add keyboard shortcuts for undo and redo actions in footer ([8251d9d](https://github.com/aelxxs/actual-budget-tweaks/commit/8251d9d))
+
+### 🏡 Chore
+
+- Update Firefox auto-update manifest for v0.1.57 ([729dadb](https://github.com/aelxxs/actual-budget-tweaks/commit/729dadb))
+
+### ❤️ Contributors
+
+- Alexis Vielma <alexis.vielma.us@gmail.com>
+
 ## v0.1.57
 
 [compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.56...v0.1.57)
