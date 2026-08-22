@@ -6,6 +6,7 @@
 	import { watchDom } from "@lib/utilities/dom-watcher";
 	import { getValue, setValue } from "@lib/utilities/store";
 	import { ChevronDown, List, ListTree, Plus } from "lucide-svelte";
+	import { overlayScrollbar } from "../actions/overlay-scrollbar";
 	import { portal } from "../actions/portal";
 	import { scrollFade } from "../actions/scroll-fade";
 	import { tooltip } from "../actions/tooltip.svelte";
@@ -31,6 +32,7 @@
 		icons,
 		groupAccounts,
 		budgetId,
+		vscode = false,
 		onToggleGroupMode,
 		onRenameAccount,
 		onCloseAccount,
@@ -39,6 +41,7 @@
 		icons: Record<string, AccountIconData>;
 		groupAccounts: boolean;
 		budgetId: string | undefined;
+		vscode?: boolean;
 		onToggleGroupMode: () => void;
 		onRenameAccount: (accountId: string, name: string) => void;
 		onCloseAccount: (accountId: string) => void;
@@ -322,7 +325,8 @@
 
 <svelte:window onclick={closeMenu} />
 
-<div class="accounts" use:scrollFade onscroll={hideHoverCard}>
+<div class="accounts-viewport">
+	<div class="accounts" use:scrollFade use:overlayScrollbar={{ enabled: vscode }} onscroll={hideHoverCard}>
 	<div class="all-accounts section-head" class:active={isAllAccountsActive()}>
 		<button type="button" class="section-nav" onclick={() => go("/accounts")}>
 			<span class="group-label">Accounts</span>
@@ -502,6 +506,7 @@
 			{/if}
 		</div>
 	{/each}
+	</div>
 </div>
 
 {#if menuGroup}

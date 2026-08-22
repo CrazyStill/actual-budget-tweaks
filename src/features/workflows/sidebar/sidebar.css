@@ -1089,6 +1089,17 @@
 }
 
 /* Accounts */
+/* Wraps .accounts (which scrolls) so vscode mode's custom scrollbar thumb
+   (see overlay-scrollbar.ts) has a non-scrolling element to be positioned
+   against — an absolutely positioned child of .accounts itself would scroll
+   away with the content it's meant to represent. */
+.sidebar .accounts-viewport {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+}
 .sidebar .accounts {
 	display: flex;
 	flex-direction: column;
@@ -2083,6 +2094,41 @@
 	margin-left: 0;
 	padding-left: 0;
 	padding-right: 0;
+	/* Native scrollbar fully hidden — overlay-scrollbar.ts draws a themed one
+	   that never reserves layout width, since no combination of
+	   scrollbar-width/-color gets Firefox to do that natively (see
+	   overlay-scrollbar.ts). */
+	scrollbar-width: none;
+}
+.sidebar.vscode .accounts::-webkit-scrollbar {
+	display: none;
+}
+.sidebar .abt-overlay-thumb {
+	position: absolute;
+	top: 0;
+	right: 2px;
+	width: 6px;
+	border-radius: 3px;
+	background: var(--sb-fg-a22);
+	opacity: 0;
+	pointer-events: none;
+	/* Sits inside the sidebar's resize-handle hit area (right: 0, 10px wide,
+	   z-index: 10) — has to out-rank it or dragging the thumb resizes the
+	   sidebar instead. */
+	z-index: 11;
+}
+.sidebar .abt-overlay-thumb.visible {
+	opacity: 1;
+	pointer-events: auto;
+}
+.sidebar .abt-overlay-thumb:hover,
+.sidebar .abt-overlay-thumb:active {
+	background: var(--sb-fg-a32);
+}
+@media (prefers-reduced-motion: no-preference) {
+	.sidebar .abt-overlay-thumb {
+		transition: opacity 0.15s ease;
+	}
 }
 /* blue insertion line above/below the drop target */
 .sidebar .account.drop-before::after,

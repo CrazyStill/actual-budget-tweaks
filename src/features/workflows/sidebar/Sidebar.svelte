@@ -353,6 +353,7 @@
 						{icons}
 						{groupAccounts}
 						{budgetId}
+						vscode
 						onToggleGroupMode={toggleGroupMode}
 						onRenameAccount={handleRenameAccount}
 						onCloseAccount={handleCloseAccount}
