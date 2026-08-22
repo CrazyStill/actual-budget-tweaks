@@ -1117,7 +1117,6 @@
 	overflow-x: hidden;
 	scrollbar-width: thin;
 	scrollbar-color: var(--sb-fg-a22) transparent;
-	padding-bottom: 2rem;
 	/* Pre-JS fallback — scrollFade (scroll-fade.ts) takes over, fading
 	   whichever edge has more content past it instead of always the bottom. */
 	mask-image: linear-gradient(black 0%, black calc(100% - 34px), transparent 100%);
@@ -1125,6 +1124,9 @@
 	transition:
 		mask-image 140ms ease,
 		-webkit-mask-image 140ms ease;
+}
+.sidebar .accounts.is-scrollable {
+	padding-bottom: 2rem;
 }
 .sidebar .accounts::-webkit-scrollbar {
 	width: 8px;
