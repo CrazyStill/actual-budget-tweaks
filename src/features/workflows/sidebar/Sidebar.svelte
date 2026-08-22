@@ -359,7 +359,7 @@
 						onCloseAccount={handleCloseAccount}
 					/>
 				{/if}
-				<div style="padding-bottom: 0.75rem">
+				<div style="padding-bottom: 0.65rem">
 					<Footer />
 				</div>
 			</div>
