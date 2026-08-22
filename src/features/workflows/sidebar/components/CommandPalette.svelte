@@ -2,20 +2,30 @@
 	import type { AccountIconData } from "@features/appearance/account-icon-picker";
 	import { getEmojiAssetUrl } from "@features/appearance/account-icon-picker";
 	import { getPrivacyMode } from "@features/core/privacy-mode";
+	import {
+		applyThemeByKey,
+		fetchCommunityThemeCatalog,
+		getBuiltinPreviewColors,
+		type RemoteTheme,
+	} from "@features/theme/theme-apply";
 	import { closeCalendar, isCalendarOpen } from "@features/workflows/spending-calendar";
+	import { themes } from "@lib/design";
 	import { dispatch, navigate, query as queryTable } from "@lib/utilities/actual-api";
 	import { fmtMoney } from "@lib/utilities/currency";
 	import { Page } from "@lib/utilities/pages";
+	import { getValue, setValue } from "@lib/utilities/store";
 	import {
 		ArrowLeft,
 		ArrowUpRight,
 		Calendar,
 		ChartColumn,
+		Check,
 		ChevronRight,
 		Eye,
 		EyeOff,
 		Landmark,
 		LayoutGrid,
+		Palette,
 		Plus,
 		RefreshCw,
 		Search,
@@ -29,6 +39,12 @@
 	import type { SidebarAccount } from "../lib/data";
 	import { syncAllAccounts } from "../lib/data";
 	import StatusIcon from "./StatusIcon.svelte";
+
+	// Matches theme.ts's defineSetting context ("catppuccin-palette" /
+	// "mocha") — this palette applies/persists the same setting the full
+	// ThemeCustomizer settings panel reads from, so they stay in sync.
+	const THEME_SETTING_KEY = "catppuccin-palette";
+	const DEFAULT_THEME_KEY = "mocha";
 
 	interface CustomReport {
 		id: string;
@@ -89,7 +105,9 @@
 		| { kind: "report"; report: CustomReport }
 		| { kind: "nav"; label: string; page: Page; icon: typeof LayoutGrid }
 		| { kind: "action"; label: string; icon: typeof LayoutGrid; run: () => void }
-		| { kind: "view-all"; label: string; target: SubPage };
+		| { kind: "view-all"; label: string; target: SubPage }
+		| { kind: "subpage"; label: string; icon: typeof LayoutGrid; target: SubPage }
+		| { kind: "theme"; key: string; name: string; swatch: string[] };
 	interface PaletteGroup {
 		label: string;
 		items: PaletteItem[];
@@ -99,7 +117,7 @@
 	// all" row (see PREVIEW_LIMIT below) instead of dumping everything into
 	// the root list — mirrors CommandBar.tsx's themes page: a pushed
 	// sub-page rather than an ever-growing root list.
-	type SubPage = "accounts" | "reports";
+	type SubPage = "accounts" | "reports" | "themes";
 	const PREVIEW_LIMIT = 5;
 
 	let open = $state(false);
@@ -129,13 +147,28 @@
 		}
 	}
 
+	let activeThemeKey = $state(DEFAULT_THEME_KEY);
+	let communityThemes = $state<RemoteTheme[]>([]);
+	let communityThemesLoaded = false;
+	async function ensureCommunityThemesLoaded(): Promise<void> {
+		if (communityThemesLoaded) return;
+		communityThemesLoaded = true;
+		try {
+			communityThemes = await fetchCommunityThemeCatalog();
+		} catch {
+			communityThemesLoaded = false;
+		}
+	}
+
 	const q = $derived(query.trim().toLowerCase());
 	const placeholder = $derived(
 		page === "accounts"
 			? "Search accounts…"
 			: page === "reports"
 				? "Search reports…"
-				: "Search accounts and pages…",
+				: page === "themes"
+					? "Search themes…"
+					: "Search accounts and pages…",
 	);
 
 	const groups = $derived.by((): PaletteGroup[] => {
@@ -157,6 +190,23 @@
 			return matchedReports.length
 				? [{ label: "Reports", items: matchedReports.map((report) => ({ kind: "report" as const, report })) }]
 				: [];
+		}
+		if (page === "themes") {
+			const builtinItems: PaletteItem[] = Object.entries(themes)
+				.filter(([, t]) => match(t.name))
+				.map(([key, t]) => ({
+					kind: "theme" as const,
+					key,
+					name: t.name,
+					swatch: getBuiltinPreviewColors(key),
+				}));
+			const communityItems: PaletteItem[] = communityThemes
+				.filter((t) => match(t.name))
+				.map((t) => ({ kind: "theme" as const, key: t.repo, name: t.name, swatch: t.colors }));
+			return [
+				{ label: "Built-in", items: builtinItems },
+				{ label: "Community", items: communityItems },
+			].filter((g) => g.items.length > 0);
 		}
 
 		// Resting state previews a handful per list; typing searches all of
@@ -203,6 +253,9 @@
 						icon: a.icon,
 						run: a.run,
 					})),
+					...(match("Change theme")
+						? [{ kind: "subpage" as const, label: "Change theme", icon: Palette, target: "themes" as const }]
+						: []),
 					...(() => {
 						const label = privacyEnabled ? "Show amounts" : "Hide amounts";
 						if (!match(label)) return [];
@@ -233,6 +286,7 @@
 		open = true;
 		privacyEnabled = getPrivacyMode();
 		ensureReportsLoaded();
+		getValue<string>(THEME_SETTING_KEY, DEFAULT_THEME_KEY).then((v) => (activeThemeKey = v ?? DEFAULT_THEME_KEY));
 	}
 	function closePalette(): void {
 		open = false;
@@ -243,6 +297,7 @@
 		query = "";
 		index = 0;
 		animatePageChange = true;
+		if (target === "themes") ensureCommunityThemesLoaded();
 	}
 	function goBackToRoot(): void {
 		page = "root";
@@ -251,7 +306,7 @@
 		animatePageChange = true;
 	}
 	function runItem(item: PaletteItem): void {
-		if (item.kind === "view-all") {
+		if (item.kind === "view-all" || item.kind === "subpage") {
 			goToPage(item.target);
 			return;
 		}
@@ -259,7 +314,11 @@
 		if (item.kind === "nav") navigate(`/${item.page}`);
 		else if (item.kind === "account") navigate(`/accounts/${item.account.id}`);
 		else if (item.kind === "report") navigate(`/reports/custom/${item.report.id}`);
-		else item.run();
+		else if (item.kind === "theme") {
+			activeThemeKey = item.key;
+			setValue(THEME_SETTING_KEY, item.key);
+			applyThemeByKey(item.key, DEFAULT_THEME_KEY);
+		} else item.run();
 		closePalette();
 	}
 	function moveIndex(delta: number): void {
@@ -389,6 +448,20 @@
 							{:else if item.kind === "view-all"}
 								<span class="cp-item-glyph cp-item-icon"><ChevronRight strokeWidth={1.5} /></span>
 								<span class="cp-item-label">{item.label}</span>
+							{:else if item.kind === "subpage"}
+								<span class="cp-item-glyph cp-item-icon"><item.icon strokeWidth={1.5} /></span>
+								<span class="cp-item-label">{@render hl(item.label)}</span>
+								<ArrowUpRight class="cp-go" strokeWidth={2.2} />
+							{:else if item.kind === "theme"}
+								<span class="cp-item-glyph">
+									{#each item.swatch.slice(0, 4) as color}
+										<span class="cp-swatch-dot" style="background:{color}"></span>
+									{/each}
+								</span>
+								<span class="cp-item-label">{@render hl(item.name)}</span>
+								{#if item.key === activeThemeKey}
+									<Check class="cp-theme-active" strokeWidth={2.2} />
+								{/if}
 							{:else}
 								<span class="cp-item-glyph cp-item-icon"><item.icon strokeWidth={1.5} /></span>
 								<span class="cp-item-label">{@render hl(item.label)}</span>

@@ -11,7 +11,10 @@
 		applyThemeByKey,
 		applyUserCSSTheme,
 		applyUserPaletteTheme,
+		fetchCommunityThemeCatalog,
+		getBuiltinPreviewColors,
 		isCommunityTheme,
+		type RemoteTheme,
 	} from "./theme-apply";
 	import ThemeColorEditor from "./ThemeColorEditor.svelte";
 	import ThemeCreator from "./ThemeCreator.svelte";
@@ -27,13 +30,6 @@
 		userThemeState,
 		type UserTheme,
 	} from "./user-themes.svelte";
-
-	type RemoteTheme = {
-		name: string;
-		repo: string;
-		colors: string[];
-		mode: "light" | "dark";
-	};
 
 	let { ctx }: { ctx: { key: string; defaultValue: string } } = $props();
 
@@ -132,20 +128,6 @@
 			}
 		}
 		openColorEditor();
-	}
-
-	function getPreviewColors(themeKey: string): string[] {
-		const theme = themes[themeKey];
-		if (!theme) return [];
-		const k = theme.keys;
-		return [
-			k["--ctp-base"],
-			k["--ctp-mantle"],
-			k["--ctp-surface0"],
-			k["--ctp-text"],
-			k["--ctp-mauve"],
-			k["--ctp-blue"],
-		].filter(Boolean) as string[];
 	}
 
 	async function selectTheme(key: string) {
@@ -347,17 +329,7 @@
 
 		loadingRemote = true;
 		try {
-			const res = await browser.runtime.sendMessage({
-				type: "fetch",
-				responseType: "json",
-				url: "https://raw.githubusercontent.com/actualbudget/actual/master/packages/desktop-client/src/data/customThemeCatalog.json",
-			});
-			if (res?.ok) {
-				remoteThemes = res.data;
-			} else {
-				console.warn("[ABT Themes] fetch failed", { status: res?.status, ok: res?.ok, data: res?.data });
-				remoteError = true;
-			}
+			remoteThemes = await fetchCommunityThemeCatalog();
 		} catch (r) {
 			console.warn("[ABT Themes] fetch error", r);
 			remoteError = true;
@@ -548,7 +520,7 @@
 					<div class="gallery__section-label">Built-in</div>
 					<div class="gallery__grid">
 						{#each filteredBuiltin as [key, theme]}
-							{@const previewColors = getPreviewColors(key)}
+							{@const previewColors = getBuiltinPreviewColors(key)}
 							{@const isActive = activeThemeKey === key}
 							<button
 								class="card"

@@ -792,7 +792,7 @@
 	width: min(600px, calc(100vw - 48px));
 	max-height: min(440px, 68vh);
 	background: var(--sb-bg);
-	border: 1px solid var(--sb-border);
+	border: 1px solid var(--sb-border) !important;
 	border-radius: 14px;
 	box-shadow:
 		0 0 0 1px var(--sb-shadow-2),
@@ -971,6 +971,19 @@
 }
 .sidebar .cp-item.selected .cp-go {
 	opacity: 1;
+}
+.sidebar .cp-swatch-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	flex-shrink: 0;
+	box-shadow: 0 0 0 1px var(--sb-fg-a18);
+}
+.sidebar .cp-theme-active {
+	width: 14px;
+	height: 14px;
+	flex-shrink: 0;
+	color: var(--sb-accent);
 }
 .sidebar .cp-empty {
 	margin: 0;

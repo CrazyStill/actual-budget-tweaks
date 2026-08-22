@@ -1,7 +1,14 @@
-import { getTheme } from "@lib/design";
+import { getTheme, themes } from "@lib/design";
 import { applyGlobalCSS } from "@lib/utilities/dom";
 import { editorState } from "./editor-state.svelte";
 import { isUserTheme, userThemeState } from "./user-themes.svelte";
+
+export type RemoteTheme = {
+	name: string;
+	repo: string;
+	colors: string[];
+	mode: "light" | "dark";
+};
 
 export const TOKENS_STYLE_ID = "color-tokens";
 
@@ -341,6 +348,28 @@ export function applyPalette(name: string) {
 	applyGlobalCSS(BUILTIN_CSS, TOKENS_STYLE_ID);
 	editorState.activeTheme = name;
 	applyOverrides(name);
+}
+
+const COMMUNITY_CATALOG_URL =
+	"https://raw.githubusercontent.com/actualbudget/actual/master/packages/desktop-client/src/data/customThemeCatalog.json";
+
+export async function fetchCommunityThemeCatalog(): Promise<RemoteTheme[]> {
+	const res = await browser.runtime.sendMessage({
+		type: "fetch",
+		responseType: "json",
+		url: COMMUNITY_CATALOG_URL,
+	});
+	if (!res?.ok) throw new Error(`Could not fetch community theme catalog (status ${res?.status})`);
+	return res.data;
+}
+
+export function getBuiltinPreviewColors(key: string): string[] {
+	const theme = themes[key];
+	if (!theme) return [];
+	const k = theme.keys;
+	return [k["--ctp-base"], k["--ctp-mantle"], k["--ctp-surface0"], k["--ctp-text"], k["--ctp-mauve"], k["--ctp-blue"]].filter(
+		Boolean,
+	) as string[];
 }
 
 export async function fetchCommunityCSS(repo: string): Promise<string> {
