@@ -1,6 +1,39 @@
 # Changelog
 
 
+## v0.1.60
+
+[compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.59...v0.1.60)
+
+### 🚀 Enhancements
+
+- Reduce padding in sidebar footer ([293da53](https://github.com/aelxxs/actual-budget-tweaks/commit/293da53))
+- Reduce padding in sidebar add account button ([9b4bb49](https://github.com/aelxxs/actual-budget-tweaks/commit/9b4bb49))
+- Add color switcher to command menu ([be8e1ff](https://github.com/aelxxs/actual-budget-tweaks/commit/be8e1ff))
+- Add pnpm new-feature scaffold script ([c0c9b40](https://github.com/aelxxs/actual-budget-tweaks/commit/c0c9b40))
+
+### 📖 Documentation
+
+- Add CONTRIBUTING.md and website docs (contributing + architecture) ([1d6898b](https://github.com/aelxxs/actual-budget-tweaks/commit/1d6898b))
+- Rewrite docs pages to be scannable, not prose-heavy ([d9b5b41](https://github.com/aelxxs/actual-budget-tweaks/commit/d9b5b41))
+- Fold website docs back into CONTRIBUTING.md, drop the docs pages ([917886b](https://github.com/aelxxs/actual-budget-tweaks/commit/917886b))
+- Reposition README and website around community contribution ([1e7a8a1](https://github.com/aelxxs/actual-budget-tweaks/commit/1e7a8a1))
+
+### 🏡 Chore
+
+- Add ESLint + Prettier, PR-gated CI, and lower feature-registration friction ([d0082f9](https://github.com/aelxxs/actual-budget-tweaks/commit/d0082f9))
+- Update Firefox auto-update manifest for v0.1.59 ([55911d6](https://github.com/aelxxs/actual-budget-tweaks/commit/55911d6))
+- Add PR/issue templates, upgrade in-extension bug report to a form ([d10fd92](https://github.com/aelxxs/actual-budget-tweaks/commit/d10fd92))
+- Add MIT license ([821e4a2](https://github.com/aelxxs/actual-budget-tweaks/commit/821e4a2))
+
+### 🎨 Styles
+
+- Format entire codebase with Prettier ([e60ff2c](https://github.com/aelxxs/actual-budget-tweaks/commit/e60ff2c))
+
+### ❤️ Contributors
+
+- Alexis Vielma <alexis.vielma.us@gmail.com>
+
 ## v0.1.59
 
 [compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.58...v0.1.59)
