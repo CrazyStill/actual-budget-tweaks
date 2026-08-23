@@ -2,8 +2,12 @@
 	import { dispatch } from "@lib/utilities/actual-api";
 	import { Columns2, PanelLeftClose, Plus, Redo2, Undo2 } from "lucide-svelte";
 	import { tooltip } from "../actions/tooltip.svelte";
+	import { isMac } from "../lib/search";
 
 	const { onCollapse, onSwitchLayout }: { onCollapse?: () => void; onSwitchLayout?: () => void } = $props();
+
+	const undoShortcut = $derived(isMac() ? "⌘Z" : "Ctrl+Z");
+	const redoShortcut = $derived(isMac() ? "⌘⇧Z" : "Ctrl+Shift+Z");
 
 	async function addAccount() {
 		await dispatch("pushModal", { modal: { name: "add-account", options: {} } });
@@ -27,8 +31,8 @@
 		<button
 			type="button"
 			class="collapse"
-			aria-label="Undo"
-			use:tooltip={{ text: "Undo", placement: "top" }}
+			aria-label="Undo {undoShortcut}"
+			use:tooltip={{ text: `Undo ${undoShortcut}`, placement: "top" }}
 			onclick={undo}
 		>
 			<Undo2 strokeWidth={1.5} />
@@ -36,8 +40,8 @@
 		<button
 			type="button"
 			class="collapse"
-			aria-label="Redo"
-			use:tooltip={{ text: "Redo", placement: "top" }}
+			aria-label="Redo {redoShortcut}"
+			use:tooltip={{ text: `Redo ${redoShortcut}`, placement: "top" }}
 			onclick={redo}
 		>
 			<Redo2 strokeWidth={1.5} />

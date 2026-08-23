@@ -117,6 +117,36 @@
 	user-select: none;
 }
 
+/* ===== collapse/expand animation =====
+   .transitions-ready (Sidebar.svelte) skips the width transition on the
+   first paint that hydrates a persisted collapsed/width value. */
+@media (prefers-reduced-motion: no-preference) {
+	.sidebar.transitions-ready:not(.resizing) {
+		transition: width 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+	.sidebar > .budget,
+	.sidebar > .body,
+	.sidebar .vscode-panel,
+	.sidebar.collapsed > .rail-avatar,
+	.sidebar.collapsed > .rail-icon,
+	.sidebar.collapsed > .rail-nav,
+	.sidebar.collapsed > .rail-divider,
+	.sidebar.collapsed > .rail-list,
+	.sidebar.collapsed > .rail-foot {
+		animation: sidebar-content-in 0.12s ease;
+	}
+}
+@keyframes sidebar-content-in {
+	from {
+		opacity: 0;
+		transform: translateY(-2px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
 /* ===== VS Code-style layout: icon activity bar + accounts subsidebar =====
    .activity-bar deliberately mirrors .sidebar.collapsed's own shape (same
    align-items/gap/padding, same .rail-* classes below) — same visual weight
@@ -1059,6 +1089,17 @@
 }
 
 /* Accounts */
+/* Wraps .accounts (which scrolls) so vscode mode's custom scrollbar thumb
+   (see overlay-scrollbar.ts) has a non-scrolling element to be positioned
+   against — an absolutely positioned child of .accounts itself would scroll
+   away with the content it's meant to represent. */
+.sidebar .accounts-viewport {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+}
 .sidebar .accounts {
 	display: flex;
 	flex-direction: column;
@@ -1076,7 +1117,6 @@
 	overflow-x: hidden;
 	scrollbar-width: thin;
 	scrollbar-color: var(--sb-fg-a22) transparent;
-	padding-bottom: 2rem;
 	/* Pre-JS fallback — scrollFade (scroll-fade.ts) takes over, fading
 	   whichever edge has more content past it instead of always the bottom. */
 	mask-image: linear-gradient(black 0%, black calc(100% - 34px), transparent 100%);
@@ -1084,6 +1124,9 @@
 	transition:
 		mask-image 140ms ease,
 		-webkit-mask-image 140ms ease;
+}
+.sidebar .accounts.is-scrollable {
+	padding-bottom: 2rem;
 }
 .sidebar .accounts::-webkit-scrollbar {
 	width: 8px;
@@ -1352,6 +1395,9 @@
 }
 .sidebar .account.selected {
 	background: var(--sb-accent-muted);
+}
+.sidebar .account.selected .account-name {
+	color: var(--sb-accent);
 }
 .sidebar.vscode .account {
 	border-radius: 0;
@@ -2050,6 +2096,41 @@
 	margin-left: 0;
 	padding-left: 0;
 	padding-right: 0;
+	/* Native scrollbar fully hidden — overlay-scrollbar.ts draws a themed one
+	   that never reserves layout width, since no combination of
+	   scrollbar-width/-color gets Firefox to do that natively (see
+	   overlay-scrollbar.ts). */
+	scrollbar-width: none;
+}
+.sidebar.vscode .accounts::-webkit-scrollbar {
+	display: none;
+}
+.sidebar .abt-overlay-thumb {
+	position: absolute;
+	top: 0;
+	right: 2px;
+	width: 6px;
+	border-radius: 3px;
+	background: var(--sb-fg-a22);
+	opacity: 0;
+	pointer-events: none;
+	/* Sits inside the sidebar's resize-handle hit area (right: 0, 10px wide,
+	   z-index: 10) — has to out-rank it or dragging the thumb resizes the
+	   sidebar instead. */
+	z-index: 11;
+}
+.sidebar .abt-overlay-thumb.visible {
+	opacity: 1;
+	pointer-events: auto;
+}
+.sidebar .abt-overlay-thumb:hover,
+.sidebar .abt-overlay-thumb:active {
+	background: var(--sb-fg-a32);
+}
+@media (prefers-reduced-motion: no-preference) {
+	.sidebar .abt-overlay-thumb {
+		transition: opacity 0.15s ease;
+	}
 }
 /* blue insertion line above/below the drop target */
 .sidebar .account.drop-before::after,
