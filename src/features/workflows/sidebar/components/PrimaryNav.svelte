@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { closeCalendar, isCalendarOpen, openCalendar } from "@features/workflows/spending-calendar";
+	import {
+		closeCalendar,
+		isCalendarOpen,
+		openCalendar,
+	} from "@features/workflows/spending-calendar";
 	import { navigate } from "@lib/utilities/actual-api";
 	import { watchDom } from "@lib/utilities/dom-watcher";
 	import { Page, matchesPage } from "@lib/utilities/pages";
@@ -100,14 +104,24 @@
 
 <nav class="nav">
 	{#each navItems as item (item.page)}
-		<button type="button" class="nav-link" class:active={isActive(item.page)} onclick={() => go(item.page)}>
+		<button
+			type="button"
+			class="nav-link"
+			class:active={isActive(item.page)}
+			onclick={() => go(item.page)}
+		>
 			<span class="nav-icon"><item.icon strokeWidth={1.5} /></span>
 			<span class="nav-label">{item.label}</span>
 		</button>
 	{/each}
 
 	{#if calendarFeatureEnabled}
-		<button type="button" class="nav-link" class:active={isActive(Page.Calendar)} onclick={openSpendingCalendar}>
+		<button
+			type="button"
+			class="nav-link"
+			class:active={isActive(Page.Calendar)}
+			onclick={openSpendingCalendar}
+		>
 			<span class="nav-icon"><CalendarDays strokeWidth={1.5} /></span>
 			<span class="nav-label">Calendar</span>
 		</button>
@@ -117,7 +131,11 @@
 		<span class="nav-icon"><Ellipsis strokeWidth={1.5} /></span>
 		<span class="nav-label">More</span>
 		<span class="nav-caret">
-			<ChevronDown class={moreExpanded ? "caret" : "caret collapsed"} color="var(--sb-fgm-a50)" strokeWidth={3} />
+			<ChevronDown
+				class={moreExpanded ? "caret" : "caret collapsed"}
+				color="var(--sb-fgm-a50)"
+				strokeWidth={3}
+			/>
 		</span>
 	</button>
 

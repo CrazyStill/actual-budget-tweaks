@@ -4,7 +4,8 @@
 	import { getValue, setValue } from "@lib/utilities/store";
 	import { bgPatterns } from "./data";
 
-	let { ctx }: { ctx: { key: string; defaultValue: string; css: (v: string) => string } } = $props();
+	let { ctx }: { ctx: { key: string; defaultValue: string; css: (v: string) => string } } =
+		$props();
 
 	const options = Object.keys(bgPatterns);
 
@@ -64,7 +65,8 @@
 
 	.bpp-option.is-active {
 		border-color: var(--color-sidebarItemAccentSelected);
-		box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-sidebarItemAccentSelected) 20%, transparent);
+		box-shadow: 0 0 0 2px
+			color-mix(in srgb, var(--color-sidebarItemAccentSelected) 20%, transparent);
 	}
 
 	.bpp-swatch {
@@ -89,7 +91,11 @@
 
 	.bpp-option.is-active .bpp-label {
 		color: var(--color-sidebarItemAccentSelected);
-		background: color-mix(in srgb, var(--color-sidebarItemAccentSelected) 6%, var(--color-cardBackground));
+		background: color-mix(
+			in srgb,
+			var(--color-sidebarItemAccentSelected) 6%,
+			var(--color-cardBackground)
+		);
 		border-top-color: color-mix(in srgb, var(--color-sidebarItemAccentSelected) 30%, transparent);
 	}
 </style>

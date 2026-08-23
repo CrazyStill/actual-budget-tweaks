@@ -1,7 +1,15 @@
 <script lang="ts">
 	import type { IconPickerResult } from "@lib/components/IconPickerPopover.svelte";
 	import IconPickerPopover from "@lib/components/IconPickerPopover.svelte";
-	import { Check, ChevronsUpDown, CloudCheck, CloudDownload, CloudOff, LogOut, Pencil } from "lucide-svelte";
+	import {
+		Check,
+		ChevronsUpDown,
+		CloudCheck,
+		CloudDownload,
+		CloudOff,
+		LogOut,
+		Pencil,
+	} from "lucide-svelte";
 	import { onMount } from "svelte";
 	import { autofocus } from "../actions/autofocus";
 	import { tooltip } from "../actions/tooltip.svelte";
@@ -318,7 +326,12 @@
 			{#each files as file, i (file.id ?? file.cloudFileId ?? i)}
 				{@const isActive = !!file.id && file.id === currentId}
 				{@const Icon = stateIcon(file.state)}
-				<button type="button" class="budget-item" class:active={isActive} onclick={() => onSelectFile(file)}>
+				<button
+					type="button"
+					class="budget-item"
+					class:active={isActive}
+					onclick={() => onSelectFile(file)}
+				>
 					<span class="budget-dot" class:active={isActive}></span>
 					<span class="budget-item-name">{file.name}</span>
 					<span

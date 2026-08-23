@@ -16,8 +16,14 @@ function shouldRun(setting: Setting, value: unknown): boolean {
 	return setting.type === "checkbox" ? Boolean(value) : true;
 }
 
-function usesLegacyLifecycle(setting: Setting): setting is Setting & { onChange: NonNullable<unknown> } {
-	return setting.type !== "core" && setting.type !== "custom" && Boolean((setting as { onChange?: unknown }).onChange);
+function usesLegacyLifecycle(
+	setting: Setting,
+): setting is Setting & { onChange: NonNullable<unknown> } {
+	return (
+		setting.type !== "core" &&
+		setting.type !== "custom" &&
+		Boolean((setting as { onChange?: unknown }).onChange)
+	);
 }
 
 async function activate(setting: Setting, value: unknown) {

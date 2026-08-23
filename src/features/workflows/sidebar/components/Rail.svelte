@@ -1,6 +1,10 @@
 <script lang="ts">
 	import type { AccountIconData } from "@features/appearance/account-icon-picker";
-	import { closeCalendar, isCalendarOpen, openCalendar } from "@features/workflows/spending-calendar";
+	import {
+		closeCalendar,
+		isCalendarOpen,
+		openCalendar,
+	} from "@features/workflows/spending-calendar";
 	import IconPickerPopover from "@lib/components/IconPickerPopover.svelte";
 	import { dispatch, navigate } from "@lib/utilities/actual-api";
 	import { watchDom } from "@lib/utilities/dom-watcher";
@@ -192,7 +196,13 @@
 		onClose={() => (iconPickerOpen = false)}
 	/>
 {/if}
-<button type="button" class="rail-icon" onclick={onSearch} aria-label="Search" use:tooltip={"Search (⌘K)"}>
+<button
+	type="button"
+	class="rail-icon"
+	onclick={onSearch}
+	aria-label="Search"
+	use:tooltip={"Search (⌘K)"}
+>
 	<Search strokeWidth={1.5} />
 </button>
 <div class="rail-nav">

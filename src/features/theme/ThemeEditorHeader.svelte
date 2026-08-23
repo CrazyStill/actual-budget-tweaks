@@ -30,7 +30,9 @@
 		<span class="editor__icon">◈</span>
 		<div>
 			<p class="editor__title">Token Editor</p>
-			<p class="editor__sub">{editorState.isSaving ? "saving…" : editorState.isDirty ? "unsaved" : "saved"}</p>
+			<p class="editor__sub">
+				{editorState.isSaving ? "saving…" : editorState.isDirty ? "unsaved" : "saved"}
+			</p>
 		</div>
 	</div>
 	<div class="editor__actions">
@@ -90,7 +92,9 @@
 		background: var(--color-buttonNormalBackground);
 		color: var(--color-sidebarItemAccentSelected);
 		cursor: pointer;
-		transition: border-color 0.15s, color 0.15s;
+		transition:
+			border-color 0.15s,
+			color 0.15s;
 	}
 
 	.editor__export:hover {

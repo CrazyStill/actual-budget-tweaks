@@ -25,7 +25,8 @@
 
 	const title = $derived.by(() => {
 		const rawMonthLabel =
-			(templatePlanState.activeTab === "breakdown" && templatePlanState.breakdownState?.ctx.month) ||
+			(templatePlanState.activeTab === "breakdown" &&
+				templatePlanState.breakdownState?.ctx.month) ||
 			(templatePlanState.activeTab === "overview" && templatePlanState.overviewData?.monthKey) ||
 			templatePlanState.priorityData?.month ||
 			null;
@@ -43,7 +44,9 @@
 		sidepanel.setTitle(title);
 	});
 
-	const showFooter = $derived(templatePlanState.activeTab === "breakdown" && !!templatePlanState.breakdownState);
+	const showFooter = $derived(
+		templatePlanState.activeTab === "breakdown" && !!templatePlanState.breakdownState,
+	);
 </script>
 
 <Tabs

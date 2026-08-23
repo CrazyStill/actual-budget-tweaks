@@ -319,7 +319,8 @@
 					date: d,
 					total,
 					transactions: txs,
-					isToday: d === today.getDate() && month === today.getMonth() && year === today.getFullYear(),
+					isToday:
+						d === today.getDate() && month === today.getMonth() && year === today.getFullYear(),
 					isCurrentMonth: true,
 				});
 			}
@@ -378,7 +379,11 @@
 		headerInstance = mount(DayHeader, {
 			target: headerContainer,
 			props: {
-				dateStr: date.toLocaleDateString(undefined, { month: "numeric", day: "numeric", year: "numeric" }),
+				dateStr: date.toLocaleDateString(undefined, {
+					month: "numeric",
+					day: "numeric",
+					year: "numeric",
+				}),
 				total,
 			},
 		});
@@ -411,10 +416,12 @@
 	});
 
 	onMount(() => {
-		Promise.all([loadCurrency(), loadCategoryColors(), getValue(HIDE_OFFBUDGET_KEY, true)]).then(([, , off]) => {
-			hideOffBudget = off;
-			loadMonth();
-		});
+		Promise.all([loadCurrency(), loadCategoryColors(), getValue(HIDE_OFFBUDGET_KEY, true)]).then(
+			([, , off]) => {
+				hideOffBudget = off;
+				loadMonth();
+			},
+		);
 
 		function onKey(e: KeyboardEvent) {
 			if (e.key === "Escape") {
@@ -457,7 +464,8 @@
 					stroke="currentColor"
 					stroke-width="2"
 					stroke-linecap="round"
-					stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg
+					stroke-linejoin="round"
+					><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg
 				>
 			</button>
 			<span class="cal-header__sep"></span>
@@ -582,7 +590,10 @@
 			<div class="cal-filters__title">Show</div>
 			<label class="cal-filters__row">
 				<span>Off-budget accounts</span>
-				<Switch checked={!hideOffBudget} onCheckedChange={(checked) => setHideOffBudget(!checked)} />
+				<Switch
+					checked={!hideOffBudget}
+					onCheckedChange={(checked) => setHideOffBudget(!checked)}
+				/>
 			</label>
 		</div>
 	{/if}

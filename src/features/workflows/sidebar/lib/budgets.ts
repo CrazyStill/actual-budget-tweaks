@@ -31,7 +31,10 @@ interface RawRemoteFile {
 
 // Mirrors budgetfilesSlice.ts's reconcileFiles() — matches local budgets
 // against the remote list to determine each one's real sync state.
-function reconcileFiles(localFiles: RawBudget[], remoteFiles: RawRemoteFile[] | null): BudgetFile[] {
+function reconcileFiles(
+	localFiles: RawBudget[],
+	remoteFiles: RawRemoteFile[] | null,
+): BudgetFile[] {
 	const reconciled = new Set<string>();
 
 	const files: BudgetFile[] = localFiles.map((local) => {
@@ -69,7 +72,12 @@ function reconcileFiles(localFiles: RawBudget[], remoteFiles: RawRemoteFile[] | 
 
 	const remoteOnly: BudgetFile[] = (remoteFiles || [])
 		.filter((f) => !reconciled.has(f.fileId) && !f.deleted)
-		.map((f) => ({ cloudFileId: f.fileId, groupId: f.groupId, name: f.name, state: "remote" as const }));
+		.map((f) => ({
+			cloudFileId: f.fileId,
+			groupId: f.groupId,
+			name: f.name,
+			state: "remote" as const,
+		}));
 
 	return [...files, ...remoteOnly].sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -79,7 +87,12 @@ export async function loadBudgetFiles(): Promise<BudgetFile[]> {
 		send<RawBudget[]>("get-budgets"),
 		send<RawRemoteFile[]>("get-remote-files").catch(() => null),
 	]);
-	console.debug("[ABT experimental sidebar] get-budgets ->", budgets, "get-remote-files ->", remoteFiles);
+	console.debug(
+		"[ABT experimental sidebar] get-budgets ->",
+		budgets,
+		"get-remote-files ->",
+		remoteFiles,
+	);
 	return reconcileFiles(budgets, remoteFiles);
 }
 
@@ -125,10 +138,10 @@ let iconCache: Record<string, BudgetIcon> | null = null;
 
 async function loadBudgetIcons(): Promise<Record<string, BudgetIcon>> {
 	if (!iconCache) {
-		iconCache = (await getValue(BUDGET_ICON_STORAGE_KEY, {} as Record<string, BudgetIcon>)) as Record<
-			string,
-			BudgetIcon
-		>;
+		iconCache = (await getValue(
+			BUDGET_ICON_STORAGE_KEY,
+			{} as Record<string, BudgetIcon>,
+		)) as Record<string, BudgetIcon>;
 	}
 	return iconCache;
 }

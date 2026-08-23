@@ -169,7 +169,9 @@
 	let shortcutsFeatureEnabled = $state(false);
 
 	$effect(() => {
-		getValue<boolean>("sidebar-shortcuts-enabled", false).then((v) => (shortcutsFeatureEnabled = v));
+		getValue<boolean>("sidebar-shortcuts-enabled", false).then(
+			(v) => (shortcutsFeatureEnabled = v),
+		);
 	});
 
 	// A bank sync happens server-side over time (synced → syncing → synced/
@@ -328,7 +330,11 @@
 		</div>
 		{#if !collapsed}
 			<div class="vscode-panel">
-				<BudgetHeader name={budgetName} showBudgetIcon={false} onBudgetChange={refreshBudgetContext} />
+				<BudgetHeader
+					name={budgetName}
+					showBudgetIcon={false}
+					onBudgetChange={refreshBudgetContext}
+				/>
 				<div
 					style="padding-inline: 0.65rem; padding-block: 0.65rem; display: flex; gap: 0.5rem; flex-direction: column;"
 				>
@@ -365,7 +371,14 @@
 			</div>
 		{/if}
 	{:else if collapsed}
-		<Rail {budgetName} {budgetId} {accounts} {icons} onExpand={expandSidebar} onSearch={openPalette} />
+		<Rail
+			{budgetName}
+			{budgetId}
+			{accounts}
+			{icons}
+			onExpand={expandSidebar}
+			onSearch={openPalette}
+		/>
 	{:else}
 		<BudgetHeader name={budgetName} onBudgetChange={refreshBudgetContext} />
 		<div class="body">

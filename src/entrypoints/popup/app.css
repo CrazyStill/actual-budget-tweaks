@@ -12,7 +12,14 @@
 	--ok: light-dark(#16a34a, #22c55e);
 	--warn: light-dark(#d97706, #f59e0b);
 
-	font-family: Inter, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+	font-family:
+		Inter,
+		system-ui,
+		-apple-system,
+		"Segoe UI",
+		Helvetica,
+		Arial,
+		sans-serif;
 	font-size: 14px;
 	line-height: 1.5;
 

@@ -25,8 +25,8 @@ export const themeSelector = defineSetting({
 
 			window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", async (e) => {
 				const k = e.matches
-					? (await getValue<string>("theme-auto-dark", "mocha")) as string
-					: (await getValue<string>("theme-auto-light", "latte")) as string;
+					? ((await getValue<string>("theme-auto-dark", "mocha")) as string)
+					: ((await getValue<string>("theme-auto-light", "latte")) as string);
 				await applyThemeByKey(k, ctx.defaultValue as string);
 			});
 			return;

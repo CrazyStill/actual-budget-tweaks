@@ -36,7 +36,9 @@
 {:else}
 	<div class="abt-tab-prio-summary">
 		<div class="abt-tab-prio-summary-label">Template demand</div>
-		<div class="abt-tab-prio-summary-value abt-privacy-number">{fmtMoney(data.totalRequestedCents ?? 0)}</div>
+		<div class="abt-tab-prio-summary-value abt-privacy-number">
+			{fmtMoney(data.totalRequestedCents ?? 0)}
+		</div>
 
 		<div class="abt-tab-prio-summary-label">Will allocate</div>
 		<div
@@ -73,11 +75,13 @@
 			{@const hf = data.highestFundedPriority}
 			{#if watermarkTier?.status === "partial"}
 				<div class="abt-tab-prio-watermark" data-status="partial">
-					{hf != null ? `Funded through priority ${hf}. ` : ""}{priorityLabel(data.watermark)} partially allocated.
+					{hf != null ? `Funded through priority ${hf}. ` : ""}{priorityLabel(data.watermark)} partially
+					allocated.
 				</div>
 			{:else}
 				<div class="abt-tab-prio-watermark" data-status="none">
-					{hf != null ? `Funded through priority ${hf}. ` : ""}{priorityLabel(data.watermark)}+ unfunded.
+					{hf != null ? `Funded through priority ${hf}. ` : ""}{priorityLabel(data.watermark)}+
+					unfunded.
 				</div>
 			{/if}
 		{/if}
@@ -114,7 +118,8 @@
 					</span>
 					<span class="abt-tab-prio-badge" data-status={tier.status}>{badgeChar(tier.status)}</span>
 					<span class="abt-tab-prio-tier-label">{priorityLabel(tier.priority)}</span>
-					<span class="abt-tab-prio-tier-meta">{tier.rows.length} cat{tier.rows.length === 1 ? "" : "s"}</span
+					<span class="abt-tab-prio-tier-meta"
+						>{tier.rows.length} cat{tier.rows.length === 1 ? "" : "s"}</span
 					>
 					<span class="abt-tab-prio-tier-amount abt-privacy-number">
 						{tier.allocatedCents === tier.requestedCents
@@ -125,7 +130,9 @@
 
 				<div class="abt-tab-prio-tier-rows">
 					{#each tier.rows as row (row.catId)}
-						{@const otherPriorities = row.priorities.filter((p) => p !== tier.priority && p != null)}
+						{@const otherPriorities = row.priorities.filter(
+							(p) => p !== tier.priority && p != null,
+						)}
 						{@const multiPrio = otherPriorities.length > 0}
 						{@const metaText = multiPrio
 							? `also @ ${otherPriorities.join(", ")}`
@@ -138,7 +145,10 @@
 										: row.templateCount > 1
 											? `${row.templateCount} templates`
 											: null}
-						<div class="abt-tab-prio-row" data-status={statusFor(row.requestedCents, row.allocatedCents)}>
+						<div
+							class="abt-tab-prio-row"
+							data-status={statusFor(row.requestedCents, row.allocatedCents)}
+						>
 							<span class="abt-tab-prio-row-name">
 								{row.catName}
 								{#if metaText}

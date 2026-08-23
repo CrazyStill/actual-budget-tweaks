@@ -100,9 +100,32 @@
 	});
 </script>
 
-<div class="sched" role="button" tabindex="0" onclick={() => navigate("/schedules")} onkeydown={(e) => { if (e.key === "Enter") navigate("/schedules"); }}>
+<div
+	class="sched"
+	role="button"
+	tabindex="0"
+	onclick={() => navigate("/schedules")}
+	onkeydown={(e) => {
+		if (e.key === "Enter") navigate("/schedules");
+	}}
+>
 	<div class="sched__hd">
-		<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+		<svg
+			width="10"
+			height="10"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line
+				x1="8"
+				y1="2"
+				x2="8"
+				y2="6"
+			/><line x1="3" y1="10" x2="21" y2="10" /></svg
+		>
 		<span>Upcoming</span>
 	</div>
 
@@ -116,7 +139,11 @@
 		<div class="sched__list">
 			{#each items as item (item.id)}
 				<div class="sched__row">
-					<span class="sched__date" class:is-soon={item.daysUntil <= 1} class:is-near={item.daysUntil > 1 && item.daysUntil <= 3}>
+					<span
+						class="sched__date"
+						class:is-soon={item.daysUntil <= 1}
+						class:is-near={item.daysUntil > 1 && item.daysUntil <= 3}
+					>
 						{formatDate(item.daysUntil)}
 					</span>
 					<span class="sched__name">{item.name}</span>

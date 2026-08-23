@@ -54,7 +54,7 @@
 	let tooltip = $derived(
 		price != null && change != null
 			? `${symbol} $${price.toFixed(2)} (${change >= 0 ? "+" : ""}${change.toFixed(2)})`
-			: symbol
+			: symbol,
 	);
 </script>
 
@@ -69,7 +69,11 @@
 		<span class="stk__sym">{symbol}</span>
 		<span class="stk__price abt-privacy-number">{price?.toFixed(2)}</span>
 		{#if changePercent != null}
-			<span class="stk__pct abt-privacy-number" class:is-pos={changePercent >= 0} class:is-neg={changePercent < 0}>
+			<span
+				class="stk__pct abt-privacy-number"
+				class:is-pos={changePercent >= 0}
+				class:is-neg={changePercent < 0}
+			>
 				{changePercent >= 0 ? "+" : ""}{changePercent.toFixed(1)}%
 			</span>
 		{/if}
@@ -111,10 +115,15 @@
 		flex-shrink: 0;
 	}
 
-	.stk__pct.is-pos { color: var(--color-noticeTextLight); }
-	.stk__pct.is-neg { color: var(--color-errorText); }
+	.stk__pct.is-pos {
+		color: var(--color-noticeTextLight);
+	}
+	.stk__pct.is-neg {
+		color: var(--color-errorText);
+	}
 
-	.stk__dots, .stk__err {
+	.stk__dots,
+	.stk__err {
 		opacity: 0.35;
 		margin-inline-start: auto;
 		font-size: 10px;

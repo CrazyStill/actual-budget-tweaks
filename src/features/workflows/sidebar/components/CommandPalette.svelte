@@ -188,7 +188,12 @@
 		}
 		if (page === "reports") {
 			return matchedReports.length
-				? [{ label: "Reports", items: matchedReports.map((report) => ({ kind: "report" as const, report })) }]
+				? [
+						{
+							label: "Reports",
+							items: matchedReports.map((report) => ({ kind: "report" as const, report })),
+						},
+					]
 				: [];
 		}
 		if (page === "themes") {
@@ -211,9 +216,9 @@
 
 		// Resting state previews a handful per list; typing searches all of
 		// them directly (no point paging through a filtered result).
-		const accountItems: PaletteItem[] = (q === "" ? matchedAccounts.slice(0, PREVIEW_LIMIT) : matchedAccounts).map(
-			(account) => ({ kind: "account" as const, account }),
-		);
+		const accountItems: PaletteItem[] = (
+			q === "" ? matchedAccounts.slice(0, PREVIEW_LIMIT) : matchedAccounts
+		).map((account) => ({ kind: "account" as const, account }));
 		if (q === "" && matchedAccounts.length > PREVIEW_LIMIT) {
 			accountItems.push({
 				kind: "view-all",
@@ -221,9 +226,9 @@
 				target: "accounts",
 			});
 		}
-		const reportItems: PaletteItem[] = (q === "" ? matchedReports.slice(0, PREVIEW_LIMIT) : matchedReports).map(
-			(report) => ({ kind: "report" as const, report }),
-		);
+		const reportItems: PaletteItem[] = (
+			q === "" ? matchedReports.slice(0, PREVIEW_LIMIT) : matchedReports
+		).map((report) => ({ kind: "report" as const, report }));
 		if (q === "" && matchedReports.length > PREVIEW_LIMIT) {
 			reportItems.push({
 				kind: "view-all",
@@ -254,7 +259,14 @@
 						run: a.run,
 					})),
 					...(match("Change theme")
-						? [{ kind: "subpage" as const, label: "Change theme", icon: Palette, target: "themes" as const }]
+						? [
+								{
+									kind: "subpage" as const,
+									label: "Change theme",
+									icon: Palette,
+									target: "themes" as const,
+								},
+							]
 						: []),
 					...(() => {
 						const label = privacyEnabled ? "Show amounts" : "Hide amounts";
@@ -286,7 +298,9 @@
 		open = true;
 		privacyEnabled = getPrivacyMode();
 		ensureReportsLoaded();
-		getValue<string>(THEME_SETTING_KEY, DEFAULT_THEME_KEY).then((v) => (activeThemeKey = v ?? DEFAULT_THEME_KEY));
+		getValue<string>(THEME_SETTING_KEY, DEFAULT_THEME_KEY).then(
+			(v) => (activeThemeKey = v ?? DEFAULT_THEME_KEY),
+		);
 	}
 	function closePalette(): void {
 		open = false;
@@ -372,9 +386,9 @@
 
 {#snippet hl(text: string)}
 	{@const i = q === "" ? -1 : text.toLowerCase().indexOf(q)}
-	{#if i === -1}{text}{:else}{text.slice(0, i)}<mark class="cp-mark">{text.slice(i, i + q.length)}</mark>{text.slice(
-			i + q.length,
-		)}{/if}
+	{#if i === -1}{text}{:else}{text.slice(0, i)}<mark class="cp-mark"
+			>{text.slice(i, i + q.length)}</mark
+		>{text.slice(i + q.length)}{/if}
 {/snippet}
 
 {#snippet acctIcon(account: SidebarAccount)}
@@ -434,7 +448,10 @@
 									{@render acctIcon(item.account)}
 								</span>
 								<span class="cp-item-label">{@render hl(item.account.name)}</span>
-								<span class="cp-item-amount abt-privacy-number" class:red={item.account.balance < 0}>
+								<span
+									class="cp-item-amount abt-privacy-number"
+									class:red={item.account.balance < 0}
+								>
 									{fmtMoney(item.account.balance)}
 								</span>
 							{:else if item.kind === "report"}
@@ -475,7 +492,9 @@
 			</div>
 		{/key}
 		<div class="cp-foot">
-			<span class="cp-foot-hint"><span class="cp-kbd">↑</span><span class="cp-kbd">↓</span> navigate</span>
+			<span class="cp-foot-hint"
+				><span class="cp-kbd">↑</span><span class="cp-kbd">↓</span> navigate</span
+			>
 			<span class="cp-foot-hint"><span class="cp-kbd">↵</span> select</span>
 			<span class="cp-foot-hint"><span class="cp-kbd">esc</span> close</span>
 		</div>

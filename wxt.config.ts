@@ -2,7 +2,9 @@ import { resolve } from "path";
 import type { UserManifest } from "wxt";
 import { defineConfig } from "wxt";
 
-type GeckoSettings = NonNullable<NonNullable<UserManifest["browser_specific_settings"]>["gecko"]> & {
+type GeckoSettings = NonNullable<
+	NonNullable<UserManifest["browser_specific_settings"]>["gecko"]
+> & {
 	data_collection_permissions?: {
 		required: string[];
 	};

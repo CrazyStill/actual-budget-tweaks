@@ -34,7 +34,9 @@ export function createToolbarButton(options: {
 
 export function createElement<K extends keyof HTMLElementTagNameMap>(
 	tag: K,
-	options?: Omit<Partial<HTMLElementTagNameMap[K]>, "style"> & { style?: Partial<CSSStyleDeclaration> },
+	options?: Omit<Partial<HTMLElementTagNameMap[K]>, "style"> & {
+		style?: Partial<CSSStyleDeclaration>;
+	},
 ): HTMLElementTagNameMap[K] {
 	const el = document.createElement(tag);
 	const resolvedOptions = (options ?? {}) as Omit<Partial<HTMLElementTagNameMap[K]>, "style"> & {
@@ -116,7 +118,10 @@ export interface WaitForElementOptions {
  * Polls the DOM until a matching element appears, then resolves with it.
  * Rejects after `maxRetries` attempts.
  */
-export function waitForElement(selector: string, options: WaitForElementOptions = {}): Promise<HTMLElement> {
+export function waitForElement(
+	selector: string,
+	options: WaitForElementOptions = {},
+): Promise<HTMLElement> {
 	const { maxRetries = 10, interval = 300, root = document } = options;
 
 	return new Promise((resolve, reject) => {

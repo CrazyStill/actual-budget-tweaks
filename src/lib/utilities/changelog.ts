@@ -1,4 +1,5 @@
-const CHANGELOG_URL = "https://raw.githubusercontent.com/aelxxs/actual-budget-tweaks/main/CHANGELOG.md";
+const CHANGELOG_URL =
+	"https://raw.githubusercontent.com/aelxxs/actual-budget-tweaks/main/CHANGELOG.md";
 
 export interface ReleaseNoteSection {
 	heading: string;
@@ -6,7 +7,10 @@ export interface ReleaseNoteSection {
 }
 
 /** Extracts the `## v{version}` section of the changelog into grouped, cleaned-up bullet items. */
-export function parseChangelogSection(markdown: string, version: string): ReleaseNoteSection[] | null {
+export function parseChangelogSection(
+	markdown: string,
+	version: string,
+): ReleaseNoteSection[] | null {
 	const versionHeading = `## v${version}`;
 	const start = markdown.indexOf(versionHeading);
 	if (start === -1) return null;

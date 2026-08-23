@@ -13,7 +13,13 @@ const MASK = {
 function update(node: HTMLElement, lastState: { value: keyof typeof MASK | null }) {
 	const maxScroll = node.scrollHeight - node.clientHeight;
 	const state =
-		maxScroll <= 1 ? "none" : node.scrollTop <= 0 ? "top" : node.scrollTop >= maxScroll - 1 ? "bottom" : "middle";
+		maxScroll <= 1
+			? "none"
+			: node.scrollTop <= 0
+				? "top"
+				: node.scrollTop >= maxScroll - 1
+					? "bottom"
+					: "middle";
 	// The ResizeObserver below fires often (live data reflows constantly);
 	// skip the write unless the fade state actually changed, or every
 	// no-op firing forces a repaint on this masked layer.

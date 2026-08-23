@@ -6,7 +6,10 @@
 
 	const breakdownState = $derived(templatePlanState.breakdownState);
 
-	function formatAllocatedVsRequested(allocatedCents: number, requestedCents: number | null): string {
+	function formatAllocatedVsRequested(
+		allocatedCents: number,
+		requestedCents: number | null,
+	): string {
 		if (requestedCents == null || allocatedCents === requestedCents) {
 			return fmtMoney(allocatedCents);
 		}
@@ -21,7 +24,9 @@
 		breakdownState && Array.isArray(breakdownState.diff?.groups) ? breakdownState.diff.groups : [],
 	);
 	const changedGroups = $derived(
-		rawGroups.map((g) => ({ ...g, rows: g.rows.filter((r) => r.delta !== 0) })).filter((g) => g.rows.length > 0),
+		rawGroups
+			.map((g) => ({ ...g, rows: g.rows.filter((r) => r.delta !== 0) }))
+			.filter((g) => g.rows.length > 0),
 	);
 	const allEmpty = $derived(changedGroups.length === 0);
 	const groupsToShow = $derived(templatePlanState.showAllRows ? rawGroups : changedGroups);
@@ -57,10 +62,16 @@
 			{#each summary.tiers as tier (priorityKey(tier.priority))}
 				<div class="abt-tab-breakdown-priority-tier" data-status={tier.status}>
 					<div class="abt-tab-breakdown-priority-tier-header">
-						<span class="abt-tab-prio-badge" data-status={tier.status}>{badgeChar(tier.status ?? "none")}</span>
-						<span class="abt-tab-breakdown-priority-tier-label">{priorityLabel(tier.priority)}</span>
+						<span class="abt-tab-prio-badge" data-status={tier.status}
+							>{badgeChar(tier.status ?? "none")}</span
+						>
+						<span class="abt-tab-breakdown-priority-tier-label">{priorityLabel(tier.priority)}</span
+						>
 						<span class="abt-tab-breakdown-priority-tier-amount abt-privacy-number">
-							{formatAllocatedVsRequested(tier.allocatedCents, tier.hasUnknownDemand ? null : tier.requestedCents)}
+							{formatAllocatedVsRequested(
+								tier.allocatedCents,
+								tier.hasUnknownDemand ? null : tier.requestedCents,
+							)}
 						</span>
 					</div>
 					<div class="abt-tab-breakdown-priority-rows">
@@ -79,7 +90,9 @@
 	{/if}
 
 	{#if groupsToShow.length === 0}
-		<div class="abt-tab-empty">{allEmpty ? "No category budgets changed." : "No categories to show."}</div>
+		<div class="abt-tab-empty">
+			{allEmpty ? "No category budgets changed." : "No categories to show."}
+		</div>
 	{:else}
 		{#each groupsToShow as g (g.id)}
 			<div class="abt-tab-group">

@@ -5,9 +5,30 @@
 	const { onClose } = $props<{ onClose: () => void }>();
 
 	const CURRENCIES = [
-		"USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY",
-		"INR", "MXN", "BRL", "KRW", "SEK", "NOK", "DKK", "NZD",
-		"SGD", "HKD", "TRY", "ZAR", "PLN", "THB", "PHP", "CZK",
+		"USD",
+		"EUR",
+		"GBP",
+		"JPY",
+		"CAD",
+		"AUD",
+		"CHF",
+		"CNY",
+		"INR",
+		"MXN",
+		"BRL",
+		"KRW",
+		"SEK",
+		"NOK",
+		"DKK",
+		"NZD",
+		"SGD",
+		"HKD",
+		"TRY",
+		"ZAR",
+		"PLN",
+		"THB",
+		"PHP",
+		"CZK",
 	];
 
 	let fromCurrency = $state("USD");
@@ -81,13 +102,7 @@
 					<option value={c}>{c}</option>
 				{/each}
 			</select>
-			<input
-				class="conv__input"
-				type="number"
-				bind:value={fromAmount}
-				placeholder="0"
-				step="any"
-			/>
+			<input class="conv__input" type="number" bind:value={fromAmount} placeholder="0" step="any" />
 		</div>
 	</div>
 
@@ -177,7 +192,9 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-	.conv__input::placeholder { color: var(--color-pageTextSubdued); }
+	.conv__input::placeholder {
+		color: var(--color-pageTextSubdued);
+	}
 
 	.conv__input--result {
 		color: var(--color-sidebarItemAccentSelected, #7c5cbf);
@@ -213,7 +230,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: color 0.1s, border-color 0.1s;
+		transition:
+			color 0.1s,
+			border-color 0.1s;
 	}
 
 	.conv__swap-btn:hover {
@@ -236,5 +255,7 @@
 		padding-top: 6px;
 	}
 
-	.conv__time { opacity: 0.6; }
+	.conv__time {
+		opacity: 0.6;
+	}
 </style>

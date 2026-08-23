@@ -8,7 +8,10 @@
 const MIN_THUMB = 24; // px
 const HIDE_DELAY = 800; // ms after the last scroll/drag before fading out
 
-export function overlayScrollbar(node: HTMLElement, params: { enabled: boolean } = { enabled: true }) {
+export function overlayScrollbar(
+	node: HTMLElement,
+	params: { enabled: boolean } = { enabled: true },
+) {
 	if (!params.enabled) return {};
 
 	// Appended to the parent (a non-scrolling positioning wrapper — see

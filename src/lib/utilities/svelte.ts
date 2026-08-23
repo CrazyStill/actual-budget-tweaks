@@ -6,7 +6,11 @@ export function mountToNode<T extends Record<string, unknown>>(
 	props: T,
 	target?: HTMLElement,
 ): HTMLDivElement;
-export function mountToNode(component: Component, props?: undefined, target?: HTMLElement): HTMLDivElement;
+export function mountToNode(
+	component: Component,
+	props?: undefined,
+	target?: HTMLElement,
+): HTMLDivElement;
 export function mountToNode(
 	component: Component,
 	props?: Record<string, unknown>,
@@ -38,7 +42,10 @@ export function mountToNodeWithReturn<T extends Record<string, unknown>>(
  * own outer scroll container ends up scrolling the whole drawer (header
  * included) instead of just the mounted content's internal scroll region.
  */
-export function mountToPanelBody<T extends Record<string, unknown>>(component: Component<T>, props?: T): HTMLDivElement {
+export function mountToPanelBody<T extends Record<string, unknown>>(
+	component: Component<T>,
+	props?: T,
+): HTMLDivElement {
 	const container = createElement("div", {
 		style: {
 			display: "flex",

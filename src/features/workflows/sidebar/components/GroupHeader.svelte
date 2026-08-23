@@ -73,7 +73,11 @@
 		ondragover={onDragOver}
 		ondrop={onDrop}
 	>
-		<ChevronDown class={open ? "caret" : "caret collapsed"} color="var(--sb-fgm-a50)" strokeWidth={3} />
+		<ChevronDown
+			class={open ? "caret" : "caret collapsed"}
+			color="var(--sb-fgm-a50)"
+			strokeWidth={3}
+		/>
 		<span class="group-label sub-label">{group.label}</span>
 		{#if count}<span class="group-count sub-count">{count}</span>{/if}
 	</button>

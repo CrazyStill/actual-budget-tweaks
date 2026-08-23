@@ -1,5 +1,13 @@
 <script lang="ts">
-	let { themeName, mode, isEditing, onSave, onDelete, onNameChange, onModeChange }: {
+	let {
+		themeName,
+		mode,
+		isEditing,
+		onSave,
+		onDelete,
+		onNameChange,
+		onModeChange,
+	}: {
 		themeName: string;
 		mode: "dark" | "light";
 		isEditing: boolean;
@@ -95,7 +103,9 @@
 		border-radius: 6px;
 		border: var(--border);
 		cursor: pointer;
-		transition: border-color 0.15s, color 0.15s;
+		transition:
+			border-color 0.15s,
+			color 0.15s;
 	}
 
 	.creator-header__delete {

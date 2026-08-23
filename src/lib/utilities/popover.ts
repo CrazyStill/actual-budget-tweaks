@@ -49,7 +49,10 @@ export function positionPopover(
  * listener is attached after a 0ms delay so the click that opened the popover
  * doesn't immediately close it. Returns an unsubscribe usable at any time.
  */
-export function onOutsideClick(elements: HTMLElement | HTMLElement[], onClose: () => void): () => void {
+export function onOutsideClick(
+	elements: HTMLElement | HTMLElement[],
+	onClose: () => void,
+): () => void {
 	const els = Array.isArray(elements) ? elements : [elements];
 
 	function handler(e: MouseEvent) {

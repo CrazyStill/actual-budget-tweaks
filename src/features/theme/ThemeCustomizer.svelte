@@ -184,7 +184,8 @@
 		remoteThemes.filter((theme) => {
 			const matchesSearch = !q || theme.name.toLowerCase().includes(q);
 			const matchesCreator =
-				creatorFilter === "all" || (creatorFilter !== "ABT" && getRepoOwner(theme.repo) === creatorFilter);
+				creatorFilter === "all" ||
+				(creatorFilter !== "ABT" && getRepoOwner(theme.repo) === creatorFilter);
 			const matchesThemeType = themeFilter === "all" || theme.mode === themeFilter;
 
 			return matchesSearch && matchesCreator && matchesThemeType;
@@ -196,7 +197,9 @@
 		...Array.from(new Set(remoteThemes.map((t) => getRepoOwner(t.repo)))).sort(),
 	]);
 
-	const isEmpty = $derived(filteredBuiltin.length === 0 && filteredCommunity.length === 0 && !loadingRemote);
+	const isEmpty = $derived(
+		filteredBuiltin.length === 0 && filteredCommunity.length === 0 && !loadingRemote,
+	);
 
 	let creatorNode: Node | null = null;
 	let creatorHeaderNode: Node | null = null;
@@ -383,7 +386,12 @@
 	</div>
 
 	<div class="controls">
-		<input class="controls__search" type="search" placeholder="Search themes…" bind:value={searchQuery} />
+		<input
+			class="controls__search"
+			type="search"
+			placeholder="Search themes…"
+			bind:value={searchQuery}
+		/>
 		<select class="controls__creator" bind:value={creatorFilter}>
 			<option value="all">All creators</option>
 			{#each availableCreators as creator}
@@ -941,12 +949,14 @@
 
 	.card:hover:not(:disabled) {
 		border-color: color-mix(in srgb, var(--color-sidebarItemAccentSelected) 60%, transparent);
-		box-shadow: 0 2px 8px color-mix(in srgb, var(--color-sidebarItemAccentSelected) 15%, transparent);
+		box-shadow: 0 2px 8px
+			color-mix(in srgb, var(--color-sidebarItemAccentSelected) 15%, transparent);
 	}
 
 	.card--active {
 		border-color: var(--color-sidebarItemAccentSelected);
-		box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-sidebarItemAccentSelected) 25%, transparent);
+		box-shadow: 0 0 0 2px
+			color-mix(in srgb, var(--color-sidebarItemAccentSelected) 25%, transparent);
 	}
 
 	.card--loading {
@@ -1063,7 +1073,8 @@
 		width: 100%;
 		padding: 5px 10px;
 		border: none;
-		border-top: 1px solid color-mix(in srgb, var(--color-sidebarItemAccentSelected) 20%, transparent);
+		border-top: 1px solid
+			color-mix(in srgb, var(--color-sidebarItemAccentSelected) 20%, transparent);
 		background: color-mix(in srgb, var(--color-sidebarItemAccentSelected) 6%, transparent);
 		color: var(--color-sidebarItemAccentSelected);
 		font-family: inherit;
@@ -1091,7 +1102,8 @@
 		list-style: none;
 		margin: 0;
 		padding: 4px 10px 6px;
-		border-top: 1px solid color-mix(in srgb, var(--color-sidebarItemAccentSelected) 15%, transparent);
+		border-top: 1px solid
+			color-mix(in srgb, var(--color-sidebarItemAccentSelected) 15%, transparent);
 		background: color-mix(in srgb, var(--color-sidebarItemAccentSelected) 4%, transparent);
 		max-height: 88px;
 		overflow-y: auto;

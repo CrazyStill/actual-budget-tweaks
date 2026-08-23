@@ -1,5 +1,10 @@
 <script lang="ts">
-	let { label, value, onHexInput, onPickerChange }: {
+	let {
+		label,
+		value,
+		onHexInput,
+		onPickerChange,
+	}: {
 		label: string;
 		value: string;
 		onHexInput: (value: string) => void;

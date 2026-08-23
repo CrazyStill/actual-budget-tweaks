@@ -124,7 +124,11 @@
 		const surfaceKeys = SURFACE_VARS.map((v) => v.key);
 		const surfaceColors: Record<string, string> = {};
 		surfaceKeys.forEach((key, i) => {
-			surfaceColors[key] = hslToHex(baseHue, baseSat * (isDark ? 0.3 + i * 0.05 : 0.6 - i * 0.03), surfaceL[i]);
+			surfaceColors[key] = hslToHex(
+				baseHue,
+				baseSat * (isDark ? 0.3 + i * 0.05 : 0.6 - i * 0.03),
+				surfaceL[i],
+			);
 		});
 
 		const accentSat = 55 + Math.random() * 25;
@@ -132,7 +136,11 @@
 		const accentColors: Record<string, string> = {};
 		ACCENT_VARS.forEach((v, i) => {
 			const hue = (baseHue + (i * 360) / ACCENT_VARS.length + Math.random() * 10) % 360;
-			accentColors[v.key] = hslToHex(hue, accentSat + Math.random() * 10 - 5, accentL + Math.random() * 8 - 4);
+			accentColors[v.key] = hslToHex(
+				hue,
+				accentSat + Math.random() * 10 - 5,
+				accentL + Math.random() * 8 - 4,
+			);
 		});
 
 		const newColors = { ...surfaceColors, ...accentColors };
@@ -198,8 +206,7 @@
 				class="creator__css-input"
 				placeholder={`:root {\n  --color-pageBackground: #1e1e2e;\n  --color-pageText: #cdd6f4;\n  /* ... all color tokens */\n}`}
 				bind:value={cssInput}
-				rows="16"
-			></textarea>
+				rows="16"></textarea>
 			<button class="creator__css-apply" onclick={applyCss}>Apply CSS</button>
 		</div>
 	{/if}

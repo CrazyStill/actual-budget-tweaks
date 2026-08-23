@@ -49,10 +49,13 @@
 	</div>
 {:else if !data}
 	<div class="abt-tab-empty">
-		<button type="button" class="abt-tab-overview-load-btn" onclick={triggerRefresh}>Load overview</button>
+		<button type="button" class="abt-tab-overview-load-btn" onclick={triggerRefresh}
+			>Load overview</button
+		>
 	</div>
 {:else}
-	{@const spentPct = data.totalBudgeted > 0 ? Math.round((data.totalSpent / data.totalBudgeted) * 100) : 0}
+	{@const spentPct =
+		data.totalBudgeted > 0 ? Math.round((data.totalSpent / data.totalBudgeted) * 100) : 0}
 	{@const spentPctCapped = Math.min(100, spentPct)}
 	{@const ringColor =
 		spentPct >= 100
@@ -70,13 +73,18 @@
 	{@const daysLeft = isCurrentMonth ? daysInMonth - dayOfMonth : 0}
 	{@const spentAhead = data.totalBudgeted > 0 && spentPct > monthElapsedPct}
 	{@const nextCoveragePct =
-		data.recentAvgSpending > 0 ? Math.round((data.nextMonthToBudget / data.recentAvgSpending) * 100) : 0}
+		data.recentAvgSpending > 0
+			? Math.round((data.nextMonthToBudget / data.recentAvgSpending) * 100)
+			: 0}
 	{@const nextOver = data.nextMonthToBudget - data.recentAvgSpending}
-	{@const maxOver = data.overspentCategories.length > 0 ? Math.abs(data.overspentCategories[0].leftover) : 1}
+	{@const maxOver =
+		data.overspentCategories.length > 0 ? Math.abs(data.overspentCategories[0].leftover) : 1}
 
 	<!-- Quick Actions -->
 	<div class="abt-tab-overview-actions">
-		<button type="button" class="abt-tab-overview-apply-btn" onclick={applyTemplates}> ✦ Apply Templates </button>
+		<button type="button" class="abt-tab-overview-apply-btn" onclick={applyTemplates}>
+			✦ Apply Templates
+		</button>
 		<button
 			type="button"
 			class="abt-tab-overview-refresh-btn"
@@ -86,7 +94,8 @@
 			aria-label="Refresh overview"
 		>
 			{#if loading}
-				<span class="abt-tab-spinner" style="width:9px;height:9px;border-width:1.5px;margin:0"></span>
+				<span class="abt-tab-spinner" style="width:9px;height:9px;border-width:1.5px;margin:0"
+				></span>
 			{:else}
 				↻
 			{/if}
@@ -169,16 +178,22 @@
 					<div class="abt-tab-overview-bdr">
 						<span class="abt-tab-overview-bdr-op">→</span>
 						<span class="abt-tab-overview-bdr-label">Available funds</span>
-						<span class="abt-tab-overview-bdr-val abt-privacy-number">{fmtMoney(data.availableFunds)}</span>
+						<span class="abt-tab-overview-bdr-val abt-privacy-number"
+							>{fmtMoney(data.availableFunds)}</span
+						>
 					</div>
 					<div class="abt-tab-overview-bdr">
 						<span class="abt-tab-overview-bdr-op">−</span>
 						<span class="abt-tab-overview-bdr-label">Assigned to categories</span>
-						<span class="abt-tab-overview-bdr-val abt-privacy-number">{fmtMoney(data.totalBudgeted)}</span>
+						<span class="abt-tab-overview-bdr-val abt-privacy-number"
+							>{fmtMoney(data.totalBudgeted)}</span
+						>
 					</div>
 					{#if data.lastMonthOverspent !== 0}
 						<div class="abt-tab-overview-bdr">
-							<span class="abt-tab-overview-bdr-op" style="color:var(--color-errorText,#e57373)">−</span>
+							<span class="abt-tab-overview-bdr-op" style="color:var(--color-errorText,#e57373)"
+								>−</span
+							>
 							<span class="abt-tab-overview-bdr-label">Last month overspent</span>
 							<span class="abt-tab-overview-bdr-val abt-privacy-number" data-sign="neg"
 								>{fmtMoney(Math.abs(data.lastMonthOverspent))}</span
@@ -197,7 +212,8 @@
 				</div>
 				{#if data.bufferedSelected !== 0}
 					<div class="abt-tab-overview-callout" data-type="success">
-						✓ <span class="abt-privacy-number">{fmtMoney(data.bufferedSelected)}</span> saved for next month
+						✓ <span class="abt-privacy-number">{fmtMoney(data.bufferedSelected)}</span> saved for next
+						month
 					</div>
 				{/if}
 			</div>
@@ -240,7 +256,8 @@
 						<span class="abt-tab-overview-pace-label">Spent</span>
 						<span
 							class="abt-tab-overview-pace-pct abt-privacy-number"
-							data-sign={spentPct >= 100 ? "neg" : spentAhead ? "warn" : null}>{spentPctCapped}%</span
+							data-sign={spentPct >= 100 ? "neg" : spentAhead ? "warn" : null}
+							>{spentPctCapped}%</span
 						>
 					</div>
 					<div class="abt-tab-overview-mini-bar-wrap">
@@ -344,7 +361,9 @@
 						{#if nextCoveragePct >= 100}
 							Fully prepared for {longMonth(data.nextMonthKey)} — {fmtMoney(nextOver)} over target.
 						{:else}
-							{fmtMoney(Math.abs(nextOver))} more needed to fully cover {longMonth(data.nextMonthKey)}.
+							{fmtMoney(Math.abs(nextOver))} more needed to fully cover {longMonth(
+								data.nextMonthKey,
+							)}.
 						{/if}
 					</div>
 
@@ -500,7 +519,9 @@
 				{:else}
 					<span class="abt-tab-overview-st-badge" data-status="ok">all funded</span>
 				{/if}
-				<span class="abt-tab-overview-st-tally">{data.fullyFundedGoalCount}/{data.totalGoalCount}</span>
+				<span class="abt-tab-overview-st-tally"
+					>{data.fullyFundedGoalCount}/{data.totalGoalCount}</span
+				>
 				<svg
 					class="abt-tab-overview-chevron"
 					data-open={open("goals")}
@@ -586,7 +607,9 @@
 						</div>
 					{/each}
 				{:else}
-					<div class="abt-tab-overview-empty-row">No scheduled transactions in the next 30 days</div>
+					<div class="abt-tab-overview-empty-row">
+						No scheduled transactions in the next 30 days
+					</div>
 				{/if}
 			</div>
 		{/if}

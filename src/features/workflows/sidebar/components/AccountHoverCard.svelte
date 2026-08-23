@@ -37,7 +37,9 @@
 		const max = Math.max(...pts);
 		const range = max - min || 1;
 		const step = w / (pts.length - 1);
-		const xy = pts.map((p, i) => [i * step, pad + (h - pad * 2) * (1 - (p - min) / range)] as const);
+		const xy = pts.map(
+			(p, i) => [i * step, pad + (h - pad * 2) * (1 - (p - min) / range)] as const,
+		);
 		const line = xy.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
 		return { line, area: `${line} L ${w} ${h} L 0 ${h} Z` };
 	}
@@ -113,7 +115,9 @@
 					<div class="acard-sched">
 						<span class="acard-date">{u.date}</span>
 						<span class="acard-payee">{u.payee}</span>
-						<span class="acard-amt" class:neg={u.amount < 0}>{fmtMoney(u.amount, { sign: true })}</span>
+						<span class="acard-amt" class:neg={u.amount < 0}
+							>{fmtMoney(u.amount, { sign: true })}</span
+						>
 					</div>
 				{/each}
 			</div>

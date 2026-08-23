@@ -10,7 +10,8 @@ export interface SettingContext {
 export type SettingType = "select" | "checkbox" | "custom" | "core";
 
 /** Known subgroup labels settings can be grouped under within a section. Add new values here as needed. */
-export type SettingGroup = "General" | "Budget" | "Transactions" | "Categories" | "Sidebar" | "Accounts" | "Reports";
+export type SettingGroup =
+	"General" | "Budget" | "Transactions" | "Categories" | "Sidebar" | "Accounts" | "Reports";
 
 export type Cleanup = void | (() => void | Promise<void>);
 
@@ -62,11 +63,10 @@ export interface CoreSetting {
 }
 
 export type Setting<C extends SettingContext = SettingContext> =
-	| SelectSetting<C>
-	| CheckboxSetting<C>
-	| CustomSetting<C>
-	| CoreSetting;
+	SelectSetting<C> | CheckboxSetting<C> | CustomSetting<C> | CoreSetting;
 
-export function defineSetting<C extends SettingContext, S extends Setting<C>>(setting: S & { context: C }): S {
+export function defineSetting<C extends SettingContext, S extends Setting<C>>(
+	setting: S & { context: C },
+): S {
 	return setting;
 }

@@ -17,7 +17,9 @@ export async function injectMainWorldScript(path: string): Promise<void> {
 
 	await new Promise<void>((resolve, reject) => {
 		script.addEventListener("load", () => resolve(), { once: true });
-		script.addEventListener("error", () => reject(new Error(`Failed to inject script: ${path}`)), { once: true });
+		script.addEventListener("error", () => reject(new Error(`Failed to inject script: ${path}`)), {
+			once: true,
+		});
 		(document.head || document.documentElement).appendChild(script);
 	});
 }

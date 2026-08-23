@@ -19,19 +19,29 @@ function scopedKey(base: string, budgetId: string | undefined): string {
 	return budgetId ? `${base}:${budgetId}` : base;
 }
 
-export async function loadGroups(budgetId: string | undefined): Promise<Record<string, AccountGroup>> {
+export async function loadGroups(
+	budgetId: string | undefined,
+): Promise<Record<string, AccountGroup>> {
 	return getValue<Record<string, AccountGroup>>(scopedKey(GROUPS_KEY, budgetId), {});
 }
 
-export function saveGroups(budgetId: string | undefined, groups: Record<string, AccountGroup>): void {
+export function saveGroups(
+	budgetId: string | undefined,
+	groups: Record<string, AccountGroup>,
+): void {
 	setValue(scopedKey(GROUPS_KEY, budgetId), groups);
 }
 
-export async function loadAssignments(budgetId: string | undefined): Promise<Record<string, string>> {
+export async function loadAssignments(
+	budgetId: string | undefined,
+): Promise<Record<string, string>> {
 	return getValue<Record<string, string>>(scopedKey(ASSIGNMENTS_KEY, budgetId), {});
 }
 
-export function saveAssignments(budgetId: string | undefined, assignments: Record<string, string>): void {
+export function saveAssignments(
+	budgetId: string | undefined,
+	assignments: Record<string, string>,
+): void {
 	setValue(scopedKey(ASSIGNMENTS_KEY, budgetId), assignments);
 }
 

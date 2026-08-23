@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { icon, type IconName } from "../icons";
 
-	const { name, size, strokeWidth, class: className }: {
+	const {
+		name,
+		size,
+		strokeWidth,
+		class: className,
+	}: {
 		name: IconName;
 		size?: number;
 		strokeWidth?: number;

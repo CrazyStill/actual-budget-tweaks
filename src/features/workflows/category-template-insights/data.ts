@@ -35,7 +35,9 @@ function parseGoalDef(goalDef: string | null | undefined): GoalDefEntry[] {
 	try {
 		const parsed = JSON.parse(goalDef);
 		if (!Array.isArray(parsed)) return [];
-		return parsed.filter((d): d is GoalDefEntry => d && (d.directive === "template" || d.directive === "goal"));
+		return parsed.filter(
+			(d): d is GoalDefEntry => d && (d.directive === "template" || d.directive === "goal"),
+		);
 	} catch {
 		return [];
 	}
@@ -96,7 +98,9 @@ export async function loadData(): Promise<Map<string, CategoryInsight> | null> {
 	loading = (async () => {
 		try {
 			const [cats, scheds, txs, prefs] = await Promise.all([
-				query<{ id: string; name: string; tombstone: boolean; goal_def: string | null }[]>("categories"),
+				query<{ id: string; name: string; tombstone: boolean; goal_def: string | null }[]>(
+					"categories",
+				),
 				query<RawSchedule[]>("schedules"),
 				query<{ id: string; date: string; schedule: string }[]>("transactions", {
 					filter: { tombstone: false },
@@ -188,7 +192,10 @@ async function fetchGoalCents(catId: string): Promise<number | null> {
 	const sheet = getCurrentSheetName();
 	if (!sheet) return null;
 	try {
-		const res = await send<{ value?: number }>("get-cell", { sheetName: sheet, name: "goal-" + catId });
+		const res = await send<{ value?: number }>("get-cell", {
+			sheetName: sheet,
+			name: "goal-" + catId,
+		});
 		const value = res && typeof res.value === "number" ? res.value : null;
 		goalCache.set(catId, value);
 		return value;
@@ -201,7 +208,10 @@ async function fetchLeftoverCents(catId: string): Promise<number | null> {
 	const sheet = getCurrentSheetName();
 	if (!sheet) return null;
 	try {
-		const res = await send<{ value?: number }>("get-cell", { sheetName: sheet, name: "leftover-" + catId });
+		const res = await send<{ value?: number }>("get-cell", {
+			sheetName: sheet,
+			name: "leftover-" + catId,
+		});
 		return res && typeof res.value === "number" ? res.value : null;
 	} catch {
 		return null;
@@ -247,7 +257,10 @@ function directGoalCents(entry: CategoryInsight): number | null {
 	return null;
 }
 
-export async function getProgressCents(row: HTMLElement, entry: CategoryInsight): Promise<ProgressInfo> {
+export async function getProgressCents(
+	row: HTMLElement,
+	entry: CategoryInsight,
+): Promise<ProgressInfo> {
 	const schedTotal = scheduleTotalCents(entry);
 	if (schedTotal > 0) {
 		const leftover = await fetchLeftoverCents(entry.id);

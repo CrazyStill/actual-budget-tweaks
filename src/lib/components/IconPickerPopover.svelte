@@ -96,7 +96,9 @@
 	function scrollToGroup(name: string) {
 		activeGroup = name;
 		emojiSearch = "";
-		gridWrap?.querySelector(`[data-group="${name}"]`)?.scrollIntoView({ block: "start", behavior: "smooth" });
+		gridWrap
+			?.querySelector(`[data-group="${name}"]`)
+			?.scrollIntoView({ block: "start", behavior: "smooth" });
 	}
 
 	$effect(() => {
@@ -105,12 +107,14 @@
 		emojiObserver = new IntersectionObserver(
 			(entries) => {
 				for (const entry of entries) {
-					if (entry.isIntersecting) activeGroup = (entry.target as HTMLElement).dataset.group ?? activeGroup;
+					if (entry.isIntersecting)
+						activeGroup = (entry.target as HTMLElement).dataset.group ?? activeGroup;
 				}
 			},
 			{ root: gridWrap, threshold: 0, rootMargin: "0px 0px -80% 0px" },
 		);
-		for (const el of gridWrap.querySelectorAll<HTMLElement>("[data-group]")) emojiObserver.observe(el);
+		for (const el of gridWrap.querySelectorAll<HTMLElement>("[data-group]"))
+			emojiObserver.observe(el);
 		return () => emojiObserver?.disconnect();
 	});
 
@@ -145,7 +149,8 @@
 		let left = anchorRect.right + margin;
 
 		if (left + pop.width > window.innerWidth - margin) left = anchorRect.left - pop.width - margin;
-		if (top + pop.height > window.innerHeight - margin) top = window.innerHeight - pop.height - margin;
+		if (top + pop.height > window.innerHeight - margin)
+			top = window.innerHeight - pop.height - margin;
 		top = Math.max(margin, top);
 
 		style = `top:${top}px;left:${left}px;opacity:1`;
@@ -201,7 +206,11 @@
 			>
 			Logo
 		</button>
-		<button class="tab" class:active={activeTab === "upload"} onclick={() => (activeTab = "upload")}>
+		<button
+			class="tab"
+			class:active={activeTab === "upload"}
+			onclick={() => (activeTab = "upload")}
+		>
 			<svg
 				viewBox="0 0 16 16"
 				fill="none"
@@ -211,12 +220,9 @@
 				stroke-linejoin="round"
 				width="13"
 				height="13"
-				><path d="M2 11v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2" /><polyline points="11 5 8 2 5 5" /><line
-					x1="8"
-					y1="2"
-					x2="8"
-					y2="11"
-				/></svg
+				><path d="M2 11v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2" /><polyline
+					points="11 5 8 2 5 5"
+				/><line x1="8" y1="2" x2="8" y2="11" /></svg
 			>
 			Upload
 		</button>
@@ -275,8 +281,7 @@
 										<button
 											class="eg-btn"
 											title={e.name}
-											onclick={() => onSelect({ type: "emoji", value: e.emoji })}
-											>{e.emoji}</button
+											onclick={() => onSelect({ type: "emoji", value: e.emoji })}>{e.emoji}</button
 										>
 									{/if}
 								{/each}
@@ -370,18 +375,17 @@
 						width="22"
 						height="22"
 						style="opacity:0.3;color:var(--color-pageText)"
-						><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line
-							x1="12"
-							y1="3"
-							x2="12"
-							y2="15"
-						/></svg
+						><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline
+							points="17 8 12 3 7 8"
+						/><line x1="12" y1="3" x2="12" y2="15" /></svg
 					>
 					<span class="dropzone__label">Drop image or click to browse</span>
 				{/if}
 			</div>
 			{#if uploadedDataUrl}
-				<button class="btn-primary" onclick={() => onSelect({ type: "dataUrl", value: uploadedDataUrl! })}
+				<button
+					class="btn-primary"
+					onclick={() => onSelect({ type: "dataUrl", value: uploadedDataUrl! })}
 					>Use this image</button
 				>
 			{/if}
@@ -672,7 +676,8 @@
 
 	.inp:focus {
 		border-color: var(--color-sidebarItemAccentSelected);
-		box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-sidebarItemAccentSelected) 12%, transparent);
+		box-shadow: 0 0 0 2px
+			color-mix(in srgb, var(--color-sidebarItemAccentSelected) 12%, transparent);
 	}
 	.inp::placeholder {
 		color: var(--color-pageTextSubdued);

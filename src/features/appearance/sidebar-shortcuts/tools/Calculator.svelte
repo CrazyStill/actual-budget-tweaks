@@ -39,12 +39,23 @@
 
 		let result: number;
 		switch (op) {
-			case "+": result = left + right; break;
-			case "-": result = left - right; break;
-			case "×": result = left * right; break;
-			case "÷": result = right !== 0 ? left / right : NaN; break;
-			case "%": result = left * (right / 100); break;
-			default: return;
+			case "+":
+				result = left + right;
+				break;
+			case "-":
+				result = left - right;
+				break;
+			case "×":
+				result = left * right;
+				break;
+			case "÷":
+				result = right !== 0 ? left / right : NaN;
+				break;
+			case "%":
+				result = left * (right / 100);
+				break;
+			default:
+				return;
 		}
 
 		display = isNaN(result) ? "Error" : parseFloat(result.toFixed(10)).toString();
@@ -59,7 +70,10 @@
 	}
 
 	function backspace() {
-		if (hasResult) { clear(); return; }
+		if (hasResult) {
+			clear();
+			return;
+		}
 		display = display.length > 1 ? display.slice(0, -1) : "0";
 	}
 
@@ -69,8 +83,10 @@
 		else if (e.key === "+") input("+");
 		else if (e.key === "-") input("-");
 		else if (e.key === "*") input("×");
-		else if (e.key === "/") { e.preventDefault(); input("÷"); }
-		else if (e.key === "%") input("%");
+		else if (e.key === "/") {
+			e.preventDefault();
+			input("÷");
+		} else if (e.key === "%") input("%");
 		else if (e.key === "Enter" || e.key === "=") calculate();
 		else if (e.key === "Escape") onClose();
 		else if (e.key === "Backspace") backspace();

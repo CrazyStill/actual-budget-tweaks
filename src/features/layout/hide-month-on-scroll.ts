@@ -94,7 +94,9 @@ export const hideMonthOnScroll = defineSetting({
 				return;
 			}
 
-			const budgetTable = document.querySelector('[data-testid="budget-totals"]')?.nextElementSibling;
+			const budgetTable = document.querySelector(
+				'[data-testid="budget-totals"]',
+			)?.nextElementSibling;
 			const monthSelection = document.querySelector('[data-testid="budget-table"]')
 				?.previousElementSibling as HTMLElement | null;
 

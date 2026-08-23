@@ -4,7 +4,8 @@
 	import { applyGlobalCSS } from "@lib/utilities/dom";
 	import { getValue, setValue } from "@lib/utilities/store";
 
-	let { ctx }: { ctx: { key: string; defaultValue: string; css: (v: string) => string } } = $props();
+	let { ctx }: { ctx: { key: string; defaultValue: string; css: (v: string) => string } } =
+		$props();
 
 	const options = [
 		{ value: ".05rem", label: "Slim" },

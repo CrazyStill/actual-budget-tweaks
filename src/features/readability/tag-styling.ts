@@ -122,7 +122,9 @@ function decorateTagOption(item: HTMLElement) {
 }
 
 function scanTags() {
-	for (const btn of document.querySelectorAll<HTMLButtonElement>('button[data-react-aria-pressable="true"]')) {
+	for (const btn of document.querySelectorAll<HTMLButtonElement>(
+		'button[data-react-aria-pressable="true"]',
+	)) {
 		if (btn.hasAttribute(ATTR)) {
 			refreshTagColors(btn);
 		} else if (btn.textContent?.trim().startsWith("#")) {

@@ -47,7 +47,9 @@
 		onCloseAccount: (accountId: string) => void;
 	} = $props();
 
-	const grandTotal = $derived(accounts.filter((a) => !a.closed).reduce((sum, a) => sum + a.balance, 0));
+	const grandTotal = $derived(
+		accounts.filter((a) => !a.closed).reduce((sum, a) => sum + a.balance, 0),
+	);
 
 	const STORAGE_KEY = "experimental-sidebar-collapsed-sections";
 	const COLLAPSED_GROUPS_KEY = "experimental-sidebar-collapsed-groups";
@@ -62,7 +64,9 @@
 		getValue<Record<string, boolean>>(STORAGE_KEY, {}).then((stored) => (collapsed = stored));
 	});
 	$effect(() => {
-		getValue<Record<string, boolean>>(COLLAPSED_GROUPS_KEY, {}).then((stored) => (collapsedGroups = stored));
+		getValue<Record<string, boolean>>(COLLAPSED_GROUPS_KEY, {}).then(
+			(stored) => (collapsedGroups = stored),
+		);
 	});
 	// Reading budgetId here (rather than capturing it once) makes these
 	// effects re-run whenever the open budget changes — otherwise this list
@@ -127,7 +131,9 @@
 		].filter((s) => s.items.length > 0),
 	);
 
-	const orderedSections = $derived(sections.map((s) => ({ ...s, items: applyOrder(s.items, order) })));
+	const orderedSections = $derived(
+		sections.map((s) => ({ ...s, items: applyOrder(s.items, order) })),
+	);
 
 	function groupsForSection(kind: "onbudget" | "offbudget"): AccountGroup[] {
 		return Object.values(groups)
@@ -316,7 +322,9 @@
 		if (overPos === "after") targetIndex += 1;
 		ids.splice(targetIndex, 0, dragSrcId);
 
-		const nextOrder = orderedSections.flatMap((s) => (s.label === sectionLabel ? ids : s.items.map((a) => a.id)));
+		const nextOrder = orderedSections.flatMap((s) =>
+			s.label === sectionLabel ? ids : s.items.map((a) => a.id),
+		);
 		order = nextOrder;
 		saveAccountOrder(budgetId, nextOrder);
 		endDrag();
@@ -326,109 +334,90 @@
 <svelte:window onclick={closeMenu} />
 
 <div class="accounts-viewport">
-	<div class="accounts" use:scrollFade use:overlayScrollbar={{ enabled: vscode }} onscroll={hideHoverCard}>
-	<div class="all-accounts section-head" class:active={isAllAccountsActive()}>
-		<button type="button" class="section-nav" onclick={() => go("/accounts")}>
-			<span class="group-label">Accounts</span>
-			<span class="group-total abt-privacy-number">{fmtMoney(grandTotal)}</span>
-		</button>
-		<button
-			type="button"
-			class="group-toggle"
-			class:on={groupAccounts}
-			aria-pressed={groupAccounts}
-			use:tooltip={{
-				text: groupAccounts
-					? "Grouped by category — click for a flat list"
-					: "Flat list — click to group by category",
-				placement: "right",
-			}}
-			onclick={onToggleGroupMode}
-		>
-			{#if groupAccounts}
-				<ListTree strokeWidth={1.5} />
-			{:else}
-				<List strokeWidth={1.5} />
-			{/if}
-		</button>
-	</div>
-	{#each orderedSections as section (section.label)}
-		{@const kind = SECTION_KIND[section.label]}
-		<div class="section">
-			<div class="group-header section-head" class:active={isSectionActive(kind)}>
-				<button
-					type="button"
-					class="caret-btn"
-					aria-label={collapsed[section.label] ? "Expand section" : "Collapse section"}
-					aria-expanded={!collapsed[section.label]}
-					onclick={() => toggle(section.label)}
-				>
-					<ChevronDown
-						class={collapsed[section.label] ? "caret collapsed" : "caret"}
-						color="var(--sb-fgm-a50)"
-						strokeWidth={3}
-					/>
-				</button>
-				{#if kind}
-					<button type="button" class="section-nav" onclick={() => go(`/accounts/${kind}`)}>
-						<span class="group-label" class:dim={section.muted}>{section.label}</span>
-						<span class="group-count">{section.items.length}</span>
-						<span class="group-total abt-privacy-number">
-							{fmtMoney(section.items.reduce((sum, a) => sum + a.balance, 0))}
-						</span>
-					</button>
+	<div
+		class="accounts"
+		use:scrollFade
+		use:overlayScrollbar={{ enabled: vscode }}
+		onscroll={hideHoverCard}
+	>
+		<div class="all-accounts section-head" class:active={isAllAccountsActive()}>
+			<button type="button" class="section-nav" onclick={() => go("/accounts")}>
+				<span class="group-label">Accounts</span>
+				<span class="group-total abt-privacy-number">{fmtMoney(grandTotal)}</span>
+			</button>
+			<button
+				type="button"
+				class="group-toggle"
+				class:on={groupAccounts}
+				aria-pressed={groupAccounts}
+				use:tooltip={{
+					text: groupAccounts
+						? "Grouped by category — click for a flat list"
+						: "Flat list — click to group by category",
+					placement: "right",
+				}}
+				onclick={onToggleGroupMode}
+			>
+				{#if groupAccounts}
+					<ListTree strokeWidth={1.5} />
 				{:else}
-					<span class="section-nav">
-						<span class="group-label" class:dim={section.muted}>{section.label}</span>
-						<span class="group-count">{section.items.length}</span>
-						<span class="group-total abt-privacy-number">
-							{fmtMoney(section.items.reduce((sum, a) => sum + a.balance, 0))}
-						</span>
-					</span>
+					<List strokeWidth={1.5} />
 				{/if}
-				{#if kind}
+			</button>
+		</div>
+		{#each orderedSections as section (section.label)}
+			{@const kind = SECTION_KIND[section.label]}
+			<div class="section">
+				<div class="group-header section-head" class:active={isSectionActive(kind)}>
 					<button
 						type="button"
-						class="section-add"
-						aria-label="New category in {section.label}"
-						onclick={(e) => {
-							e.stopPropagation();
-							addCategory(section.label);
-						}}
+						class="caret-btn"
+						aria-label={collapsed[section.label] ? "Expand section" : "Collapse section"}
+						aria-expanded={!collapsed[section.label]}
+						onclick={() => toggle(section.label)}
 					>
-						<Plus strokeWidth={1.5} />
+						<ChevronDown
+							class={collapsed[section.label] ? "caret collapsed" : "caret"}
+							color="var(--sb-fgm-a50)"
+							strokeWidth={3}
+						/>
 					</button>
-				{/if}
-			</div>
-			{#if !collapsed[section.label]}
-				{#if !kind || !groupAccounts}
-					<!-- Closed accounts, or flat mode: no sub-category headers. -->
-					<div class="account-list">
-						{#each section.items as account (account.id)}
-							<AccountRow
-								{account}
-								icon={icons[account.id]}
-								dragging={dragSrcId === account.id}
-								dropPos={overId === account.id ? overPos : null}
-								editing={editingAccountId === account.id}
-								onDragStart={(e) => onDragStart(e, account.id)}
-								onDragOver={(e) => onDragOver(e, account.id)}
-								onDrop={(e) => onDrop(e, section.label, account.id, null, section.items)}
-								onDragEnd={endDrag}
-								onStartRename={() => (editingAccountId = account.id)}
-								onCommitRename={(name) => commitAccountRename(account.id, name)}
-								onCancelRename={() => (editingAccountId = null)}
-								onContextMenu={(e) => openAccountMenu(e, account)}
-								onRowMouseEnter={(e) => onAccountRowEnter(e, account)}
-								onRowMouseLeave={hideHoverCard}
-							/>
-						{/each}
-					</div>
-				{:else}
-					{@const ungrouped = section.items.filter((a) => !bucketOf(a.id))}
-					{#if ungrouped.length}
+					{#if kind}
+						<button type="button" class="section-nav" onclick={() => go(`/accounts/${kind}`)}>
+							<span class="group-label" class:dim={section.muted}>{section.label}</span>
+							<span class="group-count">{section.items.length}</span>
+							<span class="group-total abt-privacy-number">
+								{fmtMoney(section.items.reduce((sum, a) => sum + a.balance, 0))}
+							</span>
+						</button>
+					{:else}
+						<span class="section-nav">
+							<span class="group-label" class:dim={section.muted}>{section.label}</span>
+							<span class="group-count">{section.items.length}</span>
+							<span class="group-total abt-privacy-number">
+								{fmtMoney(section.items.reduce((sum, a) => sum + a.balance, 0))}
+							</span>
+						</span>
+					{/if}
+					{#if kind}
+						<button
+							type="button"
+							class="section-add"
+							aria-label="New category in {section.label}"
+							onclick={(e) => {
+								e.stopPropagation();
+								addCategory(section.label);
+							}}
+						>
+							<Plus strokeWidth={1.5} />
+						</button>
+					{/if}
+				</div>
+				{#if !collapsed[section.label]}
+					{#if !kind || !groupAccounts}
+						<!-- Closed accounts, or flat mode: no sub-category headers. -->
 						<div class="account-list">
-							{#each ungrouped as account (account.id)}
+							{#each section.items as account (account.id)}
 								<AccountRow
 									{account}
 									icon={icons[account.id]}
@@ -448,64 +437,88 @@
 								/>
 							{/each}
 						</div>
-					{/if}
-					{#each groupsForSection(kind) as group (group.id)}
-						{@const itemsInGroup = section.items.filter((a) => bucketOf(a.id) === group.id)}
-						<GroupHeader
-							{group}
-							count={itemsInGroup.length}
-							open={!collapsedGroups[group.id]}
-							editing={editingGroupId === group.id}
-							dropActive={overGroupId === group.id}
-							onToggleOpen={() => toggleGroup(group.id)}
-							onStartRename={() => (editingGroupId = group.id)}
-							onCommitRename={(label) => commitRename(group.id, label)}
-							onCancelRename={() => (editingGroupId = null)}
-							onContextMenu={(e) => openGroupMenu(e, group)}
-							onDragOver={(e) => onGroupDragOver(e, group.id)}
-							onDrop={(e) => onGroupDrop(e, group.id)}
-						/>
-						{#if !collapsedGroups[group.id]}
-							{#if itemsInGroup.length}
-								<div class="account-list indented">
-									{#each itemsInGroup as account (account.id)}
-										<AccountRow
-											{account}
-											icon={icons[account.id]}
-											dragging={dragSrcId === account.id}
-											dropPos={overId === account.id ? overPos : null}
-											editing={editingAccountId === account.id}
-											onDragStart={(e) => onDragStart(e, account.id)}
-											onDragOver={(e) => onDragOver(e, account.id)}
-											onDrop={(e) =>
-												onDrop(e, section.label, account.id, group.id, section.items)}
-											onDragEnd={endDrag}
-											onStartRename={() => (editingAccountId = account.id)}
-											onCommitRename={(name) => commitAccountRename(account.id, name)}
-											onCancelRename={() => (editingAccountId = null)}
-											onContextMenu={(e) => openAccountMenu(e, account)}
-											onRowMouseEnter={(e) => onAccountRowEnter(e, account)}
-											onRowMouseLeave={hideHoverCard}
-										/>
-									{/each}
-								</div>
-							{:else}
-								<div
-									class="group-empty-hint"
-									class:drop-before={overGroupId === group.id}
-									ondragover={(e) => onGroupDragOver(e, group.id)}
-									ondrop={(e) => onGroupDrop(e, group.id)}
-									role="list"
-								>
-									Drop accounts here
-								</div>
-							{/if}
+					{:else}
+						{@const ungrouped = section.items.filter((a) => !bucketOf(a.id))}
+						{#if ungrouped.length}
+							<div class="account-list">
+								{#each ungrouped as account (account.id)}
+									<AccountRow
+										{account}
+										icon={icons[account.id]}
+										dragging={dragSrcId === account.id}
+										dropPos={overId === account.id ? overPos : null}
+										editing={editingAccountId === account.id}
+										onDragStart={(e) => onDragStart(e, account.id)}
+										onDragOver={(e) => onDragOver(e, account.id)}
+										onDrop={(e) => onDrop(e, section.label, account.id, null, section.items)}
+										onDragEnd={endDrag}
+										onStartRename={() => (editingAccountId = account.id)}
+										onCommitRename={(name) => commitAccountRename(account.id, name)}
+										onCancelRename={() => (editingAccountId = null)}
+										onContextMenu={(e) => openAccountMenu(e, account)}
+										onRowMouseEnter={(e) => onAccountRowEnter(e, account)}
+										onRowMouseLeave={hideHoverCard}
+									/>
+								{/each}
+							</div>
 						{/if}
-					{/each}
+						{#each groupsForSection(kind) as group (group.id)}
+							{@const itemsInGroup = section.items.filter((a) => bucketOf(a.id) === group.id)}
+							<GroupHeader
+								{group}
+								count={itemsInGroup.length}
+								open={!collapsedGroups[group.id]}
+								editing={editingGroupId === group.id}
+								dropActive={overGroupId === group.id}
+								onToggleOpen={() => toggleGroup(group.id)}
+								onStartRename={() => (editingGroupId = group.id)}
+								onCommitRename={(label) => commitRename(group.id, label)}
+								onCancelRename={() => (editingGroupId = null)}
+								onContextMenu={(e) => openGroupMenu(e, group)}
+								onDragOver={(e) => onGroupDragOver(e, group.id)}
+								onDrop={(e) => onGroupDrop(e, group.id)}
+							/>
+							{#if !collapsedGroups[group.id]}
+								{#if itemsInGroup.length}
+									<div class="account-list indented">
+										{#each itemsInGroup as account (account.id)}
+											<AccountRow
+												{account}
+												icon={icons[account.id]}
+												dragging={dragSrcId === account.id}
+												dropPos={overId === account.id ? overPos : null}
+												editing={editingAccountId === account.id}
+												onDragStart={(e) => onDragStart(e, account.id)}
+												onDragOver={(e) => onDragOver(e, account.id)}
+												onDrop={(e) =>
+													onDrop(e, section.label, account.id, group.id, section.items)}
+												onDragEnd={endDrag}
+												onStartRename={() => (editingAccountId = account.id)}
+												onCommitRename={(name) => commitAccountRename(account.id, name)}
+												onCancelRename={() => (editingAccountId = null)}
+												onContextMenu={(e) => openAccountMenu(e, account)}
+												onRowMouseEnter={(e) => onAccountRowEnter(e, account)}
+												onRowMouseLeave={hideHoverCard}
+											/>
+										{/each}
+									</div>
+								{:else}
+									<div
+										class="group-empty-hint"
+										class:drop-before={overGroupId === group.id}
+										ondragover={(e) => onGroupDragOver(e, group.id)}
+										ondrop={(e) => onGroupDrop(e, group.id)}
+										role="list"
+									>
+										Drop accounts here
+									</div>
+								{/if}
+							{/if}
+						{/each}
+					{/if}
 				{/if}
-			{/if}
-		</div>
-	{/each}
+			</div>
+		{/each}
 	</div>
 </div>
 

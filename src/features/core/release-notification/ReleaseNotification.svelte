@@ -58,7 +58,9 @@
 			<input type="checkbox" class="toast__checkbox" bind:checked={dontShowAgain} />
 			Don't show update notifications again
 		</label>
-		<a class="toast__release-link" href={releaseUrl} target="_blank" rel="noreferrer">View full release</a>
+		<a class="toast__release-link" href={releaseUrl} target="_blank" rel="noreferrer"
+			>View full release</a
+		>
 	</div>
 </div>
 
@@ -187,7 +189,11 @@
 		width: 4px;
 		height: 4px;
 		border-radius: 50%;
-		background: color-mix(in srgb, var(--color-sidebarItemAccentSelected) 70%, var(--color-pageTextSubdued));
+		background: color-mix(
+			in srgb,
+			var(--color-sidebarItemAccentSelected) 70%,
+			var(--color-pageTextSubdued)
+		);
 	}
 
 	.toast__empty {
@@ -249,7 +255,10 @@
 
 	.toast__checkbox:checked {
 		border-color: var(--color-checkboxBorderSelected, var(--color-sidebarItemAccentSelected));
-		background-color: var(--color-checkboxBackgroundSelected, var(--color-sidebarItemAccentSelected));
+		background-color: var(
+			--color-checkboxBackgroundSelected,
+			var(--color-sidebarItemAccentSelected)
+		);
 	}
 
 	.toast__checkbox:checked::after {

@@ -190,7 +190,8 @@
 
 	.ic__row--total {
 		padding-top: 4px;
-		border-top: 1px solid color-mix(in srgb, var(--color-sidebarItemAccentSelected) 15%, transparent);
+		border-top: 1px solid
+			color-mix(in srgb, var(--color-sidebarItemAccentSelected) 15%, transparent);
 		font-size: 13px;
 		font-weight: 600;
 	}

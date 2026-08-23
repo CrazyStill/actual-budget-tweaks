@@ -33,7 +33,13 @@ import {
 	TRIGGER_LABELS,
 } from "./constants";
 import { CSS } from "./css";
-import { templatePlanState, type BreakdownState, type MonthTrend, type OverviewCategoryRow, type OverviewSchedule } from "./state.svelte";
+import {
+	templatePlanState,
+	type BreakdownState,
+	type MonthTrend,
+	type OverviewCategoryRow,
+	type OverviewSchedule,
+} from "./state.svelte";
 import TemplatePlanPanel from "./TemplatePlanPanel.svelte";
 
 const TRIGGER_ID = "abt-template-plan-trigger";
@@ -47,7 +53,8 @@ const priorityPlanner = createPriorityPlanner({
 	sheetToMonthKey,
 	sheetToMonthLabel,
 });
-const { computePriorityStatus, buildBreakdownPrioritySummary, invalidatePriorityStatus } = priorityPlanner;
+const { computePriorityStatus, buildBreakdownPrioritySummary, invalidatePriorityStatus } =
+	priorityPlanner;
 
 // ── Panel mount (built once, reused across opens) ────────────────────
 let bodyContainer: HTMLElement | null = null;
@@ -59,7 +66,8 @@ function ensurePanelMounted(): HTMLElement {
 		// The side panel's own body already scrolls by default (for consumers with
 		// no internal layout of their own) — clip our wrapper so only our internal
 		// .abt-tab-body scrolls, keeping the tabs/footer/toggle pinned in place.
-		node.style.cssText = "display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden;";
+		node.style.cssText =
+			"display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden;";
 		bodyContainer = node;
 		panelInstance = instance;
 	}
@@ -105,9 +113,17 @@ function openPanel(): void {
 	removeTriggerButton();
 	const bodyNode = ensurePanelMounted();
 	sidepanel.open({ bodyNode, persist: true, width: SIDE_PANEL_WIDTH });
-	if (templatePlanState.activeTab === "overview" && !templatePlanState.overviewLoading && !templatePlanState.overviewData) {
+	if (
+		templatePlanState.activeTab === "overview" &&
+		!templatePlanState.overviewLoading &&
+		!templatePlanState.overviewData
+	) {
 		refreshOverview();
-	} else if (templatePlanState.activeTab === "priority" && !templatePlanState.priorityLoading && !templatePlanState.priorityData) {
+	} else if (
+		templatePlanState.activeTab === "priority" &&
+		!templatePlanState.priorityLoading &&
+		!templatePlanState.priorityData
+	) {
 		refreshPriorityIfNeeded();
 	}
 }
@@ -134,7 +150,8 @@ function closePanel(): void {
 // ── Persisted UI state ────────────────────────────────────────────────
 async function loadPersistedState(): Promise<void> {
 	const tab = await getValue<"breakdown" | "priority" | "overview">(TAB_STORAGE_KEY, "overview");
-	if (tab === "breakdown" || tab === "priority" || tab === "overview") templatePlanState.activeTab = tab;
+	if (tab === "breakdown" || tab === "priority" || tab === "overview")
+		templatePlanState.activeTab = tab;
 
 	const collapse = await getValue<Record<string, boolean>>(PRIO_COLLAPSE_STORAGE_KEY, {});
 	for (const [k, v] of Object.entries(collapse)) {
@@ -183,7 +200,7 @@ async function refreshOverview(): Promise<void> {
 
 		const toBudget = cells.get("to-budget") ?? 0;
 		const totalBudgeted = Math.abs(cells.get("total-budgeted") ?? 0);
-		const availableFunds = cells.get("available-funds") ?? (toBudget + totalBudgeted);
+		const availableFunds = cells.get("available-funds") ?? toBudget + totalBudgeted;
 		const lastMonthOverspent = cells.get("last-month-overspent") ?? 0;
 		const bufferedSelected = cells.get("buffered-selected") ?? 0;
 
@@ -201,7 +218,12 @@ async function refreshOverview(): Promise<void> {
 			if (sumAmount < 0) totalSpent += Math.abs(sumAmount);
 
 			if (leftover < 0) {
-				overspentCategories.push({ id: cat.id, name: cat.name, groupName: cat.group_name, leftover });
+				overspentCategories.push({
+					id: cat.id,
+					name: cat.name,
+					groupName: cat.group_name,
+					leftover,
+				});
 			}
 
 			if (goal > 0) {
@@ -209,17 +231,25 @@ async function refreshOverview(): Promise<void> {
 				if (leftover >= goal) {
 					fullyFundedGoalCount++;
 				} else {
-					underfundedGoals.push({ id: cat.id, name: cat.name, groupName: cat.group_name, leftover, goal });
+					underfundedGoals.push({
+						id: cat.id,
+						name: cat.name,
+						groupName: cat.group_name,
+						leftover,
+						goal,
+					});
 				}
 			}
 		}
 
 		overspentCategories.sort((a, b) => a.leftover - b.leftover);
-		underfundedGoals.sort((a, b) => (a.leftover - (a.goal ?? 0)) - (b.leftover - (b.goal ?? 0)));
+		underfundedGoals.sort((a, b) => a.leftover - (a.goal ?? 0) - (b.leftover - (b.goal ?? 0)));
 
 		const today = new Date();
 		const todayStr = today.toISOString().slice(0, 10);
-		const futureStr = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+		const futureStr = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+			.toISOString()
+			.slice(0, 10);
 
 		const upcomingSchedules: OverviewSchedule[] = (schedulesResult ?? [])
 			.filter((s) => s.next_date && s.next_date >= todayStr && s.next_date <= futureStr)
@@ -239,7 +269,11 @@ async function refreshOverview(): Promise<void> {
 
 		const pastKeys = [-5, -4, -3, -2, -1, 0].map(offsetKey);
 		const nextMonthKey = offsetKey(1);
-		const trendNames = ["to-budget", "total-budgeted", ...visibleCats.map((c) => `sum-amount-${c.id}`)];
+		const trendNames = [
+			"to-budget",
+			"total-budgeted",
+			...visibleCats.map((c) => `sum-amount-${c.id}`),
+		];
 
 		const [pastResults, nextResult] = await Promise.all([
 			Promise.all(pastKeys.map((k) => getCells(keyToSheet(k), trendNames))),
@@ -261,7 +295,10 @@ async function refreshOverview(): Promise<void> {
 			};
 		});
 
-		const nonZeroRecent = trend.slice(0, 5).filter((t) => t.spent > 0).slice(-3);
+		const nonZeroRecent = trend
+			.slice(0, 5)
+			.filter((t) => t.spent > 0)
+			.slice(-3);
 		const recentAvgSpending =
 			nonZeroRecent.length > 0
 				? nonZeroRecent.reduce((s, t) => s + t.spent, 0) / nonZeroRecent.length
@@ -308,7 +345,11 @@ async function refreshPriorityIfNeeded(): Promise<void> {
 		templatePlanState.priorityData = await computePriorityStatus(false);
 	} catch (e) {
 		console.warn("[ABT] template plan priority compute failed", e);
-		templatePlanState.priorityData = { ok: false, reason: "failed to compute", computedAt: Date.now() };
+		templatePlanState.priorityData = {
+			ok: false,
+			reason: "failed to compute",
+			computedAt: Date.now(),
+		};
 	} finally {
 		templatePlanState.priorityLoading = false;
 	}
@@ -387,7 +428,10 @@ async function handleTrigger(
 		const after = afterMap.get(sheet);
 		if (!before || !after) continue;
 		const d = diffSnapshots(before, after);
-		const score = d.groups.reduce((acc, g) => acc + g.rows.reduce((a, r) => a + Math.abs(r.delta), 0), 0);
+		const score = d.groups.reduce(
+			(acc, g) => acc + g.rows.reduce((a, r) => a + Math.abs(r.delta), 0),
+			0,
+		);
 		if (score > bestScore) {
 			bestScore = score;
 			bestDiff = d;

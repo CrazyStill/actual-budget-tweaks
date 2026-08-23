@@ -31,6 +31,6 @@
 	{anchorRect}
 	hasIcon={hasIconActual}
 	onSelect={handleSelect}
-	onRemove={onRemove}
+	{onRemove}
 	{onClose}
 />

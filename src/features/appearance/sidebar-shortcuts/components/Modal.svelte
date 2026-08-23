@@ -58,7 +58,14 @@
 		if (items.some((s) => s.type === "tool" && s.url === tool.id)) return;
 		items = [
 			...items,
-			{ id: genId(), label: tool.label, icon: tool.icon, url: tool.id, type: "tool", size: "small" },
+			{
+				id: genId(),
+				label: tool.label,
+				icon: tool.icon,
+				url: tool.id,
+				type: "tool",
+				size: "small",
+			},
 		];
 	}
 
@@ -245,7 +252,9 @@
 						if (e.key === "Enter") addWebsite();
 					}}
 				/>
-				<button class="btn btn--primary btn--sm" onclick={addWebsite} disabled={!addUrl.trim()}>Add</button>
+				<button class="btn btn--primary btn--sm" onclick={addWebsite} disabled={!addUrl.trim()}
+					>Add</button
+				>
 			</div>
 
 			<!-- Tools -->
@@ -299,14 +308,24 @@
 							<span class="widget-add-labeled__title">RSU Tracker</span>
 						</div>
 						<div class="widget-add-labeled__fields">
-							<input class="input input--sym" type="text" placeholder="Symbol" bind:value={rsuSymbol} />
+							<input
+								class="input input--sym"
+								type="text"
+								placeholder="Symbol"
+								bind:value={rsuSymbol}
+							/>
 							<input
 								class="input input--date"
 								type="date"
 								placeholder="Grant date"
 								bind:value={rsuDate}
 							/>
-							<input class="input input--sym" type="text" placeholder="Count" bind:value={rsuCount} />
+							<input
+								class="input input--sym"
+								type="text"
+								placeholder="Count"
+								bind:value={rsuCount}
+							/>
 							<button
 								class="btn btn--primary btn--sm"
 								onclick={() => addWidget(builtinWidgets.find((w) => w.id === "rsu-tracker")!)}

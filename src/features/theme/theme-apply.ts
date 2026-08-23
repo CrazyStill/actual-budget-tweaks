@@ -367,9 +367,14 @@ export function getBuiltinPreviewColors(key: string): string[] {
 	const theme = themes[key];
 	if (!theme) return [];
 	const k = theme.keys;
-	return [k["--ctp-base"], k["--ctp-mantle"], k["--ctp-surface0"], k["--ctp-text"], k["--ctp-mauve"], k["--ctp-blue"]].filter(
-		Boolean,
-	) as string[];
+	return [
+		k["--ctp-base"],
+		k["--ctp-mantle"],
+		k["--ctp-surface0"],
+		k["--ctp-text"],
+		k["--ctp-mauve"],
+		k["--ctp-blue"],
+	].filter(Boolean) as string[];
 }
 
 export async function fetchCommunityCSS(repo: string): Promise<string> {

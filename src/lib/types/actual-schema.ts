@@ -25,7 +25,8 @@ export type AmountInCents = number;
 
 // ── Entities ──────────────────────────────────────────────────────
 
-export type AccountType = "checking" | "savings" | "credit" | "investment" | "mortgage" | "debt" | "other";
+export type AccountType =
+	"checking" | "savings" | "credit" | "investment" | "mortgage" | "debt" | "other";
 
 export interface Account {
 	id: UUID;
@@ -99,7 +100,14 @@ export type GoalDefEntry =
 			priority: number | null;
 	  }
 	/** Save a target amount by a given month, spending starts accruing from a given month. */
-	| { directive: "template"; type: "spend"; amount: number; month: string; from: string; priority: number | null }
+	| {
+			directive: "template";
+			type: "spend";
+			amount: number;
+			month: string;
+			from: string;
+			priority: number | null;
+	  }
 	| {
 			directive: "template";
 			type: "percentage";
@@ -108,8 +116,20 @@ export type GoalDefEntry =
 			category: string;
 			priority: number | null;
 	  }
-	| { directive: "template"; type: "copy"; lookBack: number; limit: number | null; priority: number | null }
-	| { directive: "template"; type: "remainder"; weight: number; limit?: number | null; priority: number | null }
+	| {
+			directive: "template";
+			type: "copy";
+			lookBack: number;
+			limit: number | null;
+			priority: number | null;
+	  }
+	| {
+			directive: "template";
+			type: "remainder";
+			weight: number;
+			limit?: number | null;
+			priority: number | null;
+	  }
 	/** Balance-limit rule from the "Automate budget" UI — a spending cap, not itself a monthly target. */
 	| {
 			directive: "template";

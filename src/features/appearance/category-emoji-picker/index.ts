@@ -160,7 +160,10 @@ function openPicker(anchor: HTMLElement, catId: string, currentName: string) {
 				const { rest } = extractEmoji(currentName);
 				await updateCategoryName(catId, result.value + " " + rest);
 			} else {
-				await setCategoryIcon(catId, { type: result.type as "url" | "dataUrl", value: result.value });
+				await setCategoryIcon(catId, {
+					type: result.type as "url" | "dataUrl",
+					value: result.value,
+				});
 				if (currentEmoji) {
 					const { rest } = extractEmoji(currentName);
 					await updateCategoryName(catId, rest);

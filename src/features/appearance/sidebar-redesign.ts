@@ -34,7 +34,9 @@ async function updateUncategorizedBadges() {
 			counts.set(tx.account, (counts.get(tx.account) || 0) + 1);
 		}
 
-		for (const link of document.querySelectorAll<HTMLAnchorElement>('a[href^="/accounts/"][href*="-"]')) {
+		for (const link of document.querySelectorAll<HTMLAnchorElement>(
+			'a[href^="/accounts/"][href*="-"]',
+		)) {
 			const id = link.getAttribute("href")?.split("/accounts/")[1];
 			if (!id) continue;
 			const count = counts.get(id) || 0;
@@ -43,7 +45,9 @@ async function updateUncategorizedBadges() {
 				if (!badge) {
 					badge = document.createElement("span");
 					badge.className = "abt-uncat-badge";
-					const balanceWrap = link.querySelector('[data-cellname^="__global!balance-"]')?.parentElement;
+					const balanceWrap = link.querySelector(
+						'[data-cellname^="__global!balance-"]',
+					)?.parentElement;
 					if (balanceWrap) balanceWrap.after(badge);
 					else link.appendChild(badge);
 				}

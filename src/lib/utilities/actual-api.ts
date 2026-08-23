@@ -104,7 +104,9 @@ export async function dispatch<T = unknown>(action: string, args?: unknown): Pro
 }
 
 export function navigate(path: string, options?: Record<string, unknown>): void {
-	document.dispatchEvent(new CustomEvent("abt:api:navigate", { detail: JSON.stringify({ path, options }) }));
+	document.dispatchEvent(
+		new CustomEvent("abt:api:navigate", { detail: JSON.stringify({ path, options }) }),
+	);
 }
 
 let budgetReadyPromise: Promise<void> | null = null;

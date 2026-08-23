@@ -18,7 +18,9 @@ export async function loadCurrency(): Promise<void> {
 					style: "currency",
 					currency: code,
 				}).resolvedOptions();
-				const digits = Number.isFinite(opts.maximumFractionDigits) ? (opts.maximumFractionDigits ?? 2) : 2;
+				const digits = Number.isFinite(opts.maximumFractionDigits)
+					? (opts.maximumFractionDigits ?? 2)
+					: 2;
 				currencyScale = Math.pow(10, digits);
 			} catch {
 				currencyCode = "USD";
@@ -48,7 +50,12 @@ export function fmtMoney(cents: number, opts?: { sign?: boolean; short?: boolean
 	let str: string;
 	if (opts?.short && abs >= 1000) {
 		const k = abs / 1000;
-		str = new Intl.NumberFormat(undefined, { ...fmtOpts, minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(k) + "k";
+		str =
+			new Intl.NumberFormat(undefined, {
+				...fmtOpts,
+				minimumFractionDigits: 1,
+				maximumFractionDigits: 1,
+			}).format(k) + "k";
 	} else {
 		str = new Intl.NumberFormat(undefined, fmtOpts).format(abs);
 	}

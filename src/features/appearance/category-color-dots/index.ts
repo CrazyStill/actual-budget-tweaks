@@ -1,6 +1,10 @@
 import { defineSetting } from "@features/types";
 import { query } from "@lib/utilities/actual-api";
-import { getCategoryColor, loadCategoryColors, setCategoryColor } from "@lib/utilities/category-colors";
+import {
+	getCategoryColor,
+	loadCategoryColors,
+	setCategoryColor,
+} from "@lib/utilities/category-colors";
 import { watchDom } from "@lib/utilities/dom-watcher";
 import { onOutsideClick, positionPopover } from "@lib/utilities/popover";
 import { mountToNode } from "@lib/utilities/svelte";
@@ -132,7 +136,10 @@ function decorateRow(row: HTMLElement) {
 		openColorPicker(dot, catId);
 	});
 
-	nameEl.parentElement?.insertBefore(dot, nameEl.parentElement.querySelector(".abt-emoji-btn") || nameEl);
+	nameEl.parentElement?.insertBefore(
+		dot,
+		nameEl.parentElement.querySelector(".abt-emoji-btn") || nameEl,
+	);
 }
 
 function decorateTransactionRow(row: HTMLElement) {
@@ -143,7 +150,13 @@ function decorateTransactionRow(row: HTMLElement) {
 	if (!textEl) return;
 
 	const catName = textEl.textContent?.trim() || "";
-	if (!catName || catName === "Categorize" || catName === "Upcoming" || catName === "Missed" || catName === "Split")
+	if (
+		!catName ||
+		catName === "Categorize" ||
+		catName === "Upcoming" ||
+		catName === "Missed" ||
+		catName === "Split"
+	)
 		return;
 
 	const fp = catName;
@@ -167,7 +180,9 @@ function scanRows() {
 	for (const row of document.querySelectorAll<HTMLElement>(ROW_SELECTOR)) {
 		decorateRow(row);
 	}
-	for (const row of document.querySelectorAll<HTMLElement>('[data-testid="row"]:has([data-testid="category"])')) {
+	for (const row of document.querySelectorAll<HTMLElement>(
+		'[data-testid="row"]:has([data-testid="category"])',
+	)) {
 		decorateTransactionRow(row);
 	}
 }

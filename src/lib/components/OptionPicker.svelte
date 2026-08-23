@@ -59,7 +59,8 @@
 
 	.op-option.is-active {
 		border-color: var(--color-sidebarItemAccentSelected);
-		box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-sidebarItemAccentSelected) 20%, transparent);
+		box-shadow: 0 0 0 2px
+			color-mix(in srgb, var(--color-sidebarItemAccentSelected) 20%, transparent);
 	}
 
 	.op-preview {

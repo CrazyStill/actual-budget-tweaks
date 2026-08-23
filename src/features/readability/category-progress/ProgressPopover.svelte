@@ -52,8 +52,12 @@
 					: "under",
 	);
 
-	const goalFundedPct = $derived(goal > 0 ? Math.min(100, Math.max(0, (budgeted / goal) * 100)) : 0);
-	const perDay = $derived(daysLeft && daysLeft > 0 && balance > 0 ? Math.floor(balance / daysLeft) : null);
+	const goalFundedPct = $derived(
+		goal > 0 ? Math.min(100, Math.max(0, (budgeted / goal) * 100)) : 0,
+	);
+	const perDay = $derived(
+		daysLeft && daysLeft > 0 && balance > 0 ? Math.floor(balance / daysLeft) : null,
+	);
 	const avgDelta = $derived(avgSpent != null && budgeted > 0 ? budgeted - avgSpent : null);
 </script>
 
@@ -79,7 +83,9 @@
 		</div>
 		<div class="cp__row">
 			<span class="cp__label">Balance</span>
-			<span class="cp__value abt-privacy-number" class:cp__value--neg={balance < 0}>{fmtMoney(balance)}</span>
+			<span class="cp__value abt-privacy-number" class:cp__value--neg={balance < 0}
+				>{fmtMoney(balance)}</span
+			>
 		</div>
 		{#if avgSpent != null}
 			<div class="cp__row">
@@ -88,7 +94,9 @@
 					{fmtMoney(avgSpent)}
 					{#if avgDelta != null && Math.abs(avgDelta) >= 100}
 						<span class="cp__hint" class:cp__hint--neg={avgDelta < 0}>
-							{avgDelta < 0 ? `+${fmtMoney(-avgDelta)} vs budget` : `−${fmtMoney(avgDelta)} vs budget`}
+							{avgDelta < 0
+								? `+${fmtMoney(-avgDelta)} vs budget`
+								: `−${fmtMoney(avgDelta)} vs budget`}
 						</span>
 					{/if}
 				</span>

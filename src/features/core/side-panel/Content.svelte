@@ -18,7 +18,9 @@
 	} = $props();
 
 	function handleClose() {
-		const sidebar = document.querySelector("[data-abt-side-drawer-sidebar]") as HTMLDivElement | null;
+		const sidebar = document.querySelector(
+			"[data-abt-side-drawer-sidebar]",
+		) as HTMLDivElement | null;
 		if (!sidebar || sidebar.classList.contains(SIDEBAR_CLOSING_CLASS)) {
 			onClose();
 			return;

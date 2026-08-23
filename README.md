@@ -1,9 +1,9 @@
-
 ## Recommended IDE Setup
 
 [VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
 
 <!-- Improved compatibility of back to top link: See: https://github.com/aelxxs/actual-budget-tweaks/pull/73 -->
+
 <a id="readme-top"></a>
 <!--
 *** Thanks for checking out the Best-README-Template. If you have a suggestion
@@ -13,8 +13,6 @@
 *** Thanks again! Now go create something AMAZING! :D
 -->
 
-
-
 <!-- PROJECT SHIELDS -->
 <!--
 *** I'm using markdown "reference style" links for readability.
@@ -23,14 +21,13 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![Unlicense License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
-
-
 
 <!-- PROJECT LOGO -->
 <br />
@@ -60,8 +57,6 @@
   </p>
 </div>
 
-
-
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
@@ -88,9 +83,8 @@
   </ol>
 </details>
 
-
-
 <!-- ABOUT THE PROJECT -->
+
 ## About The Project
 
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
@@ -99,14 +93,12 @@
 
 Adds user-configurable interface options to Actual Budget, including dynamic themes, layout adjustments, and visibility controls, making budgeting clearer and easier without altering core app behavior.
 
-
 - Custom Themes
 - Background Patterns
 - Border Radius Options
 - and more!
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 <!--
 ### Built With
@@ -118,16 +110,12 @@ Adds user-configurable interface options to Actual Budget, including dynamic the
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
-
-
-
 ### Installation
 
 **Install Actual Budget Tweaks from your browser's extension store:**
 
 - **Firefox:** [Install from Firefox Add-ons](https://addons.mozilla.org/en/firefox/addon/actual-budget-tweaks/)
 - **Chrome:** [Install from Chrome Web Store](https://chromewebstore.google.com/detail/actual-budget-%E2%80%93-tweaks/oknpncidmkhkphpbkamccnobdpibegmm)
-
 
 <!-- USAGE EXAMPLES -->
 <!-- ## Usage
@@ -138,7 +126,6 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
  -->
-
 
 <!-- ROADMAP -->
 <!-- ## Roadmap
@@ -155,7 +142,6 @@ See the [open issues](https://github.com/aelxxs/actual-budget-tweaks/issues) for
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
  -->
-
 
 <!-- CONTRIBUTING -->
 <!-- ## Contributing
@@ -188,7 +174,6 @@ Distributed under the Unlicense License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
-
 <!-- CONTACT -->
 <!-- ## Contact
 
@@ -198,7 +183,6 @@ Project Link: [https://github.com/aelxxs/actual-budget-tweaks](https://github.co
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
  -->
-
 
 <!-- ACKNOWLEDGMENTS -->
 <!-- ## Acknowledgments
@@ -216,10 +200,9 @@ Use this space to list resources you find helpful and would like to give credit 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
-
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/aelxxs/actual-budget-tweaks.svg?style=for-the-badge
 [contributors-url]: https://github.com/aelxxs/actual-budget-tweaks/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/aelxxs/actual-budget-tweaks.svg?style=for-the-badge
@@ -249,4 +232,3 @@ Use this space to list resources you find helpful and would like to give credit 
 [Bootstrap-url]: https://getbootstrap.com
 [JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
 [JQuery-url]: https://jquery.com
-

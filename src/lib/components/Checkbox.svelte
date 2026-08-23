@@ -8,8 +8,11 @@
 	import type { IconName } from "../icons";
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const { labelText, setting, icon }: { labelText: string; setting: CheckboxSetting<any>; icon?: IconName } =
-		$props();
+	const {
+		labelText,
+		setting,
+		icon,
+	}: { labelText: string; setting: CheckboxSetting<any>; icon?: IconName } = $props();
 	const ctx = setting.context;
 	let value = $state(false);
 
@@ -81,5 +84,4 @@
 		font-size: 11px;
 		color: var(--color-pageTextSubdued);
 	}
-
 </style>

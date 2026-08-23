@@ -335,7 +335,9 @@
 	} = $props();
 
 	function getExportCSS(): string {
-		const lines = allKeys.map((key) => `  ${key}: ${colors[key] ?? ""};`).filter((line) => !line.endsWith(": ;"));
+		const lines = allKeys
+			.map((key) => `  ${key}: ${colors[key] ?? ""};`)
+			.filter((line) => !line.endsWith(": ;"));
 		return `:root {\n${lines.join("\n")}\n}`;
 	}
 
@@ -378,7 +380,10 @@
 		onReady?.({ reset: resetAll, getExportCSS });
 	}
 
-	function extractThemeOverrides(stored: ThemeOverrides | ColorKeys | null, theme: string): ColorKeys {
+	function extractThemeOverrides(
+		stored: ThemeOverrides | ColorKeys | null,
+		theme: string,
+	): ColorKeys {
 		if (!stored) return {};
 		const firstKey = Object.keys(stored)[0];
 		// Migrate old flat format (keys start with "--")
@@ -447,7 +452,9 @@
 		// Remove only this theme's overrides from storage
 		const stored = (await getValue<ThemeOverrides | ColorKeys | null>(STORAGE_KEY, null)) ?? {};
 		const firstKey = Object.keys(stored)[0];
-		const base: ThemeOverrides = firstKey?.startsWith("--") ? {} : { ...(stored as ThemeOverrides) };
+		const base: ThemeOverrides = firstKey?.startsWith("--")
+			? {}
+			: { ...(stored as ThemeOverrides) };
 		delete base[currentTheme];
 		const next = Object.keys(base).length > 0 ? base : null;
 		await setValue(STORAGE_KEY, next);
@@ -486,7 +493,12 @@
 	</div>
 
 	<div class="editor__search">
-		<input class="editor__search-input" type="text" placeholder="Filter tokens…" bind:value={search} />
+		<input
+			class="editor__search-input"
+			type="text"
+			placeholder="Filter tokens…"
+			bind:value={search}
+		/>
 	</div>
 
 	<div class="editor__rows">

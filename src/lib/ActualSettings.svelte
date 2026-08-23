@@ -57,7 +57,9 @@
 			.filter((section) => section.items.length > 0);
 	});
 
-	const totalVisibleSettings = $derived(filteredSections.reduce((count, section) => count + section.items.length, 0));
+	const totalVisibleSettings = $derived(
+		filteredSections.reduce((count, section) => count + section.items.length, 0),
+	);
 
 	function toggleSection(title: string) {
 		collapsed[title] = !collapsed[title];
@@ -169,10 +171,14 @@
 
 <div class="settings-page stack" style="--space: 1rem;">
 	<div class="header stack" style="--space: 0.6rem;">
-		<div class="title-row cluster" style="--gutter: 0.5rem; --align: center; --justify: space-between;">
+		<div
+			class="title-row cluster"
+			style="--gutter: 0.5rem; --align: center; --justify: space-between;"
+		>
 			<span class="title-brand">
 				<img class="title-logo" src={logoUrl} alt="" />
-				<strong>Actual Budget Tweaks</strong> — Configure Actual <span class="version-tag">v{version}</span>
+				<strong>Actual Budget Tweaks</strong> — Configure Actual
+				<span class="version-tag">v{version}</span>
 			</span>
 			<div class="header-actions cluster" style="--gutter: 0.25rem; --align: center;">
 				{#if importStatus === "success"}
@@ -196,7 +202,12 @@
 				>
 					<Icon name="download" size={14} strokeWidth={1.5} />
 				</button>
-				<button class="bug-report-btn" onclick={openBugReport} title="Report a bug" aria-label="Report a bug">
+				<button
+					class="bug-report-btn"
+					onclick={openBugReport}
+					title="Report a bug"
+					aria-label="Report a bug"
+				>
 					<Icon name="bug" size={14} />
 				</button>
 			</div>
@@ -307,8 +318,7 @@
 				class="bug-textarea"
 				rows="4"
 				placeholder="Describe what you expected vs. what actually happened..."
-				bind:value={bugDescription}
-			></textarea>
+				bind:value={bugDescription}></textarea>
 
 			<div class="bug-actions">
 				<button class="bug-cancel" onclick={closeBugReport}>Cancel</button>

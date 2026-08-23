@@ -1,9 +1,15 @@
 const CUSTOM_WIDGET_ATTR = "data-abt-custom-dashboard-widget";
 const MENU_SELECTOR = "[data-popover]";
-const ADD_WIDGET_MENU_KEYS = ["cash-flow-card", "net-worth-card", "markdown-card", "custom-report"] as const;
+const ADD_WIDGET_MENU_KEYS = [
+	"cash-flow-card",
+	"net-worth-card",
+	"markdown-card",
+	"custom-report",
+] as const;
 const MENU_ITEM_HOVER_BACKGROUND =
 	"var(--color-menuItemBackgroundHover, var(--color-buttonBareBackgroundHover, rgba(200, 200, 200, .25)))";
-const MENU_ITEM_HOVER_TEXT = "var(--color-menuItemTextHover, var(--color-buttonBareTextHover, inherit))";
+const MENU_ITEM_HOVER_TEXT =
+	"var(--color-menuItemTextHover, var(--color-buttonBareTextHover, inherit))";
 
 export interface DashboardWidgetRecord {
 	type?: string;
@@ -67,7 +73,10 @@ export function createMarkdownWidgetDefinition({
 		label,
 		matchesRecord(widget) {
 			const widgetMeta = parseMeta(widget?.meta);
-			return widget?.type === "markdown-card" && String(widgetMeta.content || "").includes(placeholderText);
+			return (
+				widget?.type === "markdown-card" &&
+				String(widgetMeta.content || "").includes(placeholderText)
+			);
 		},
 		buildWidgetPayload(dashboardPageId) {
 			return {
@@ -188,7 +197,10 @@ function bindMenuButtonInteractionState(button: HTMLButtonElement) {
 function createCustomMenuButton(
 	templateButton: HTMLButtonElement,
 	widgetDefinition: DashboardWidgetDefinition,
-	onSelect: (definition: DashboardWidgetDefinition, button: HTMLButtonElement) => Promise<void> | void,
+	onSelect: (
+		definition: DashboardWidgetDefinition,
+		button: HTMLButtonElement,
+	) => Promise<void> | void,
 	logger?: Pick<Console, "error">,
 ): HTMLButtonElement {
 	const button = templateButton.cloneNode(false) as HTMLButtonElement;

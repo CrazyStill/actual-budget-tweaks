@@ -8,7 +8,9 @@ export const scheduleHighlight = {
 		function openSchedule(schedId: string) {
 			let tries = 0;
 			const step = () => {
-				const row = document.querySelector<HTMLElement>(`[data-focus-key="${schedId}"] [data-testid="row"]`);
+				const row = document.querySelector<HTMLElement>(
+					`[data-focus-key="${schedId}"] [data-testid="row"]`,
+				);
 				if (row) {
 					row.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
 					return;

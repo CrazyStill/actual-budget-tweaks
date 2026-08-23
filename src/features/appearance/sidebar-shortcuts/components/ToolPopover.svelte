@@ -13,7 +13,11 @@
 	}>();
 </script>
 
-<div class="backdrop" role="presentation" onclick={(e) => e.target === e.currentTarget && onClose()}>
+<div
+	class="backdrop"
+	role="presentation"
+	onclick={(e) => e.target === e.currentTarget && onClose()}
+>
 	<div class="popover" role="dialog" tabindex="-1" style="left: {anchorX}px; top: {anchorY}px">
 		<div class="popover__hd">
 			<span class="popover__title">{title}</span>

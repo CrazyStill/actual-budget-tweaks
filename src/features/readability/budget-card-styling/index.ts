@@ -57,10 +57,16 @@ async function processCard(card: HTMLElement) {
 	// Style the "To Budget:" label
 	const toBudgetCell = card.querySelector<HTMLElement>('[data-cellname*="object Object"]');
 	if (toBudgetCell) {
-		const toBudgetSection = toBudgetCell.closest<HTMLElement>('[data-testid="budget-summary"] > div');
+		const toBudgetSection = toBudgetCell.closest<HTMLElement>(
+			'[data-testid="budget-summary"] > div',
+		);
 		if (toBudgetSection) {
 			const label = toBudgetSection.querySelector<HTMLElement>("div:not([data-cellname])");
-			if (label && label.textContent?.includes("To Budget") && !label.classList.contains("abt-to-budget-label")) {
+			if (
+				label &&
+				label.textContent?.includes("To Budget") &&
+				!label.classList.contains("abt-to-budget-label")
+			) {
 				label.classList.add("abt-to-budget-label");
 			}
 		}

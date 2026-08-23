@@ -57,7 +57,10 @@ function renderBar(): void {
 
 	let navContainer = budgetLink.parentElement;
 	while (navContainer) {
-		if (navContainer.querySelector('a[href="/reports"]') && navContainer.querySelector('a[href="/schedules"]')) {
+		if (
+			navContainer.querySelector('a[href="/reports"]') &&
+			navContainer.querySelector('a[href="/schedules"]')
+		) {
 			break;
 		}
 		navContainer = navContainer.parentElement;

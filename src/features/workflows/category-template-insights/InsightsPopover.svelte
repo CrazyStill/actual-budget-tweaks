@@ -15,7 +15,9 @@
 	} = $props();
 
 	const ratio = $derived(
-		progress.denominator && progress.denominator > 0 ? (progress.numerator ?? 0) / progress.denominator : 0,
+		progress.denominator && progress.denominator > 0
+			? (progress.numerator ?? 0) / progress.denominator
+			: 0,
 	);
 	const ratioPct = $derived(Math.round(ratio * 100));
 
@@ -78,7 +80,9 @@
 		navigate("/schedules");
 		let tries = 0;
 		const step = () => {
-			const row = document.querySelector<HTMLElement>(`[data-focus-key="${schedId}"] [data-testid="row"]`);
+			const row = document.querySelector<HTMLElement>(
+				`[data-focus-key="${schedId}"] [data-testid="row"]`,
+			);
 			if (row) {
 				row.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
 				return;
@@ -113,7 +117,9 @@
 		<div class="pop__totals">
 			<span class="abt-privacy-number">{fmtMoney(progress.numerator ?? 0)}</span>
 			<span class="pop__sep">/</span>
-			<span class="abt-privacy-number">{progress.denominator ? fmtMoney(progress.denominator) : "—"}</span>
+			<span class="abt-privacy-number"
+				>{progress.denominator ? fmtMoney(progress.denominator) : "—"}</span
+			>
 			{#if progress.denominator}
 				<span class="pop__ratio abt-privacy-number">{ratioPct}%</span>
 			{/if}
@@ -127,7 +133,8 @@
 
 	<ul class="pop__templates">
 		{#each entry.directives as d}
-			{@const link = d.type === "schedule" ? entry.linkedSchedules.find((ls) => ls.directive === d) : null}
+			{@const link =
+				d.type === "schedule" ? entry.linkedSchedules.find((ls) => ls.directive === d) : null}
 			<li class="pop__tpl" class:pop__tpl--missing={d.type === "schedule" && !link}>
 				<span class="pop__priority" class:pop__priority--none={d.priority == null}>
 					{d.priority != null ? `#${d.priority}` : "—"}
@@ -172,14 +179,16 @@
 						</div>
 					{:else if d.type === "by"}
 						<div class="pop__raw abt-privacy-number">
-							Save {fmtMoney(Math.round(d.amount * 100))} by {fmtMonth(d.month)}{#if d.annual}, repeating yearly{:else if d.repeat}, every {d.repeat} {pluralize(
-									d.repeat,
-									"month",
-								)}{/if}{#if d.from} &middot; spend from {fmtMonth(d.from)}{/if}
+							Save {fmtMoney(Math.round(d.amount * 100))} by {fmtMonth(d.month)}{#if d.annual},
+								repeating yearly{:else if d.repeat}, every {d.repeat}
+								{pluralize(d.repeat, "month")}{/if}{#if d.from}
+								&middot; spend from {fmtMonth(d.from)}{/if}
 						</div>
 					{:else if d.type === "spend"}
 						<div class="pop__raw abt-privacy-number">
-							Save {fmtMoney(Math.round(d.amount * 100))} by {fmtMonth(d.month)} &middot; spend from {fmtMonth(d.from)}
+							Save {fmtMoney(Math.round(d.amount * 100))} by {fmtMonth(d.month)} &middot; spend from {fmtMonth(
+								d.from,
+							)}
 						</div>
 					{:else if d.type === "percentage"}
 						<div class="pop__raw">
@@ -213,7 +222,9 @@
 					{:else if d.type === "refill"}
 						<div class="pop__raw">Refill to limit each period</div>
 					{:else if d.type === "goal"}
-						<div class="pop__raw abt-privacy-number">Goal balance of {fmtMoney(Math.round(d.amount * 100))}</div>
+						<div class="pop__raw abt-privacy-number">
+							Goal balance of {fmtMoney(Math.round(d.amount * 100))}
+						</div>
 					{:else}
 						<div class="pop__raw">{JSON.stringify(d as unknown)}</div>
 					{/if}

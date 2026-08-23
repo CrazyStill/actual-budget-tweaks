@@ -198,7 +198,10 @@ export const spendingCalendar = defineSetting({
 		let injectedOnce = false;
 
 		const unwatch = watchDom(() => {
-			if (!document.querySelector(`[${LINK_ATTR}]`) && document.querySelector('a[href="/schedules"]')) {
+			if (
+				!document.querySelector(`[${LINK_ATTR}]`) &&
+				document.querySelector('a[href="/schedules"]')
+			) {
 				if (!injectedOnce) {
 					injectedOnce = true;
 					injectSidebarLink();

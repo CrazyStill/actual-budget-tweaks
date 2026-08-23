@@ -519,7 +519,10 @@ h2.abt-ib-title {
 .abt-ib-menu-item:hover,
 .abt-ib-menu-item:focus {
 	outline: none;
-	background: var(--color-menuItemBackgroundHover, var(--color-buttonNormalBackgroundHover, #1e1e2e));
+	background: var(
+		--color-menuItemBackgroundHover,
+		var(--color-buttonNormalBackgroundHover, #1e1e2e)
+	);
 	color: var(--color-menuItemTextHover, var(--color-buttonNormalTextHover, #bac2de));
 }
 

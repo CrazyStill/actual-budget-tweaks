@@ -6,7 +6,8 @@ import { onOutsideClick, positionPopover } from "@lib/utilities/popover";
 import { watchRoute } from "@lib/utilities/route-watcher";
 import { getValue, setValue } from "@lib/utilities/store";
 
-type Column = "date" | "account" | "payee" | "notes" | "category" | "payment" | "deposit" | "balance";
+type Column =
+	"date" | "account" | "payee" | "notes" | "category" | "payment" | "deposit" | "balance";
 
 const STORAGE_KEY = "toggle-columns";
 const ROOT_ATTR = "data-abt-toggle-cols";
@@ -135,7 +136,10 @@ function applyVisibility() {
 	for (const col of COLUMNS) {
 		const hidden = hiddenColumns.has(col.id);
 		for (const testId of COLUMN_TESTIDS[col.id]) {
-			document.documentElement.style.setProperty(`--abt-col-${testId}-visibility`, hidden ? "none" : "");
+			document.documentElement.style.setProperty(
+				`--abt-col-${testId}-visibility`,
+				hidden ? "none" : "",
+			);
 		}
 	}
 	updateDropdown();

@@ -21,7 +21,10 @@ async function loadTypeScript() {
 		"typescript",
 		resolve(__dirname, "../node_modules/typescript/lib/typescript.js"),
 		resolve(__dirname, "../website/node_modules/typescript/lib/typescript.js"),
-		resolve(__dirname, "../node_modules/.pnpm/typescript@*/node_modules/typescript/lib/typescript.js"),
+		resolve(
+			__dirname,
+			"../node_modules/.pnpm/typescript@*/node_modules/typescript/lib/typescript.js",
+		),
 	];
 	for (const candidate of candidates) {
 		try {
@@ -95,7 +98,8 @@ function buildImportMap(source, fileDir) {
 	const map = new Map();
 	source.forEachChild((node) => {
 		if (!ts.isImportDeclaration(node)) return;
-		if (!node.importClause?.namedBindings || !ts.isNamedImports(node.importClause.namedBindings)) return;
+		if (!node.importClause?.namedBindings || !ts.isNamedImports(node.importClause.namedBindings))
+			return;
 		if (!ts.isStringLiteral(node.moduleSpecifier)) return;
 		const importPath = node.moduleSpecifier.text;
 		if (!importPath.startsWith(".")) return; // skip type-only/aliased imports like "./types"
@@ -168,7 +172,9 @@ function main() {
 		.filter((section) => section.items.length > 0);
 
 	writeFileSync(outFile, `${JSON.stringify(sections, null, "\t")}\n`);
-	console.log(`Wrote ${sections.reduce((n, s) => n + s.items.length, 0)} settings across ${sections.length} sections to ${outFile}`);
+	console.log(
+		`Wrote ${sections.reduce((n, s) => n + s.items.length, 0)} settings across ${sections.length} sections to ${outFile}`,
+	);
 }
 
 main();

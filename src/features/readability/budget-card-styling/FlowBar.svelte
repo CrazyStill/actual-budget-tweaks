@@ -23,7 +23,11 @@
 
 	const legend = $derived.by(() => {
 		const items: LegendEntry[] = [];
-		items.push({ label: "Budgeted", value: budgeted, color: "var(--color-sidebarItemAccentSelected)" });
+		items.push({
+			label: "Budgeted",
+			value: budgeted,
+			color: "var(--color-sidebarItemAccentSelected)",
+		});
 		items.push({ label: "Overspent", value: overspent, color: "var(--color-errorText)" });
 		items.push({ label: "For next month", value: forNext, color: "var(--color-warningText)" });
 		items.push({
@@ -51,7 +55,9 @@
 				>
 					<span class="flow__dot" style="background: {item.color}"></span>
 					<span>{item.label}</span>
-					<span class="flow__item-val abt-privacy-number">{item.negative ? "-" : ""}{fmt(item.value)}</span>
+					<span class="flow__item-val abt-privacy-number"
+						>{item.negative ? "-" : ""}{fmt(item.value)}</span
+					>
 				</div>
 			{/each}
 		</div>

@@ -19,11 +19,13 @@ const EMOJI_ASSET_BASE_URL = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2
 export const EMOJI_CATEGORIES = {
 	Objects:
 		"📱📷📹🎥🎬🎤🎧🎵🎶🎼🎹🎸🎺🎷🥁📻📺📡💿📀💾💽💻⌨️🖥️🖨️🖱️🖲️🕹️🗜️⚙️🔧🔨⚒️🛠️⛏️🔩⚙️🗝️🔐🔑🚪🛏️🛋️🪑🚽🚿🛁🛒🚬⚰️⚱️🏺🔮🔭🔬",
-	Nature: "🌹🥀🌺🌻🌼🌷⛅🌤️⛈️🌩️🌨️❄️☃️⛄🌬️💨💧💦☔☂️🌊🌋⛰️🏔️🗻🏕️⛺🏠🏡🏘️🏚️🏗️🏭🏢🏬🏣🏤🏥🏦🏨🏪🏫🏩💒🏛️⛪🕌🕍🛕",
+	Nature:
+		"🌹🥀🌺🌻🌼🌷⛅🌤️⛈️🌩️🌨️❄️☃️⛄🌬️💨💧💦☔☂️🌊🌋⛰️🏔️🗻🏕️⛺🏠🏡🏘️🏚️🏗️🏭🏢🏬🏣🏤🏥🏦🏨🏪🏫🏩💒🏛️⛪🕌🕍🛕",
 	Food: "🍏🍎🍐🍊🍋🍌🍉🍇🍓🫐🍈🍒🍑🥭🍍🥥🥝🍅🍆🥑🥦🥬🥒🌶️🌽🥕🧄🧅🥔🍠🥐🥯🍞🤞🥖🥨🧀🥚🍳🧈🥞🧇🥓🥞🍗🍖🌭🍔🍟🍕",
 	Animals: "🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🦆🦅🦉🦇🐺🐗🐴🦄🐝🪱🐛🦋🐌🐞🐜",
 	Activities: "⚽🏀🏈⚾🥎🎾🏐🏉🥏🎳🏓🏸🏒🏑🥍🏘️🥅⛳⛸️🎣🎽🎿🛷🥌🎯🪀",
-	Travel: "🚗🚕🚙🚌🚎🏎️🚓🚑🚒🚐🛻🚚🚛🚜🏍️🏎️🛵🦯🦽🦼🛺🚲🛴🛹🛼🚏🛣️🛤️🛢️⛽🚨🚥🚦🛑🚧⚓⛵🛶🚤🛳️⛴️🛥️🚢✈️🛩️🛫🛬🛰️",
+	Travel:
+		"🚗🚕🚙🚌🚎🏎️🚓🚑🚒🚐🛻🚚🚛🚜🏍️🏎️🛵🦯🦽🦼🛺🚲🛴🛹🛼🚏🛣️🛤️🛢️⛽🚨🚥🚦🛑🚧⚓⛵🛶🚤🛳️⛴️🛥️🚢✈️🛩️🛫🛬🛰️",
 	Symbols: "❤️🧡💛💚💙💜🖤🤍🤎💔❤️‍🔥💕💞💓💗💖💘💝💟👋🤚🖐️✋🖖👌🤌🤏✌️🤞🫰🤟🤘🤙",
 	Smileys: "😀😃😄😁😆😅🤣😂🙂🙃😉😊😇🥰😍🤩😘😗😚😙🥲😋😛😜🤪😝🤑",
 };
@@ -45,10 +47,10 @@ export async function loadIconCache(): Promise<Record<string, AccountIconData>> 
 	if (iconCachePromise) return iconCachePromise;
 
 	iconCachePromise = (async () => {
-		const icons = (await getValue(STORAGE_KEY_PREFIX, {} as Record<string, AccountIconData>)) as Record<
-			string,
-			AccountIconData
-		>;
+		const icons = (await getValue(
+			STORAGE_KEY_PREFIX,
+			{} as Record<string, AccountIconData>,
+		)) as Record<string, AccountIconData>;
 		iconCache = icons;
 		iconCachePromise = null;
 		return icons;
@@ -199,7 +201,11 @@ function applyAccountIcon(accountId: string, iconData: AccountIconData): void {
 		}
 
 		const iconSignature = `${ICON_RENDER_VERSION}:sidebar:${iconData.type}:${iconData.value}`;
-		if (iconHost.dataset.abtIconSignature === iconSignature && iconHost.dataset.abtAccountId === accountId) return;
+		if (
+			iconHost.dataset.abtIconSignature === iconSignature &&
+			iconHost.dataset.abtAccountId === accountId
+		)
+			return;
 
 		iconHost.innerHTML = "";
 		if (iconData.type === "emoji") {
@@ -266,7 +272,9 @@ function applyAccountIcon(accountId: string, iconData: AccountIconData): void {
 
 		const hasExpectedMarkup = (baseText: string): boolean => {
 			if (iconData.type === "emoji") {
-				const img = nameEl.querySelector(`img.${ACCOUNT_ICON_IMG_CLASS}`) as HTMLImageElement | null;
+				const img = nameEl.querySelector(
+					`img.${ACCOUNT_ICON_IMG_CLASS}`,
+				) as HTMLImageElement | null;
 				const span = nameEl.querySelector("span");
 				return (
 					!!img &&
@@ -279,7 +287,12 @@ function applyAccountIcon(accountId: string, iconData: AccountIconData): void {
 
 			const img = nameEl.querySelector(`img.${ACCOUNT_ICON_IMG_CLASS}`) as HTMLImageElement | null;
 			const span = nameEl.querySelector("span");
-			return !!img && !!span && img.getAttribute("src") === iconData.value && span.textContent === baseText;
+			return (
+				!!img &&
+				!!span &&
+				img.getAttribute("src") === iconData.value &&
+				span.textContent === baseText
+			);
 		};
 
 		const hasOurImg = Boolean(nameEl.querySelector(`img.${ACCOUNT_ICON_IMG_CLASS}`));
@@ -400,7 +413,11 @@ function applyAccountIcon(accountId: string, iconData: AccountIconData): void {
 
 const DOT_PICKER_ATTR = "data-abt-dot-picker";
 
-function openIconPickerForAccount(accountId: string, accountName: string, anchor: HTMLElement): void {
+function openIconPickerForAccount(
+	accountId: string,
+	accountName: string,
+	anchor: HTMLElement,
+): void {
 	if (document.querySelector('[data-abt-modal="icon-picker"]')) return;
 
 	const container = document.createElement("div");
@@ -476,7 +493,9 @@ function attachIconPickers(): void {
 			if (!dotContainer || dotContainer.hasAttribute(DOT_PICKER_ATTR)) continue;
 
 			// Mount picker button once
-			let pickerBtn = link.querySelector(`button[${PICKER_BUTTON_ATTR}="1"]`) as HTMLButtonElement | null;
+			let pickerBtn = link.querySelector(
+				`button[${PICKER_BUTTON_ATTR}="1"]`,
+			) as HTMLButtonElement | null;
 			if (!pickerBtn) {
 				pickerBtn = createElement("button", {
 					title: "Change account icon",

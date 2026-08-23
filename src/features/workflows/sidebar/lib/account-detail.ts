@@ -98,14 +98,20 @@ async function computeAccountDetail(
 			filter: { id: accountId },
 		}),
 		query<Pick<Transaction, "date" | "amount" | "is_child" | "cleared">[]>("transactions", {
-			filter: { account: accountId, tombstone: false, date: { $gte: isoDaysAgo(TREND_WINDOW_DAYS) } },
+			filter: {
+				account: accountId,
+				tombstone: false,
+				date: { $gte: isoDaysAgo(TREND_WINDOW_DAYS) },
+			},
 		}),
-		send<{ value: number }>("get-cell", { sheetName: "__global", name: `balanceCleared-${accountId}` }).catch(
-			() => null,
-		),
-		send<{ value: number }>("get-cell", { sheetName: "__global", name: `balanceUncleared-${accountId}` }).catch(
-			() => null,
-		),
+		send<{ value: number }>("get-cell", {
+			sheetName: "__global",
+			name: `balanceCleared-${accountId}`,
+		}).catch(() => null),
+		send<{ value: number }>("get-cell", {
+			sheetName: "__global",
+			name: `balanceUncleared-${accountId}`,
+		}).catch(() => null),
 		query<Schedule[]>("schedules"),
 	]);
 
@@ -146,7 +152,9 @@ async function computeAccountDetail(
 		.sort((a, b) => (a.next_date! < b.next_date! ? -1 : 1))
 		.slice(0, 3);
 
-	const payeeIds = [...new Set(upcomingRaw.map((s) => s._payee).filter((id): id is string => !!id))];
+	const payeeIds = [
+		...new Set(upcomingRaw.map((s) => s._payee).filter((id): id is string => !!id)),
+	];
 	const payees = payeeIds.length
 		? await query<Pick<Payee, "id" | "name">[]>("payees", { filter: { id: { $oneof: payeeIds } } })
 		: [];

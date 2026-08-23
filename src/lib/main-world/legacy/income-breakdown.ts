@@ -29,7 +29,9 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 		label: DEFAULT_WIDGET_NAME,
 		matchesRecord(widget) {
 			const meta = parseMeta(widget?.meta);
-			return widget?.type === "markdown-card" && String(meta.content || "").includes(PLACEHOLDER_TEXT);
+			return (
+				widget?.type === "markdown-card" && String(meta.content || "").includes(PLACEHOLDER_TEXT)
+			);
 		},
 		buildWidgetPayload(dashboardPageId) {
 			return {
@@ -329,13 +331,19 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 	async function addIncomeBreakdownWidget() {
 		const dashboardId = await getCurrentDashboardId();
 		if (!dashboardId) return;
-		await sendDashboardMutation("dashboard-add-widget", INCOME_BREAKDOWN_WIDGET.buildWidgetPayload(dashboardId));
+		await sendDashboardMutation(
+			"dashboard-add-widget",
+			INCOME_BREAKDOWN_WIDGET.buildWidgetPayload(dashboardId),
+		);
 	}
 
 	async function addCustomDashboardWidget(widgetDefinition) {
 		const dashboardId = await getCurrentDashboardId();
 		if (!dashboardId) return;
-		await sendDashboardMutation("dashboard-add-widget", widgetDefinition.buildWidgetPayload(dashboardId));
+		await sendDashboardMutation(
+			"dashboard-add-widget",
+			widgetDefinition.buildWidgetPayload(dashboardId),
+		);
 	}
 
 	function dismissNativeMenu(anchor) {
@@ -451,7 +459,8 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 
 	function buildSankeyData(data) {
 		const { incomes, expenses, catMap, groupMap, payeeMap } = data;
-		const { showIncome, showExpense, showSubCategories, showLossGain, groupPositiveCategories } = state;
+		const { showIncome, showExpense, showSubCategories, showLossGain, groupPositiveCategories } =
+			state;
 
 		const nodes = [];
 		const links = [];
@@ -493,7 +502,12 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 				const cat = catMap.get(catId);
 				const catName = cat ? cat.name : "Unknown";
 				if (amount > 0) {
-					positiveCategoriesLinks.push({ source: "cat-" + catId, target: "budget", value: amount, catName });
+					positiveCategoriesLinks.push({
+						source: "cat-" + catId,
+						target: "budget",
+						value: amount,
+						catName,
+					});
 					positiveCategoriesAmount += amount;
 					totalIncome += amount;
 					return;
@@ -543,7 +557,11 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 		if (showLossGain && (showExpense || showIncome) && totalExpense !== totalIncome) {
 			if (totalExpense > totalIncome) {
 				ensureNode("net-loss", "NET LOSS");
-				const entry = { source: "net-loss", target: "budget", value: Math.abs(totalIncome - totalExpense) };
+				const entry = {
+					source: "net-loss",
+					target: "budget",
+					value: Math.abs(totalIncome - totalExpense),
+				};
 				totalIncome === 0 ? links.unshift(entry) : links.push(entry);
 			} else {
 				ensureNode("net-gain", "NET GAIN");
@@ -594,9 +612,19 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 
 		// Node-specific filter
 		if (nodeId.startsWith("payee-")) {
-			conditions.push({ field: "payee", op: "is", value: nodeId.replace("payee-", ""), type: "id" });
+			conditions.push({
+				field: "payee",
+				op: "is",
+				value: nodeId.replace("payee-", ""),
+				type: "id",
+			});
 		} else if (nodeId.startsWith("cat-")) {
-			conditions.push({ field: "category", op: "is", value: nodeId.replace("cat-", ""), type: "id" });
+			conditions.push({
+				field: "category",
+				op: "is",
+				value: nodeId.replace("cat-", ""),
+				type: "id",
+			});
 		} else if (nodeId.startsWith("group-")) {
 			// For category groups, find all categories in this group and use oneOf
 			const groupId = nodeId.replace("group-", "");
@@ -680,15 +708,23 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
           </thead>
           <tbody>
             ${txs
-				.map((tx) => {
-					const payee = payeeMap.get(tx.payee);
-					const cat = catMap.get(tx.category);
-					const acct = accountMap.get(tx.account);
-					const amtClass = tx.amount >= 0 ? "positive" : "negative";
-					const statusClass = tx.reconciled ? "reconciled" : tx.cleared ? "cleared" : "uncleared";
-					const statusIcon = tx.reconciled ? "🔒" : tx.cleared ? "✓" : "•";
-					const statusTitle = tx.reconciled ? "Reconciled" : tx.cleared ? "Cleared" : "Not cleared";
-					return `<tr class="abt-ib-tx-row">
+							.map((tx) => {
+								const payee = payeeMap.get(tx.payee);
+								const cat = catMap.get(tx.category);
+								const acct = accountMap.get(tx.account);
+								const amtClass = tx.amount >= 0 ? "positive" : "negative";
+								const statusClass = tx.reconciled
+									? "reconciled"
+									: tx.cleared
+										? "cleared"
+										: "uncleared";
+								const statusIcon = tx.reconciled ? "🔒" : tx.cleared ? "✓" : "•";
+								const statusTitle = tx.reconciled
+									? "Reconciled"
+									: tx.cleared
+										? "Cleared"
+										: "Not cleared";
+								return `<tr class="abt-ib-tx-row">
                 <td>${formatDate(tx.date)}</td>
                 <td>${acct ? acct.name : "—"}</td>
                 <td>${payee ? payee.name : "—"}</td>
@@ -697,8 +733,8 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
                 <td class="amount-col abt-ib-private ${amtClass}">${formatCurrency(tx.amount)}</td>
                 <td class="col-status status-${statusClass}" title="${statusTitle}">${statusIcon}</td>
               </tr>`;
-				})
-				.join("")}
+							})
+							.join("")}
           </tbody>
         </table>
       </div>
@@ -734,7 +770,9 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 		popover.style.top = top + "px";
 		popover.style.left = left + "px";
 
-		popover.querySelector(".abt-ib-popover-close").addEventListener("click", closeTransactionPopover);
+		popover
+			.querySelector(".abt-ib-popover-close")
+			.addEventListener("click", closeTransactionPopover);
 
 		// Dismiss on click outside — but let node/link clicks reach their handlers
 		// so they can toggle (close when clicking the same node) or swap popovers.
@@ -817,7 +855,11 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 		const sankeyNodes = nodes.map((n) => ({ ...n }));
 		const sankeyLinks = links
 			.filter((l) => nodeById.has(l.source) && nodeById.has(l.target))
-			.map((l) => ({ source: nodeById.get(l.source), target: nodeById.get(l.target), value: l.value }));
+			.map((l) => ({
+				source: nodeById.get(l.source),
+				target: nodeById.get(l.target),
+				value: l.value,
+			}));
 
 		if (sankeyLinks.length === 0) {
 			svg.remove();
@@ -874,7 +916,10 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 			.style("opacity", 0);
 
 		// Move SVG before tooltip
-		container.insertBefore(container.querySelector("svg"), container.querySelector(".abt-ib-tooltip"));
+		container.insertBefore(
+			container.querySelector("svg"),
+			container.querySelector(".abt-ib-tooltip"),
+		);
 
 		// Determine which node a link click should resolve to (the more specific end)
 		function clickableNodeForLink(d) {
@@ -892,7 +937,9 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 			.data(graph.links)
 			.join("path")
 			.attr("d", sankeyLinkHorizontal())
-			.attr("stroke", (d) => (d.source.id === "budget" ? getNodeColor(d.target) : getNodeColor(d.source)))
+			.attr("stroke", (d) =>
+				d.source.id === "budget" ? getNodeColor(d.target) : getNodeColor(d.source),
+			)
 			.attr("stroke-opacity", 0.35)
 			.attr("stroke-width", (d) => Math.max(1, d.width))
 			.attr("class", "abt-ib-link")
@@ -929,7 +976,8 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 			});
 
 		// Nodes — clickable rects
-		svg.append("g")
+		svg
+			.append("g")
 			.selectAll("rect")
 			.data(graph.nodes)
 			.join("rect")
@@ -971,7 +1019,8 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 			});
 
 		// Labels
-		svg.append("g")
+		svg
+			.append("g")
 			.selectAll("text")
 			.data(graph.nodes)
 			.join("text")
@@ -1415,7 +1464,9 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 					.map((widget) => widget.dataset.dashboardWidgetId)
 					.filter(Boolean),
 			);
-			const widgetRecords = (await getIncomeBreakdownWidgetRecords()).filter((record) => !usedIds.has(record.id));
+			const widgetRecords = (await getIncomeBreakdownWidgetRecords()).filter(
+				(record) => !usedIds.has(record.id),
+			);
 
 			gridItems.forEach((gridItem, index) => {
 				const widgetRecord = widgetRecords[index];
@@ -1495,7 +1546,12 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 	function waitForBackendReady() {
 		return new Promise((resolve) => {
 			function check() {
-				if (window.$q && window.$query && document.querySelector('a[href="/budget"]') && document.querySelector('[data-testid="__global!accounts-balance"]')) {
+				if (
+					window.$q &&
+					window.$query &&
+					document.querySelector('a[href="/budget"]') &&
+					document.querySelector('[data-testid="__global!accounts-balance"]')
+				) {
 					resolve();
 				} else {
 					setTimeout(check, 50);

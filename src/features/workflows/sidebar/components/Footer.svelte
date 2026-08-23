@@ -4,7 +4,8 @@
 	import { tooltip } from "../actions/tooltip.svelte";
 	import { isMac } from "../lib/search";
 
-	const { onCollapse, onSwitchLayout }: { onCollapse?: () => void; onSwitchLayout?: () => void } = $props();
+	const { onCollapse, onSwitchLayout }: { onCollapse?: () => void; onSwitchLayout?: () => void } =
+		$props();
 
 	const undoShortcut = $derived(isMac() ? "⌘Z" : "Ctrl+Z");
 	const redoShortcut = $derived(isMac() ? "⌘⇧Z" : "Ctrl+Shift+Z");

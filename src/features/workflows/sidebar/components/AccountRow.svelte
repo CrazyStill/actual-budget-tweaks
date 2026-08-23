@@ -1,6 +1,10 @@
 <script lang="ts">
 	import type { AccountIconData } from "@features/appearance/account-icon-picker";
-	import { getEmojiAssetUrl, removeAccountIcon, setAccountIcon } from "@features/appearance/account-icon-picker";
+	import {
+		getEmojiAssetUrl,
+		removeAccountIcon,
+		setAccountIcon,
+	} from "@features/appearance/account-icon-picker";
 	import IconPickerModal from "@features/appearance/account-icon-picker/Modal.svelte";
 	import { closeCalendar, isCalendarOpen } from "@features/workflows/spending-calendar";
 	import { navigate } from "@lib/utilities/actual-api";
@@ -135,7 +139,11 @@
 		{#if effectiveIcon}
 			<span class="acct-icon">
 				{#if effectiveIcon.type === "emoji"}
-					<img class="acct-icon-img" src={getEmojiAssetUrl(effectiveIcon.value)} alt={effectiveIcon.value} />
+					<img
+						class="acct-icon-img"
+						src={getEmojiAssetUrl(effectiveIcon.value)}
+						alt={effectiveIcon.value}
+					/>
 				{:else}
 					<img class="acct-icon-img" src={effectiveIcon.value} alt="" />
 				{/if}

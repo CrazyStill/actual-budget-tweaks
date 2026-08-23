@@ -27,7 +27,11 @@
 			if (existing) {
 				existing.amount += Math.abs(t.amount);
 			} else {
-				map.set(key, { name: t.categoryName || "Uncategorized", amount: Math.abs(t.amount), id: t.categoryId });
+				map.set(key, {
+					name: t.categoryName || "Uncategorized",
+					amount: Math.abs(t.amount),
+					id: t.categoryId,
+				});
 			}
 		}
 		return Array.from(map.values()).sort((a, b) => b.amount - a.amount);
@@ -233,8 +237,12 @@
 		flex-shrink: 0;
 	}
 
-	.dd__tx-amount.is-neg { color: var(--color-errorText); }
-	.dd__tx-amount.is-pos { color: var(--color-noticeTextLight); }
+	.dd__tx-amount.is-neg {
+		color: var(--color-errorText);
+	}
+	.dd__tx-amount.is-pos {
+		color: var(--color-noticeTextLight);
+	}
 
 	.dd__tx-meta {
 		display: flex;

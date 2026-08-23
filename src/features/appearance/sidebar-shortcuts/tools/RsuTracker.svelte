@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 
-	const { symbol = "", startDate = "", count = "0" } = $props<{
+	const {
+		symbol = "",
+		startDate = "",
+		count = "0",
+	} = $props<{
 		symbol?: string;
 		startDate?: string;
 		count?: string;
@@ -80,7 +84,11 @@
 		<span class="rsu__count abt-privacy-number">{rsuCount}×</span>
 		<span class="rsu__val abt-privacy-number">{fmtCompact(currentValue ?? 0)}</span>
 		{#if growth != null}
-			<span class="rsu__growth abt-privacy-number" class:is-pos={growth >= 0} class:is-neg={growth < 0}>
+			<span
+				class="rsu__growth abt-privacy-number"
+				class:is-pos={growth >= 0}
+				class:is-neg={growth < 0}
+			>
 				{growth >= 0 ? "+" : ""}{growth.toFixed(1)}%
 			</span>
 		{/if}
@@ -122,8 +130,12 @@
 		flex-shrink: 0;
 	}
 
-	.rsu__growth.is-pos { color: var(--color-noticeTextLight); }
-	.rsu__growth.is-neg { color: var(--color-errorText); }
+	.rsu__growth.is-pos {
+		color: var(--color-noticeTextLight);
+	}
+	.rsu__growth.is-neg {
+		color: var(--color-errorText);
+	}
 
 	.rsu__tag {
 		font-size: 8px;

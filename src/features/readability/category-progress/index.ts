@@ -10,7 +10,8 @@ import ProgressPopover from "./ProgressPopover.svelte";
 
 const RING_CLASS = "abt-catprog-ring";
 const POPOVER_CLASS = "abt-catprog-popover";
-const CELL_RE = /^(budget\d{6})!leftover-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
+const CELL_RE =
+	/^(budget\d{6})!leftover-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
 const CACHE_MS = 15000;
 const HOVER_DELAY_MS = 150;
 const CLOSE_DELAY_MS = 150;
@@ -146,7 +147,9 @@ function fetchCells(sheet: string, catId: string, force?: boolean): Promise<CatC
 
 async function fetchAvgSpent(sheet: string, catId: string): Promise<number | null> {
 	const values = await Promise.all(
-		Array.from({ length: AVG_MONTHS }, (_, i) => cellValue(prevSheet(sheet, i + 1), `sum-amount-${catId}`)),
+		Array.from({ length: AVG_MONTHS }, (_, i) =>
+			cellValue(prevSheet(sheet, i + 1), `sum-amount-${catId}`),
+		),
 	);
 	const spends = values.map((v) => Math.max(0, -v));
 	if (spends.every((s) => s === 0)) return null;
@@ -204,7 +207,8 @@ function paintRing(ring: HTMLElement, data: CatCells) {
 	}
 	ring.dataset.state = state;
 
-	const percent = state === "empty" ? 0 : Math.min(100, Math.max(2, (Number.isFinite(ratio) ? ratio : 1) * 100));
+	const percent =
+		state === "empty" ? 0 : Math.min(100, Math.max(2, (Number.isFinite(ratio) ? ratio : 1) * 100));
 	const fill = ring.querySelector<SVGCircleElement>(".fill");
 
 	if (fill) {
@@ -219,7 +223,9 @@ function scanAndDecorate() {
 		return;
 	}
 
-	for (const span of document.querySelectorAll<HTMLElement>('[data-testid="balance"] span[data-cellname]')) {
+	for (const span of document.querySelectorAll<HTMLElement>(
+		'[data-testid="balance"] span[data-cellname]',
+	)) {
 		const m = (span.getAttribute("data-cellname") || "").match(CELL_RE);
 		if (!m) continue;
 		const [, sheet, catId] = m;
@@ -295,9 +301,13 @@ async function openPopover(ring: HTMLElement) {
 	if (!sheet || !catId) return;
 
 	const row = ring.closest<HTMLElement>('[data-testid="row"]');
-	const name = row?.querySelector('[data-testid="category-name"]')?.textContent?.trim() || "Category";
+	const name =
+		row?.querySelector('[data-testid="category-name"]')?.textContent?.trim() || "Category";
 
-	const [data, avgSpent] = await Promise.all([fetchCells(sheet, catId, true), fetchAvgSpent(sheet, catId)]);
+	const [data, avgSpent] = await Promise.all([
+		fetchCells(sheet, catId, true),
+		fetchAvgSpent(sheet, catId),
+	]);
 	if (!ring.isConnected) return;
 	paintRing(ring, data);
 

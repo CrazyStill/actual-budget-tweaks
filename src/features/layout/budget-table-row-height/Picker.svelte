@@ -4,7 +4,8 @@
 	import { applyGlobalCSS } from "@lib/utilities/dom";
 	import { getValue, setValue } from "@lib/utilities/store";
 
-	let { ctx }: { ctx: { key: string; defaultValue: string; css: (v: string) => string } } = $props();
+	let { ctx }: { ctx: { key: string; defaultValue: string; css: (v: string) => string } } =
+		$props();
 
 	const options = [
 		{ value: "1.75rem", label: "X-Slim", rowPx: 11 },
@@ -49,7 +50,11 @@
 	.rhp-header {
 		height: 9px;
 		flex-shrink: 0;
-		background: color-mix(in srgb, var(--color-sidebarItemAccentSelected) 18%, var(--color-tableHeaderBackground));
+		background: color-mix(
+			in srgb,
+			var(--color-sidebarItemAccentSelected) 18%,
+			var(--color-tableHeaderBackground)
+		);
 		border-bottom: 1px solid var(--color-tableBorder);
 	}
 

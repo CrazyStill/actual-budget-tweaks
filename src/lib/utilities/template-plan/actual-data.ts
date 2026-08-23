@@ -116,7 +116,8 @@ export function startSnapshotMonth(sheet: string, cats: Category[]): SnapshotDes
 
 export async function awaitSnapshotMonth(start: SnapshotDescriptor): Promise<SnapshotResult> {
 	const vals = await Promise.all(start.promises.map((p) => p.catch(() => null)));
-	const v = (cell: { value: number } | null) => (cell && typeof cell.value === "number" ? cell.value : 0);
+	const v = (cell: { value: number } | null) =>
+		cell && typeof cell.value === "number" ? cell.value : 0;
 	const availableFunds = v(vals[0]);
 	const toBudget = v(vals[1]);
 	const budgets = new Map<string, number>();
@@ -126,7 +127,9 @@ export async function awaitSnapshotMonth(start: SnapshotDescriptor): Promise<Sna
 
 export function getVisibleSheets(): string[] {
 	try {
-		const cells = document.querySelectorAll('[data-testid^="budget2"][data-testid*="!sum-amount-"]');
+		const cells = document.querySelectorAll(
+			'[data-testid^="budget2"][data-testid*="!sum-amount-"]',
+		);
 		const sheets = new Set<string>();
 		for (const c of Array.from(cells)) {
 			const m = c.getAttribute("data-testid")?.match(/^(budget\d{6})/);
@@ -189,7 +192,9 @@ export function startSnapshotAllVisible(): SnapshotDescriptor[] {
 	return sheets.map((s) => startSnapshotMonth(s, categoriesCache!));
 }
 
-export async function finishSnapshots(starts: SnapshotDescriptor[]): Promise<Map<string, SnapshotResult>> {
+export async function finishSnapshots(
+	starts: SnapshotDescriptor[],
+): Promise<Map<string, SnapshotResult>> {
 	const snaps = await Promise.all(starts.map(awaitSnapshotMonth));
 	const map = new Map<string, SnapshotResult>();
 	snaps.forEach((s) => map.set(s.sheet, s));
@@ -325,7 +330,9 @@ function parseGoalDef(goalDef: string | null | undefined): GoalDefEntry[] {
 	try {
 		const parsed = JSON.parse(goalDef);
 		if (!Array.isArray(parsed)) return [];
-		return parsed.filter((d): d is GoalDefEntry => d && (d.directive === "template" || d.directive === "goal"));
+		return parsed.filter(
+			(d): d is GoalDefEntry => d && (d.directive === "template" || d.directive === "goal"),
+		);
 	} catch {
 		return [];
 	}
@@ -334,7 +341,8 @@ function parseGoalDef(goalDef: string | null | undefined): GoalDefEntry[] {
 export async function loadTemplatesByCategoryId(): Promise<Map<string, TemplateEntry[]>> {
 	const byCat = new Map<string, TemplateEntry[]>();
 	try {
-		const cats = await query<{ id: string; tombstone: boolean; goal_def: string | null }[]>("categories");
+		const cats =
+			await query<{ id: string; tombstone: boolean; goal_def: string | null }[]>("categories");
 		for (const c of cats) {
 			if (c.tombstone || !c.goal_def) continue;
 			const budgetTpls = templateEntriesFromGoalDef(parseGoalDef(c.goal_def));

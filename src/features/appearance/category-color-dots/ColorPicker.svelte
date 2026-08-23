@@ -46,7 +46,9 @@
 		border: 2px solid transparent;
 		border-radius: 6px;
 		cursor: pointer;
-		transition: border-color 0.08s, transform 0.08s;
+		transition:
+			border-color 0.08s,
+			transform 0.08s;
 		padding: 0;
 	}
 

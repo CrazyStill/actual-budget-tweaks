@@ -41,7 +41,9 @@ export const getTheme = (key: string): Theme => {
 	return themes[key as keyof typeof themes] ?? defaultTheme;
 };
 
-export const themeSelectOptions: { value: string; label: string }[] = Object.entries(themes).map(([key, theme]) => ({
-	value: key,
-	label: theme.name,
-}));
+export const themeSelectOptions: { value: string; label: string }[] = Object.entries(themes).map(
+	([key, theme]) => ({
+		value: key,
+		label: theme.name,
+	}),
+);

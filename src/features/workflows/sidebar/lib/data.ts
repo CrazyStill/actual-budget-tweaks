@@ -49,10 +49,12 @@ export async function loadSidebarAccounts(): Promise<SidebarAccount[]> {
 				bank_sync_status?: string | null;
 			})[]
 		>("accounts"),
-		query<Pick<Transaction, "account" | "category" | "is_parent" | "is_child" | "transfer_id" | "tombstone">[]>(
-			"transactions",
-			{ filter: { tombstone: false } },
-		),
+		query<
+			Pick<
+				Transaction,
+				"account" | "category" | "is_parent" | "is_child" | "transfer_id" | "tombstone"
+			>[]
+		>("transactions", { filter: { tombstone: false } }),
 	]);
 
 	console.debug("[ABT experimental sidebar] accounts ->", accounts);
@@ -97,7 +99,9 @@ export async function refreshSyncStatuses(accounts: SidebarAccount[]): Promise<s
 		filter: { id: { $oneof: accounts.map((a) => a.id) } },
 	});
 
-	const statusById = new Map(rows.map((r) => [r.id, toSyncStatus(r.sync_status ?? r.bank_sync_status)]));
+	const statusById = new Map(
+		rows.map((r) => [r.id, toSyncStatus(r.sync_status ?? r.bank_sync_status)]),
+	);
 	const changed: string[] = [];
 	for (const account of accounts) {
 		const next = statusById.get(account.id);
@@ -152,7 +156,9 @@ function collectDotStateColors(): Map<string, string> {
 export function readNativeSyncingAccountIds(): Set<string> {
 	const dotStateColors = collectDotStateColors();
 	const ids = new Set<string>();
-	for (const link of document.querySelectorAll<HTMLAnchorElement>('a[href^="/accounts/"][href*="-"]')) {
+	for (const link of document.querySelectorAll<HTMLAnchorElement>(
+		'a[href^="/accounts/"][href*="-"]',
+	)) {
 		const dot = link.querySelector<HTMLElement>(".dot");
 		if (!dot) continue;
 
@@ -185,15 +191,14 @@ export function readNativeUncategorizedButtonText(): string {
 export async function refreshUncategorizedCounts(accounts: SidebarAccount[]): Promise<string[]> {
 	if (!accounts.length) return [];
 
-	const txs = await query<Pick<Transaction, "account" | "category" | "is_parent" | "is_child" | "transfer_id">[]>(
-		"transactions",
-		{
-			filter: {
-				tombstone: false,
-				account: { $oneof: accounts.map((a) => a.id) },
-			},
+	const txs = await query<
+		Pick<Transaction, "account" | "category" | "is_parent" | "is_child" | "transfer_id">[]
+	>("transactions", {
+		filter: {
+			tombstone: false,
+			account: { $oneof: accounts.map((a) => a.id) },
 		},
-	);
+	});
 
 	const counts = new Map<string, number>();
 	for (const tx of txs) {
@@ -228,7 +233,9 @@ export async function closeAccount(accountId: string): Promise<void> {
 	});
 	if (!account) return;
 
-	const props = await send<{ balance: number; numTransactions: number }>("account-properties", { id: accountId });
+	const props = await send<{ balance: number; numTransactions: number }>("account-properties", {
+		id: accountId,
+	});
 	await dispatch("pushModal", {
 		modal: {
 			name: "close-account",

@@ -1,6 +1,12 @@
 import { send } from "@lib/utilities/actual-api";
 import { amountToCents } from "@lib/utilities/currency";
-import { PRIORITY_CACHE_MS, PRIORITY_MODE, REMAINDER_PRIORITY, comparePriority, priorityKey } from "./constants";
+import {
+	PRIORITY_CACHE_MS,
+	PRIORITY_MODE,
+	REMAINDER_PRIORITY,
+	comparePriority,
+	priorityKey,
+} from "./constants";
 import type { TemplateEntry, TemplatePriority } from "./templates";
 import { isBudgetTemplate, isRemainderTemplate } from "./templates";
 
@@ -145,7 +151,10 @@ function rowSort(a: DemandRow, b: DemandRow): number {
 	);
 }
 
-export function statusFor(requestedCents: number | null | undefined, allocatedCents: number): Status {
+export function statusFor(
+	requestedCents: number | null | undefined,
+	allocatedCents: number,
+): Status {
 	if (requestedCents == null) return allocatedCents > 0 ? "partial" : "none";
 	if (requestedCents <= 0) return "full";
 	if (allocatedCents >= requestedCents) return "full";
@@ -160,9 +169,9 @@ function addDemandRow(rowMap: Map<string, DemandRow>, row: DemandRow): DemandRow
 		existing.requestedCents += row.requestedCents;
 		existing.templateCount += row.templateCount || 1;
 		existing.rawTemplates.push(...(row.rawTemplates || []));
-		existing.priorities = Array.from(new Set([...existing.priorities, ...(row.priorities || [row.priority])])).sort(
-			comparePriority,
-		);
+		existing.priorities = Array.from(
+			new Set([...existing.priorities, ...(row.priorities || [row.priority])]),
+		).sort(comparePriority);
 		return existing;
 	}
 	row.rawTemplates = row.rawTemplates || [];
@@ -199,7 +208,10 @@ function breakdownTemplateDemandCents(
 		}
 		return amountCents;
 	}
-	if ((entry.kind === "periodic" || entry.kind === "by" || entry.kind === "spend") && Number.isFinite(entry.amount)) {
+	if (
+		(entry.kind === "periodic" || entry.kind === "by" || entry.kind === "spend") &&
+		Number.isFinite(entry.amount)
+	) {
 		return amountToCents(entry.amount!);
 	}
 	return null;
@@ -296,7 +308,10 @@ export function createPriorityPlanner({
 	sheetToMonthKey,
 	sheetToMonthLabel,
 }: PriorityPlannerDeps) {
-	async function buildBreakdownPrioritySummary(sheet: string, diff: Diff): Promise<BreakdownSummary | null> {
+	async function buildBreakdownPrioritySummary(
+		sheet: string,
+		diff: Diff,
+	): Promise<BreakdownSummary | null> {
 		if (!sheet || !diff) return null;
 		const monthKey = sheetToMonthKey(sheet);
 		const positiveRows: DiffRow[] = [];
@@ -426,7 +441,9 @@ export function createPriorityPlanner({
 			.sort((a, b) => comparePriority(a.priority, b.priority));
 		for (const tier of tiers) {
 			tier.rows.sort((a, b) => a.catName.localeCompare(b.catName));
-			tier.status = tier.hasUnknownDemand ? "partial" : statusFor(tier.requestedCents, tier.allocatedCents);
+			tier.status = tier.hasUnknownDemand
+				? "partial"
+				: statusFor(tier.requestedCents, tier.allocatedCents);
 		}
 
 		if (tiers.length === 0) return null;
@@ -496,8 +513,17 @@ export function createPriorityPlanner({
 				unknown.push(item);
 				continue;
 			}
-			const requestedCents = targetCents > 0 ? Math.min(estimateCents, remainingTarget) : estimateCents;
-			addFallbackDemandRow(rowMap, cat, item.entry, requestedCents, currentCents, priorities, "parsed-amount");
+			const requestedCents =
+				targetCents > 0 ? Math.min(estimateCents, remainingTarget) : estimateCents;
+			addFallbackDemandRow(
+				rowMap,
+				cat,
+				item.entry,
+				requestedCents,
+				currentCents,
+				priorities,
+				"parsed-amount",
+			);
 			knownTotalCents += requestedCents;
 			remainingTarget = Math.max(0, remainingTarget - requestedCents);
 			lastKnown = item;
@@ -512,7 +538,9 @@ export function createPriorityPlanner({
 			let remainingResidual = residualCents;
 			for (let i = 0; i < unknown.length; i++) {
 				const isLast = i === unknown.length - 1;
-				const requestedCents = isLast ? remainingResidual : Math.round(residualCents / unknown.length);
+				const requestedCents = isLast
+					? remainingResidual
+					: Math.round(residualCents / unknown.length);
 				addFallbackDemandRow(
 					rowMap,
 					cat,
@@ -540,7 +568,15 @@ export function createPriorityPlanner({
 			return;
 		}
 
-		addFallbackDemandRow(rowMap, cat, regular[0].entry, targetCents, currentCents, priorities, "goal-cell");
+		addFallbackDemandRow(
+			rowMap,
+			cat,
+			regular[0].entry,
+			targetCents,
+			currentCents,
+			priorities,
+			"goal-cell",
+		);
 	}
 
 	async function dryRunCategory(
@@ -564,7 +600,11 @@ export function createPriorityPlanner({
 		}
 	}
 
-	async function mapWithConcurrency<T>(items: T[], limit: number, fn: (item: T) => Promise<void>): Promise<void> {
+	async function mapWithConcurrency<T>(
+		items: T[],
+		limit: number,
+		fn: (item: T) => Promise<void>,
+	): Promise<void> {
 		let index = 0;
 		const workerCount = Math.min(limit, items.length);
 		const workers = Array.from({ length: workerCount }, async () => {
@@ -753,11 +793,18 @@ export function createPriorityPlanner({
 								return;
 							}
 							if (amount <= 0) return;
-							dryDemandRows.push({ entry, index: i, priority: entry.priority, requestedCents: amount });
+							dryDemandRows.push({
+								entry,
+								index: i,
+								priority: entry.priority,
+								requestedCents: amount,
+							});
 						});
 
 						const cappedDemandRows = capDemandRowsToGoal(
-							dryDemandRows.sort((a, b) => comparePriority(a.priority, b.priority) || a.index - b.index),
+							dryDemandRows.sort(
+								(a, b) => comparePriority(a.priority, b.priority) || a.index - b.index,
+							),
 							goalCents,
 						);
 						for (const demand of cappedDemandRows) {
@@ -865,7 +912,9 @@ export function createPriorityPlanner({
 					}
 				}
 
-				const sortedTiers = [...tierMap.values()].sort((a, b) => comparePriority(a.priority, b.priority));
+				const sortedTiers = [...tierMap.values()].sort((a, b) =>
+					comparePriority(a.priority, b.priority),
+				);
 				for (const tier of sortedTiers) {
 					tier.status = statusFor(tier.requestedCents, tier.allocatedCents);
 					tier.rows.sort(rowSort);

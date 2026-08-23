@@ -29,7 +29,11 @@ function subscribe(entry: Entry, target: Node, listener: Listener, options?: Mut
  * `document.body`. Passing a `target` gets that node its own dedicated observer
  * (deduped by target — the first caller's `options` win if targets collide).
  */
-export function watchDom(listener: Listener, target?: Node, options?: MutationObserverInit): () => void {
+export function watchDom(
+	listener: Listener,
+	target?: Node,
+	options?: MutationObserverInit,
+): () => void {
 	if (!target) {
 		subscribe(bodyEntry, document.body, listener);
 		return () => {
