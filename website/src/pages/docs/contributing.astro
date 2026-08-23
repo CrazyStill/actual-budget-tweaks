@@ -1,0 +1,236 @@
+---
+import Base from "../../layouts/Base.astro";
+---
+
+<Base
+	title="Contributing — Actual Budget Tweaks"
+	description="How to set up the extension locally and ship a new feature — a walkthrough for contributors."
+>
+	<main class="docs center">
+		<header class="docs__header stack stack--sm">
+			<a href="/" class="docs__back">&larr; Back to home</a>
+			<h1>Contributing</h1>
+			<p class="docs__subtitle">
+				Everything here is optional reading for users — it's for anyone who wants to add a feature.
+				For how the extension fits together under the hood, see <a href="/docs/architecture"
+					>Architecture</a
+				>.
+			</p>
+		</header>
+
+		<section class="docs__section">
+			<h2>Local setup</h2>
+			<ol class="docs__steps">
+				<li>
+					<code>pnpm install</code>
+				</li>
+				<li>
+					<code>pnpm dev</code> — starts WXT's dev server and builds to
+					<code>.output/chrome-mv3-dev</code>, rebuilding on save.
+				</li>
+				<li>
+					Load it as an unpacked extension: <code>chrome://extensions</code> → enable Developer
+					Mode → <strong>Load unpacked</strong> → select <code>.output/chrome-mv3-dev</code>.
+				</li>
+				<li>
+					Open an Actual Budget instance in a tab (self-hosted, or
+					<a href="https://actualbudget.org" target="_blank" rel="noopener">app.actualbudget.org</a
+					>) and set its URL from the extension's popup if it doesn't detect it automatically.
+				</li>
+			</ol>
+			<p>
+				<code>pnpm dev:firefox</code>/<code>pnpm build:firefox</code> exist for Firefox — same idea,
+				loaded via <code>about:debugging</code> → <strong>This Firefox</strong> → <strong
+					>Load Temporary Add-on</strong
+				>.
+			</p>
+		</section>
+
+		<section class="docs__section">
+			<h2>Add a feature in 5 minutes</h2>
+			<p>Scaffold it:</p>
+			<pre class="docs__code"><code>{`pnpm new-feature readability budget-warnings "Budget Warnings" checkbox`}</code></pre>
+			<p>
+				The four arguments are category, kebab-case name, display label, and type
+				(<code>checkbox</code> / <code>select</code> / <code>custom</code>). Category is one of
+				<code>layout</code>, <code>readability</code>, <code>appearance</code>, or
+				<code>workflows</code> — whichever section it belongs under in the settings panel. Add
+				<code>--component</code> if the feature needs its own Svelte component (a popover, a custom
+				editor) rather than a plain checkbox/select row:
+			</p>
+			<pre class="docs__code"><code>{`pnpm new-feature workflows spending-trends "Spending Trends" custom --component`}</code></pre>
+			<p>
+				This creates the setting file (and component, if requested) and registers it in
+				<code>src/features/index.ts</code> for you — one import, one array entry, done. From there:
+			</p>
+			<ol class="docs__steps">
+				<li>Fill in <code>description</code>, pick a real <code>icon</code> from <code>src/lib/icons.ts</code>.</li>
+				<li>
+					Implement <code>init</code> (and <code>css</code> if you need scoped styles) — see
+					<a href="/docs/architecture">Architecture</a> for the page-gating and cleanup conventions
+					this codebase uses.
+				</li>
+				<li><code>pnpm format && pnpm check && pnpm lint</code></li>
+			</ol>
+		</section>
+
+		<section class="docs__section">
+			<h2>Conventions worth knowing before you open a PR</h2>
+			<ul class="docs__list">
+				<li>
+					<strong>Page-gating goes inside the watcher, not around it.</strong> Register a permanent
+					<code>watchDom()</code> callback in <code>init</code> and have it check
+					<code>matchesPage()</code> itself and return early on the wrong page — don't start/stop the
+					watcher on route change. See <a href="/docs/architecture#page-gating">Architecture</a>.
+				</li>
+				<li>
+					<strong>Cleanup is your responsibility.</strong> Whatever <code>init</code> sets up
+					(listeners, observers, injected DOM) is only undone by whatever you return from it. Toggle
+					the setting off and confirm nothing's left behind before opening a PR.
+				</li>
+				<li>
+					<strong>Prefer <code>data-testid</code> selectors over structural CSS</strong> where Actual's
+					DOM exposes one — they're less likely to break on an Actual update than
+					<code>nth-child</code>/hashed-class selectors. (Sometimes there's no other option — that's
+					fine, just know it's the more fragile choice.)
+				</li>
+				<li>
+					<strong>Commit messages are the changelog.</strong> This repo uses
+					<a href="https://github.com/unjs/changelogen" target="_blank" rel="noopener">changelogen</a
+					>, which builds <code>CHANGELOG.md</code> and bumps the version from commit messages on
+					every merge to <code>main</code> — use conventional commits (<code>feat:</code>,
+					<code>fix:</code>, <code>chore:</code>).
+				</li>
+			</ul>
+		</section>
+
+		<section class="docs__section">
+			<h2>Before opening a PR</h2>
+			<p>
+				CI runs lint, format check, typecheck, and both builds on every PR — <code>pnpm format &&
+				pnpm check && pnpm lint</code> locally catches the same things faster. Test against a real
+				Actual instance; type checking alone doesn't catch a selector that stopped matching or a
+				popover that doesn't close. See the PR template for the full checklist.
+			</p>
+		</section>
+	</main>
+</Base>
+
+<style>
+	.docs {
+		padding-block: 3rem 5rem;
+		max-inline-size: 760px;
+	}
+
+	.docs__header h1 {
+		font-size: clamp(1.8rem, 4vw, 2.4rem);
+		font-weight: 700;
+		letter-spacing: -0.03em;
+	}
+
+	.docs__subtitle {
+		color: var(--text-secondary);
+		font-size: 1rem;
+		max-inline-size: 60ch;
+	}
+
+	.docs__back {
+		font-size: 0.85rem;
+		color: var(--text-secondary);
+		text-decoration: none;
+	}
+
+	.docs__back:hover {
+		color: var(--accent);
+	}
+
+	.docs__section {
+		margin-block-start: 3rem;
+	}
+
+	.docs__section h2 {
+		font-size: 1.3rem;
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		margin-block-end: 0.9rem;
+	}
+
+	.docs__section p {
+		font-size: 0.92rem;
+		line-height: 1.65;
+		color: var(--text-secondary);
+	}
+
+	.docs__section p + p {
+		margin-block-start: 0.9rem;
+	}
+
+	.docs__section code {
+		font-family: var(--mono);
+		font-size: 0.82em;
+		background: var(--accent-wash);
+		color: var(--accent);
+		padding: 0.1rem 0.35rem;
+		border-radius: 4px;
+	}
+
+	.docs__section strong {
+		color: var(--text);
+		font-weight: 600;
+	}
+
+	.docs__code {
+		margin-block: 1rem;
+		padding: 1rem 1.1rem;
+		background: var(--dark-bg);
+		border: 1px solid var(--dark-border);
+		border-radius: var(--radius-sm);
+		overflow-x: auto;
+	}
+
+	.docs__code code {
+		background: none;
+		color: var(--dark-text-light);
+		padding: 0;
+		font-size: 0.8rem;
+		line-height: 1.6;
+		white-space: pre;
+	}
+
+	.docs__steps {
+		list-style: decimal;
+		padding-inline-start: 1.25rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		font-size: 0.92rem;
+		line-height: 1.6;
+		color: var(--text-secondary);
+	}
+
+	.docs__list {
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+	}
+
+	.docs__list li {
+		font-size: 0.92rem;
+		line-height: 1.6;
+		color: var(--text-secondary);
+		padding-inline-start: 1.1rem;
+		position: relative;
+	}
+
+	.docs__list li::before {
+		content: "";
+		position: absolute;
+		inset-inline-start: 0;
+		inset-block-start: 0.55rem;
+		inline-size: 5px;
+		block-size: 5px;
+		border-radius: 50%;
+		background: var(--accent);
+	}
+</style>

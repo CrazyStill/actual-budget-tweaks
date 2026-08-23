@@ -1,0 +1,321 @@
+---
+import Base from "../../layouts/Base.astro";
+---
+
+<Base
+	title="Architecture — Actual Budget Tweaks"
+	description="How features, the runtime, and the Actual API bridge fit together — for anyone contributing a new feature."
+>
+	<main class="docs center">
+		<header class="docs__header stack stack--sm">
+			<a href="/" class="docs__back">&larr; Back to home</a>
+			<h1>Architecture</h1>
+			<p class="docs__subtitle">
+				How this extension is put together, for anyone about to add a feature to it. If you're
+				looking for a step-by-step walkthrough instead, see <a href="/docs/contributing">Contributing</a
+				>.
+			</p>
+		</header>
+
+		<section class="docs__section">
+			<h2>The shape of a feature</h2>
+			<p>
+				Every feature — theme, layout tweak, sidebar redesign, whatever — is one call to
+				<code>defineSetting()</code>, exported as a named const, and listed in
+				<code>src/features/index.ts</code>. That's the entire contract. There's no plugin manifest,
+				no separate registration file, no build step beyond the normal one.
+			</p>
+			<pre class="docs__code"><code>{`// src/features/readability/category-progress/index.ts
+export const categoryProgress = defineSetting({
+  type: "checkbox",
+  label: "Category Progress Bars",
+  description: "Show a spending progress bar under each budget category.",
+  group: "Budget",
+  icon: "gauge",
+  context: { key: "category-progress-indicators", defaultValue: false },
+  css: () => CSS,
+  init: () => {
+    const unwatch = watchDom(scanAndDecorate);
+    return () => {
+      unwatch();
+      undecorateAll();
+    };
+  },
+});`}</code></pre>
+			<p>
+				<code>defineSetting()</code> itself (<code>src/features/types.ts</code>) does nothing at
+				runtime — it's the identity function. Its job is entirely in the type system: it infers a
+				precise literal type for whatever you pass it, which is what lets the runtime and settings UI
+				work with one setting file at a time without a giant hand-written type declaration.
+			</p>
+		</section>
+
+		<section class="docs__section">
+			<h2>The four setting types</h2>
+			<div class="docs__cards">
+				<div class="docs__card">
+					<code class="docs__card-type">checkbox</code>
+					<p>A single on/off toggle. The most common type — most tweaks are this.</p>
+				</div>
+				<div class="docs__card">
+					<code class="docs__card-type">select</code>
+					<p>A dropdown of named options (<code>options: [&#123; value, label &#125;]</code>).</p>
+				</div>
+				<div class="docs__card">
+					<code class="docs__card-type">custom</code>
+					<p>
+						Renders its own Svelte component in the settings panel instead of a checkbox/select
+						row — for anything with more than one control (a color picker, multiple related
+						toggles). Its <code>init</code> has no cleanup return, unlike the other three — it
+						manages its own lifecycle.
+					</p>
+				</div>
+				<div class="docs__card">
+					<code class="docs__card-type">core</code>
+					<p>
+						No UI card at all — always active, no user-facing toggle. Used for things like the
+						release-notification check and the side-panel manager. Reserved for extension
+						internals; a new feature almost never needs this type.
+					</p>
+				</div>
+			</div>
+		</section>
+
+		<section class="docs__section">
+			<h2>Runtime lifecycle</h2>
+			<p>
+				<code>src/features/runtime.ts</code> is the only place that calls a setting's
+				<code>init</code>/cleanup. On startup, <code>bootstrapSettings()</code> reads every setting's
+				persisted value and activates the ones that should be on — all concurrently
+				(<code>Promise.all</code>), so one feature's slow storage read or DOM query doesn't delay
+				another's CSS from applying. When a checkbox/select is toggled from the settings panel,
+				<code>applySettingChange()</code> deactivates the old value and activates the new one the same
+				way.
+			</p>
+			<p>
+				Every <code>init</code>, cleanup, and bootstrap call is wrapped in its own try/catch and
+				logged on failure — <strong
+					>a feature that throws during activation doesn't take any other feature down with it</strong
+				>, and doesn't block the rest of <code>bootstrapSettings()</code>'s <code>Promise.all</code>.
+				You don't need to add your own top-level try/catch for this; the runtime already isolates
+				you.
+			</p>
+			<p>
+				What it doesn't do for you: cleanup correctness. If <code>init</code> registers a listener,
+				starts an observer, or injects DOM, your returned cleanup function is the only thing that
+				undoes it — nothing else runs when the setting is toggled off.
+			</p>
+		</section>
+
+		<section class="docs__section">
+			<h2 id="page-gating">Page gating</h2>
+			<p>
+				Actual is a single-page app, so a feature can't just run once at load — it has to notice
+				when the user navigates to (or away from) the page it cares about. The convention here is a
+				permanent <code>watchDom()</code> callback that checks <code>matchesPage()</code> internally
+				and no-ops on the wrong page, <strong>not</strong> a start/stop pair triggered by route changes.
+			</p>
+			<pre class="docs__code"><code>{`import { watchDom } from "@lib/utilities/dom-watcher";
+import { Page, matchesPage } from "@lib/utilities/pages";
+
+function scanAndDecorate() {
+  if (!matchesPage(Page.Budget)) return;
+  // ...decorate whatever's currently in the DOM
+}
+
+// registered once in init(), left running for the setting's whole lifetime
+const unwatch = watchDom(scanAndDecorate);`}</code></pre>
+			<p>
+				<code>watchDom()</code> (<code>src/lib/utilities/dom-watcher.ts</code>) is a ref-counted
+				wrapper around a debounced <code>MutationObserver</code>. Callers that don't pass a
+				<code>target</code> all share one observer on <code>document.body</code>; passing a
+				<code>target</code> gets that node its own observer, deduped by target. Either way it's cheap
+				to add another listener — you're not paying for a new observer per feature.
+			</p>
+		</section>
+
+		<section class="docs__section">
+			<h2>The Actual API bridge</h2>
+			<p>
+				<code>src/lib/utilities/actual-api.ts</code> exports <code>query()</code>, <code>send()</code
+				>, <code>dispatch()</code>, and <code>navigate()</code> — typed wrappers around Actual's own
+				internal <code>$q</code>/<code>$query</code>/<code>$send</code> and action-creators, reached
+				via a bridge injected into the page's main JS world
+				(<code>src/entrypoints/actual-api-bridge-main.ts</code>).
+			</p>
+			<pre class="docs__code"><code>{`const cats = await query("categories");
+const cell = await send("get-cell", { sheetName: "budget202506", name: "available-funds" });`}</code></pre>
+			<p>
+				The important thing to know before you reach for this: <strong
+					>the bridge itself is generic</strong
+				> — <code>query</code>/<code>send</code> forward whatever table or method name you give them.
+				Typed autocomplete and return types come entirely from
+				<code>ActualTable</code>/<code>SendMethodMap</code> in
+				<code>src/lib/types/actual-schema.ts</code>. So if you need a table or internal method that
+				isn't typed yet, you almost never need to touch the runtime bridge — add the type to
+				<code>actual-schema.ts</code> and it works.
+			</p>
+		</section>
+
+		<section class="docs__section">
+			<h2>Storage</h2>
+			<p>
+				<code>src/lib/utilities/store.ts</code> exports <code>getValue</code>/<code>setValue</code>/<code
+					>hasValue</code
+				>, thin wrappers around <code>browser.storage.local</code> with a <code>local:</code> key
+				prefix. A setting's own persisted value (<code>context.key</code>) is handled for you by the
+				runtime — you'd reach for these directly only for extra state a feature needs beyond its
+				single on/off value (category icon assignments, a cached API response, and so on).
+			</p>
+		</section>
+
+		<section class="docs__section">
+			<h2>Registering a feature</h2>
+			<p>
+				<code>pnpm new-feature</code> does this step for you (see <a href="/docs/contributing"
+					>Contributing</a
+				>). If you're doing it by hand: add the import to <code>src/features/index.ts</code>, then
+				add the identifier to the category array it belongs in (<code>readability</code>,
+				<code>appearance</code>, <code>layoutAndDensity</code>, <code>workflows</code>). That
+				array is also what <code>scriptSections</code> renders in the settings panel and what
+				<code>scripts/generate-features-manifest.mjs</code> reads to build the public
+				<a href="/features">features list</a> — one array, both places.
+			</p>
+			<p>
+				That manifest script parses <code>index.ts</code> as a TypeScript AST rather than importing
+				it, so it doesn't have to pull Svelte/browser dependencies into a plain Node script. One
+				consequence: <code>label</code>/<code>description</code>/<code>icon</code>/<code>group</code>
+				 must be plain string literals in the <code>defineSetting()</code> call, not computed
+				expressions — a non-literal value is read back empty with no error, and the feature quietly
+				drops off the public features list.
+			</p>
+		</section>
+	</main>
+</Base>
+
+<style>
+	.docs {
+		padding-block: 3rem 5rem;
+		max-inline-size: 760px;
+	}
+
+	.docs__header h1 {
+		font-size: clamp(1.8rem, 4vw, 2.4rem);
+		font-weight: 700;
+		letter-spacing: -0.03em;
+	}
+
+	.docs__subtitle {
+		color: var(--text-secondary);
+		font-size: 1rem;
+		max-inline-size: 60ch;
+	}
+
+	.docs__back {
+		font-size: 0.85rem;
+		color: var(--text-secondary);
+		text-decoration: none;
+	}
+
+	.docs__back:hover {
+		color: var(--accent);
+	}
+
+	.docs__section {
+		margin-block-start: 3rem;
+	}
+
+	.docs__section h2 {
+		font-size: 1.3rem;
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		margin-block-end: 0.9rem;
+	}
+
+	.docs__section p {
+		font-size: 0.92rem;
+		line-height: 1.65;
+		color: var(--text-secondary);
+	}
+
+	.docs__section p + p {
+		margin-block-start: 0.9rem;
+	}
+
+	.docs__section code {
+		font-family: var(--mono);
+		font-size: 0.82em;
+		background: var(--accent-wash);
+		color: var(--accent);
+		padding: 0.1rem 0.35rem;
+		border-radius: 4px;
+	}
+
+	.docs__section strong {
+		color: var(--text);
+		font-weight: 600;
+	}
+
+	.docs__code {
+		margin-block: 1rem;
+		padding: 1rem 1.1rem;
+		background: var(--dark-bg);
+		border: 1px solid var(--dark-border);
+		border-radius: var(--radius-sm);
+		overflow-x: auto;
+	}
+
+	.docs__code code {
+		background: none;
+		color: var(--dark-text-light);
+		padding: 0;
+		font-size: 0.8rem;
+		line-height: 1.6;
+		white-space: pre;
+	}
+
+	.docs__cards {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.9rem;
+	}
+
+	.docs__card {
+		padding: 1rem 1.1rem;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+	}
+
+	.docs__card-type {
+		display: inline-block;
+		font-family: var(--mono);
+		font-size: 0.78rem;
+		background: var(--accent-wash);
+		color: var(--accent);
+		padding: 0.15rem 0.5rem;
+		border-radius: 4px;
+		margin-block-end: 0.5rem;
+	}
+
+	.docs__card p {
+		font-size: 0.85rem;
+		line-height: 1.55;
+		color: var(--text-secondary);
+	}
+
+	.docs__card code {
+		font-family: var(--mono);
+		font-size: 0.85em;
+		background: var(--accent-wash);
+		color: var(--accent);
+		padding: 0.05rem 0.3rem;
+		border-radius: 3px;
+	}
+
+	@media (max-width: 640px) {
+		.docs__cards {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
