@@ -21,7 +21,7 @@
 	const categoryBreakdown = $derived.by(() => {
 		const map = new Map<string, { name: string; amount: number; id: string }>();
 		for (const t of transactions) {
-			if (t.amount >= 0 || t.upcoming) continue;
+			if (t.amount >= 0 || t.upcoming || t.missed) continue;
 			const key = t.categoryId || "__uncategorized";
 			const existing = map.get(key);
 			if (existing) {
@@ -34,8 +34,9 @@
 	});
 
 	const totalSpent = $derived(categoryBreakdown.reduce((s, c) => s + c.amount, 0));
-	const actualTxs = $derived(transactions.filter((t) => !t.upcoming));
+	const actualTxs = $derived(transactions.filter((t) => !t.upcoming && !t.missed));
 	const upcomingTxs = $derived(transactions.filter((t) => t.upcoming));
+	const missedTxs = $derived(transactions.filter((t) => t.missed));
 </script>
 
 <div class="dd">
@@ -82,6 +83,27 @@
 						</div>
 						{#if tx.notes}
 							<div class="dd__tx-notes abt-privacy-number">{tx.notes}</div>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
+	{#if missedTxs.length > 0}
+		<div class="dd__section">
+			<div class="dd__section-title dd__section-title--missed">Missed</div>
+			<div class="dd__list">
+				{#each missedTxs as tx}
+					<div class="dd__tx dd__tx--missed">
+						<div class="dd__tx-row">
+							<span class="dd__tx-payee abt-privacy-number">{tx.payee}</span>
+							<span class="dd__tx-amount abt-privacy-number is-neg">{fmt(tx.amount)}</span>
+						</div>
+						{#if tx.accountName}
+							<div class="dd__tx-meta">
+								<span>{tx.accountName}</span>
+							</div>
 						{/if}
 					</div>
 				{/each}
@@ -254,4 +276,16 @@
 		opacity: 0.5;
 		font-style: italic;
 	}
+
+	/* ── Missed ── */
+	.dd__section-title--missed {
+		color: var(--color-errorText);
+	}
+
+	.dd__tx--missed .dd__tx-payee {
+		color: var(--color-errorText);
+		text-decoration: line-through;
+		text-decoration-color: color-mix(in srgb, var(--color-errorText) 45%, transparent);
+	}
+
 </style>

@@ -6,4 +6,5 @@ export interface DayTransaction {
 	accountName: string;
 	notes: string;
 	upcoming?: boolean;
+	missed?: boolean;
 }
