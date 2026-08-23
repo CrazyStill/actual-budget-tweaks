@@ -1,6 +1,79 @@
 # Changelog
 
 
+## v0.1.61
+
+[compare changes](https://github.com/CrazyStill/actual-budget-tweaks/compare/v0.1.54...v0.1.61)
+
+### 🚀 Enhancements
+
+- Implement command palette and integrate with sidebar search functionality ([39a3192](https://github.com/CrazyStill/actual-budget-tweaks/commit/39a3192))
+- Add filter for off-budget accounts in spending calendar ([47d0ebe](https://github.com/CrazyStill/actual-budget-tweaks/commit/47d0ebe))
+- Implement Switch component for improved toggle functionality ([9f64384](https://github.com/CrazyStill/actual-budget-tweaks/commit/9f64384))
+- Add @types/d3 and extend SendMethodMap interface for budget cell operations ([7a9c3ff](https://github.com/CrazyStill/actual-budget-tweaks/commit/7a9c3ff))
+- Browse future months in spending calendar ([ca46c30](https://github.com/CrazyStill/actual-budget-tweaks/commit/ca46c30))
+- Enhance sidebar transition handling for improved user experience ([32401d5](https://github.com/CrazyStill/actual-budget-tweaks/commit/32401d5))
+- Update active account text color ([e4db545](https://github.com/CrazyStill/actual-budget-tweaks/commit/e4db545))
+- Implement custom overlay scrollbar for improved scrolling experience in accounts ([14cee4f](https://github.com/CrazyStill/actual-budget-tweaks/commit/14cee4f))
+- Add padding to scrollable accounts section in sidebar ([7ac0cb7](https://github.com/CrazyStill/actual-budget-tweaks/commit/7ac0cb7))
+- Add keyboard shortcuts for undo and redo actions in footer ([8251d9d](https://github.com/CrazyStill/actual-budget-tweaks/commit/8251d9d))
+- Reduce padding in sidebar footer ([293da53](https://github.com/CrazyStill/actual-budget-tweaks/commit/293da53))
+- Reduce padding in sidebar add account button ([9b4bb49](https://github.com/CrazyStill/actual-budget-tweaks/commit/9b4bb49))
+- Add color switcher to command menu ([be8e1ff](https://github.com/CrazyStill/actual-budget-tweaks/commit/be8e1ff))
+- Add pnpm new-feature scaffold script ([c0c9b40](https://github.com/CrazyStill/actual-budget-tweaks/commit/c0c9b40))
+
+### 🩹 Fixes
+
+- Update sidebar borders to use computed color ([33a6961](https://github.com/CrazyStill/actual-budget-tweaks/commit/33a6961))
+- Adjust padding-right for sidebar account drop target ([c1682e1](https://github.com/CrazyStill/actual-budget-tweaks/commit/c1682e1))
+- Adjust top position for fixed element in template plan CSS ([533430b](https://github.com/CrazyStill/actual-budget-tweaks/commit/533430b))
+- Defer focus and select calls to ensure element is laid out ([592cae4](https://github.com/CrazyStill/actual-budget-tweaks/commit/592cae4))
+- Defer focus call to ensure element is laid out before focusing ([6dbae8f](https://github.com/CrazyStill/actual-budget-tweaks/commit/6dbae8f))
+- Resolve issue with transaction query only respecting upper bound on date ([042223c](https://github.com/CrazyStill/actual-budget-tweaks/commit/042223c))
+- Limit displayed transactions to three and update more indicator accordingly ([bead75f](https://github.com/CrazyStill/actual-budget-tweaks/commit/bead75f))
+- Missed transactions not clearing when posted to spending calendar ([281f820](https://github.com/CrazyStill/actual-budget-tweaks/commit/281f820))
+
+### 💅 Refactors
+
+- Replace inline type definitions with imported types for transactions ([6ee384d](https://github.com/CrazyStill/actual-budget-tweaks/commit/6ee384d))
+
+### 📖 Documentation
+
+- Add CONTRIBUTING.md and website docs (contributing + architecture) ([1d6898b](https://github.com/CrazyStill/actual-budget-tweaks/commit/1d6898b))
+- Rewrite docs pages to be scannable, not prose-heavy ([d9b5b41](https://github.com/CrazyStill/actual-budget-tweaks/commit/d9b5b41))
+- Fold website docs back into CONTRIBUTING.md, drop the docs pages ([917886b](https://github.com/CrazyStill/actual-budget-tweaks/commit/917886b))
+- Reposition README and website around community contribution ([1e7a8a1](https://github.com/CrazyStill/actual-budget-tweaks/commit/1e7a8a1))
+
+### 🏡 Chore
+
+- Update Firefox auto-update manifest for v0.1.54 ([4044713](https://github.com/CrazyStill/actual-budget-tweaks/commit/4044713))
+- **release:** V0.1.55 ([6b09599](https://github.com/CrazyStill/actual-budget-tweaks/commit/6b09599))
+- Update Firefox auto-update manifest for v0.1.55 ([b86ef73](https://github.com/CrazyStill/actual-budget-tweaks/commit/b86ef73))
+- **release:** V0.1.56 ([911f8df](https://github.com/CrazyStill/actual-budget-tweaks/commit/911f8df))
+- Update Firefox auto-update manifest for v0.1.56 ([abf8eb6](https://github.com/CrazyStill/actual-budget-tweaks/commit/abf8eb6))
+- **release:** V0.1.57 ([3a47422](https://github.com/CrazyStill/actual-budget-tweaks/commit/3a47422))
+- Update Firefox auto-update manifest for v0.1.57 ([729dadb](https://github.com/CrazyStill/actual-budget-tweaks/commit/729dadb))
+- **release:** V0.1.58 ([37fffc1](https://github.com/CrazyStill/actual-budget-tweaks/commit/37fffc1))
+- Update Firefox auto-update manifest for v0.1.58 ([a4b5d0b](https://github.com/CrazyStill/actual-budget-tweaks/commit/a4b5d0b))
+- Useless notes ([5749b4a](https://github.com/CrazyStill/actual-budget-tweaks/commit/5749b4a))
+- **release:** V0.1.59 ([66fb3bc](https://github.com/CrazyStill/actual-budget-tweaks/commit/66fb3bc))
+- Add ESLint + Prettier, PR-gated CI, and lower feature-registration friction ([d0082f9](https://github.com/CrazyStill/actual-budget-tweaks/commit/d0082f9))
+- Update Firefox auto-update manifest for v0.1.59 ([55911d6](https://github.com/CrazyStill/actual-budget-tweaks/commit/55911d6))
+- Add PR/issue templates, upgrade in-extension bug report to a form ([d10fd92](https://github.com/CrazyStill/actual-budget-tweaks/commit/d10fd92))
+- Add MIT license ([821e4a2](https://github.com/CrazyStill/actual-budget-tweaks/commit/821e4a2))
+- **release:** V0.1.60 ([0a8e199](https://github.com/CrazyStill/actual-budget-tweaks/commit/0a8e199))
+- Update Firefox auto-update manifest for v0.1.60 ([ada64f7](https://github.com/CrazyStill/actual-budget-tweaks/commit/ada64f7))
+
+### 🎨 Styles
+
+- Format entire codebase with Prettier ([e60ff2c](https://github.com/CrazyStill/actual-budget-tweaks/commit/e60ff2c))
+
+### ❤️ Contributors
+
+- GitHub Actions ([@github-actions-up-and-running](https://github.com/github-actions-up-and-running))
+- Alexis Vielma <alexis.vielma.us@gmail.com>
+- CrazyStill ([@CrazyStill](https://github.com/CrazyStill))
+
 ## v0.1.60
 
 [compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.59...v0.1.60)
