@@ -82,6 +82,10 @@ function groupItems(items: FeatureItem[]): { label: string | null; items: Featur
 				</section>
 			))
 		}
+
+		<p class="features-page__footer-cta">
+			Missing something? <a href="https://github.com/aelxxs/actual-budget-tweaks/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contribute it &rarr;</a>
+		</p>
 	</main>
 </Base>
 
@@ -173,6 +177,15 @@ function groupItems(items: FeatureItem[]): { label: string | null; items: Featur
 
 	.settings-list__desc {
 		font-size: 0.82rem;
+		color: var(--text-secondary);
+	}
+
+	.features-page__footer-cta {
+		margin-block-start: 3rem;
+		padding-block-start: 2rem;
+		border-block-start: 1px solid var(--border);
+		text-align: center;
+		font-size: 0.9rem;
 		color: var(--text-secondary);
 	}
 </style>
