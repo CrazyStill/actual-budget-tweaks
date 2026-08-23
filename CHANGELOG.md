@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v0.1.59
+
+[compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.58...v0.1.59)
+
+### 🩹 Fixes
+
+- Missed transactions not clearing when posted to spending calendar ([281f820](https://github.com/aelxxs/actual-budget-tweaks/commit/281f820))
+
+### 🏡 Chore
+
+- Update Firefox auto-update manifest for v0.1.58 ([a4b5d0b](https://github.com/aelxxs/actual-budget-tweaks/commit/a4b5d0b))
+- Useless notes ([5749b4a](https://github.com/aelxxs/actual-budget-tweaks/commit/5749b4a))
+
+### ❤️ Contributors
+
+- CrazyStill ([@CrazyStill](https://github.com/CrazyStill))
+
 ## v0.1.58
 
 [compare changes](https://github.com/aelxxs/actual-budget-tweaks/compare/v0.1.57...v0.1.58)
