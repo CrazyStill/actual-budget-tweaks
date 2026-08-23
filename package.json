@@ -2,6 +2,7 @@
 	"name": "actual-budget-tweaks",
 	"description": "",
 	"private": true,
+	"license": "MIT",
 	"version": "0.1.59",
 	"type": "module",
 	"scripts": {

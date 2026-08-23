@@ -10,6 +10,7 @@
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
+[![MIT License][license-shield]][license-url]
 
 <!-- PROJECT LOGO -->
 <br />
@@ -46,6 +47,7 @@
     <li><a href="#about-the-project">About The Project</a></li>
     <li><a href="#installation">Installation</a></li>
     <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#license">License</a></li>
   </ol>
 </details>
 
@@ -90,6 +92,14 @@ Contributions are what make the open source community such an amazing place to l
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- LICENSE -->
+
+## License
+
+Distributed under the MIT License. See [`LICENSE`](LICENSE) for the full text.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
@@ -101,6 +111,8 @@ Contributions are what make the open source community such an amazing place to l
 [stars-url]: https://github.com/aelxxs/actual-budget-tweaks/stargazers
 [issues-shield]: https://img.shields.io/github/issues/aelxxs/actual-budget-tweaks.svg?style=for-the-badge
 [issues-url]: https://github.com/aelxxs/actual-budget-tweaks/issues
+[license-shield]: https://img.shields.io/github/license/aelxxs/actual-budget-tweaks.svg?style=for-the-badge
+[license-url]: https://github.com/aelxxs/actual-budget-tweaks/blob/main/LICENSE
 [product-screenshot]: images/screenshot-1.png
 [Svelte-url]: https://svelte.dev/
 [WXT-url]: https://wxt.dev/
