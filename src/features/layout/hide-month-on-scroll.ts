@@ -30,7 +30,7 @@ export const hideMonthOnScroll = defineSetting({
 	init: () => {
 		function setup(container: Element, target: HTMLElement) {
 			let isCollapsed = false;
-			let transitionDuration = 400;
+			const transitionDuration = 400;
 
 			target.classList.add("month-selection");
 

@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { PRESET_COLORS } from "@lib/utilities/category-colors";
 
-	const { currentColor, onSelect, onClose } = $props<{
+	const {
+		currentColor,
+		onSelect,
+		// Closing is handled by the parent popover's own backdrop/outside-click
+		// logic; this component doesn't need to trigger it itself.
+		onClose: _onClose,
+	} = $props<{
 		currentColor: string;
 		onSelect: (color: string) => void;
 		onClose: () => void;

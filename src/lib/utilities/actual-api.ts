@@ -103,6 +103,13 @@ export async function dispatch<T = unknown>(action: string, args?: unknown): Pro
 	return request("abt:api:dispatch", { action, args });
 }
 
+/**
+ * Navigate Actual Budget's own router via the API bridge (SPA navigation,
+ * not a full page load).
+ *
+ * @example
+ * navigate("/accounts/" + accountId);
+ */
 export function navigate(path: string, options?: Record<string, unknown>): void {
 	document.dispatchEvent(
 		new CustomEvent("abt:api:navigate", { detail: JSON.stringify({ path, options }) }),
@@ -111,6 +118,12 @@ export function navigate(path: string, options?: Record<string, unknown>): void 
 
 let budgetReadyPromise: Promise<void> | null = null;
 
+/**
+ * Resolves once a budget is open (detected via the sidebar's `/budget` link),
+ * since `query`/`send` calls made before then have nothing to act on.
+ * `query` and `send` already await this internally — most callers won't need
+ * to call it directly.
+ */
 export function waitForBudget(): Promise<void> {
 	if (document.querySelector('a[href="/budget"]')) return Promise.resolve();
 	if (budgetReadyPromise) return budgetReadyPromise;

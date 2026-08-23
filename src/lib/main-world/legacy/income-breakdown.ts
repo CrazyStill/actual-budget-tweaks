@@ -145,7 +145,7 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 	];
 
 	// ── State ─────────────────────────────────────────────────────────────
-	let state = {
+	const state = {
 		showIncome: getSetting("showIncome", true),
 		showExpense: getSetting("showExpense", true),
 		showSubCategories: getSetting("showSubCategories", true),
@@ -326,15 +326,6 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 			id: widgetRecord.id,
 			meta: nextMeta,
 		});
-	}
-
-	async function addIncomeBreakdownWidget() {
-		const dashboardId = await getCurrentDashboardId();
-		if (!dashboardId) return;
-		await sendDashboardMutation(
-			"dashboard-add-widget",
-			INCOME_BREAKDOWN_WIDGET.buildWidgetPayload(dashboardId),
-		);
 	}
 
 	async function addCustomDashboardWidget(widgetDefinition) {
@@ -562,7 +553,11 @@ import { dashboardWidgetUtils } from "./dashboard-widget-utils";
 					target: "budget",
 					value: Math.abs(totalIncome - totalExpense),
 				};
-				totalIncome === 0 ? links.unshift(entry) : links.push(entry);
+				if (totalIncome === 0) {
+					links.unshift(entry);
+				} else {
+					links.push(entry);
+				}
 			} else {
 				ensureNode("net-gain", "NET GAIN");
 				links.push({ source: "budget", target: "net-gain", value: totalIncome - totalExpense });

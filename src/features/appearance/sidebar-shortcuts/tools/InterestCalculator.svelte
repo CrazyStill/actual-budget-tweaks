@@ -1,5 +1,7 @@
 <script lang="ts">
-	const { onClose } = $props<{ onClose: () => void }>();
+	// Closing is handled by the parent popover's own backdrop/outside-click
+	// logic; this component doesn't need to trigger it itself.
+	const { onClose: _onClose } = $props<{ onClose: () => void }>();
 
 	let principal = $state("");
 	let rate = $state("");

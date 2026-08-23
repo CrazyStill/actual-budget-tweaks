@@ -16,8 +16,8 @@ const TIP_DELAY = 320;
 function placeTip(el: HTMLElement, o: Required<TipOpts>) {
 	const r = el.getBoundingClientRect();
 	const gap = 9;
-	let x = 0;
-	let y = 0;
+	let x: number;
+	let y: number;
 	if (o.placement === "right") {
 		x = r.right + gap;
 		y = r.top + r.height / 2;

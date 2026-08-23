@@ -1,5 +1,3 @@
-import { join } from "path";
-
 import { cyberpunk } from "./palettes/cyberpunk";
 import { dusk } from "./palettes/dusk";
 import { frappe } from "./palettes/frappe";

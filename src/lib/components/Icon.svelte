@@ -14,4 +14,5 @@
 	} = $props();
 </script>
 
+<!-- eslint-disable-next-line svelte/no-at-html-tags -- name is a closed IconName union, not user input -->
 {@html icon(name, { size, strokeWidth, class: className })}

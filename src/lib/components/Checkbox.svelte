@@ -7,7 +7,6 @@
 	import Switch from "./Switch.svelte";
 	import type { IconName } from "../icons";
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const {
 		labelText,
 		setting,

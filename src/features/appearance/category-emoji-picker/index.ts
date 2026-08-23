@@ -90,7 +90,6 @@ const CSS = `
 	}
 `;
 
-let stopWatching: (() => void) | null = null;
 let popoverEl: HTMLElement | null = null;
 let popoverInstance: any = null;
 

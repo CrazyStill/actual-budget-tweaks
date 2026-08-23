@@ -371,7 +371,11 @@
 			e.preventDefault();
 			e.stopImmediatePropagation();
 			e.stopPropagation();
-			open ? closePalette() : openPalette();
+			if (open) {
+				closePalette();
+			} else {
+				openPalette();
+			}
 		} else if (e.key === "Escape" && open) {
 			if (page !== "root") goBackToRoot();
 			else closePalette();

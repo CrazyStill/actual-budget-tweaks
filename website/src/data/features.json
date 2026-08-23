@@ -83,7 +83,7 @@
 			},
 			{
 				"label": "Color Transactions",
-				"description": "Color upcoming scheduled transaction rows.",
+				"description": "Color negative and positive transactions.",
 				"icon": "palette",
 				"group": "Transactions"
 			},
@@ -212,6 +212,18 @@
 				"description": "A calendar view of daily spending, added to the sidebar.",
 				"icon": "calendar",
 				"group": null
+			}
+		]
+	},
+	{
+		"title": "Experimental",
+		"description": "Early previews of in-progress features",
+		"items": [
+			{
+				"label": "Live sidebar (experimental)",
+				"description": "Replace the native sidebar with a rebuilt one wired to live account data.",
+				"icon": null,
+				"group": "Sidebar"
 			}
 		]
 	}

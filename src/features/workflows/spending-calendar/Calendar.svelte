@@ -507,7 +507,8 @@
 
 			{#each days as day, idx}
 				{@const lastRow = days.length - 7}
-				<!-- svelte-ignore a11y_no_noninteractive_tabindex -- role="button" and tabindex are set by the same condition -->
+				<!-- role="button" and tabindex are set by the same condition -->
+				<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 				<div
 					class="cal-cell"
 					class:is-today={day.isToday}

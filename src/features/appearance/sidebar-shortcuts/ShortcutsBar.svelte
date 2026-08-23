@@ -268,6 +268,7 @@
 				ondragend={onDragEnd}
 			>
 				{#if shortcut.icon && SVG_ICONS[shortcut.icon]}
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG_ICONS is a static internal map, not user input -->
 					{@html SVG_ICONS[shortcut.icon]}
 				{:else if shortcut.type === "external" && !shortcut.icon}
 					{@const fav = getFaviconUrl(shortcut.url)}

@@ -63,12 +63,12 @@ export async function loadIconCache(): Promise<Record<string, AccountIconData>> 
 }
 
 function isValidAccountId(href: string): boolean {
-	const match = href.match(/\/accounts\/([a-f0-9\-]+)$/);
+	const match = href.match(/\/accounts\/([a-f0-9-]+)$/);
 	return match !== null && match[1].includes("-");
 }
 
 function getAccountIdFromHref(href: string): string | null {
-	const match = href.match(/\/accounts\/([a-f0-9\-]+)$/);
+	const match = href.match(/\/accounts\/([a-f0-9-]+)$/);
 	return match ? match[1] : null;
 }
 

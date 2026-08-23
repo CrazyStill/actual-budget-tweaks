@@ -10,7 +10,7 @@ export const reportWidgetBackgroundColor = defineSetting({
 		key: "report-card-color-dark",
 		defaultValue: false,
 	},
-	css: (ctx) => `
+	css: () => `
 		.css-w4wco7,
 		.css-eiyo5a {
 			width: 100%;

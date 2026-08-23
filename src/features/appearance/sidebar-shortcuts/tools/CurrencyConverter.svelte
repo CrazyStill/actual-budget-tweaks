@@ -86,7 +86,11 @@
 	});
 
 	$effect(() => {
+		// Bare reads register fromAmount/toCurrency as effect dependencies;
+		// convert() itself doesn't reference them directly.
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		fromAmount;
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		toCurrency;
 		convert();
 	});

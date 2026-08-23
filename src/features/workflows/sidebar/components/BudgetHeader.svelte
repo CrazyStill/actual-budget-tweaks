@@ -31,14 +31,10 @@
 		onBudgetChange,
 	}: { name: string; showBudgetIcon?: boolean; onBudgetChange?: () => void } = $props();
 
-	let displayName = $state(name);
+	// Writable $derived: re-syncs to `name` whenever the prop changes, but the
+	// rename handler below can still assign it locally in the meantime.
+	let displayName = $derived(name);
 
-	// $state(name) only captures the initial value — it doesn't track later
-	// prop changes on its own, so without this displayName would freeze at
-	// whatever name was passed in on first mount.
-	$effect(() => {
-		displayName = name;
-	});
 	let open = $state(false);
 	let editing = $state(false);
 	let editValue = $state("");

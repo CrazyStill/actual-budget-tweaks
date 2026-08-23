@@ -24,10 +24,6 @@
 			? ((currentValue - grantValue) / grantValue) * 100
 			: null,
 	);
-	const gainDollars = $derived(
-		currentValue != null && grantValue != null ? currentValue - grantValue : null,
-	);
-
 	async function fetchData() {
 		if (!symbol) return;
 		try {

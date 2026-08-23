@@ -125,39 +125,18 @@ export const scriptSections = [
 	},
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// Bootstrap-only settings with no dedicated settings-panel card (no `group`),
+// so they don't appear in `scriptSections` but still need to be activated.
+const hiddenScripts = [themeLoader];
+
+// Derived from the same category arrays that build `scriptSections` above, so
+// a feature only needs to be added to one place instead of two.
 export const scripts: Setting<any>[][] = [
 	[themeSelector],
-	[backgroundPattern, borderRadius, budgetTableRowHeight],
-	[reportWidgetBackgroundColor, toggleColumns, sidebarAccountSpacing],
-	[
-		alternatingTransactionRows,
-		budgetCardStyling,
-		categoryProgress,
-		colorNegativeBalances,
-		colorTransactions,
-		dimReconciled,
-		hideMonthOnScroll,
-		notificationContrast,
-		resizableTransactionColumns,
-		showDailyAvailable,
-		sidebarRedesign,
-		sidebarIcons,
-		sidebarSearch,
-		sidebarShortcuts,
-		spendingCalendar,
-		accountIconPicker,
-		categoryColorDots,
-		categoryEmojiPicker,
-		categoryTemplateInsights,
-		templatePlan,
-		highlightUncategorized,
-		tagStyling,
-		headerBorder,
-		reportCardBorders,
-		budgetPageBorders,
-		budgetTotalsLabelStyling,
-		themeLoader,
-		experimentalSidebar,
-	],
+	layoutAndDensity,
+	readability,
+	appearance,
+	workflows,
+	experimental,
+	hiddenScripts,
 ];

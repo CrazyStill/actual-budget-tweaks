@@ -47,17 +47,23 @@
 	let headerSlotEl: HTMLDivElement | undefined;
 	let bodyEl: HTMLDivElement | undefined;
 
+	// Portal pattern: panelState carries raw DOM nodes built outside Svelte, so
+	// they're attached imperatively rather than rendered from a Svelte template.
 	$effect(() => {
 		const node = panelState.headerNode;
 		if (!headerSlotEl) return;
+		// eslint-disable-next-line svelte/no-dom-manipulating
 		headerSlotEl.replaceChildren();
+		// eslint-disable-next-line svelte/no-dom-manipulating
 		if (node) headerSlotEl.appendChild(node);
 	});
 
 	$effect(() => {
 		const node = panelState.bodyNode;
 		if (!bodyEl) return;
+		// eslint-disable-next-line svelte/no-dom-manipulating
 		bodyEl.replaceChildren();
+		// eslint-disable-next-line svelte/no-dom-manipulating
 		if (node) bodyEl.appendChild(node);
 	});
 

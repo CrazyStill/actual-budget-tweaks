@@ -70,7 +70,6 @@
 		return !normalizedQuery && !!collapsed[title];
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	function groupSectionItems(items: any[]): { label: string | null; items: any[] }[] {
 		const hasAnyGroup = items.some((item) => item.group);
 		if (!hasAnyGroup) return [{ label: null, items }];

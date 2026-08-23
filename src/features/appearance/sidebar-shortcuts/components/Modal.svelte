@@ -201,6 +201,7 @@
 							<span class="row__grip" aria-label="Drag to reorder">⋮⋮</span>
 							<span class="row__icon">
 								{#if item.icon && SVG_ICONS[item.icon]}
+									<!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG_ICONS is a static internal map, not user input -->
 									{@html SVG_ICONS[item.icon]}
 								{:else if item.type === "external" && !item.icon}
 									{@const fav = getFaviconUrl(item.url)}
@@ -264,9 +265,14 @@
 					{@const exists = items.some((s) => s.type === "tool" && s.url === tool.id)}
 					{#if !exists}
 						<button class="tool-btn" onclick={() => addTool(tool)}>
-							<span class="tool-btn__icon"
-								>{#if SVG_ICONS[tool.icon]}{@html SVG_ICONS[tool.icon]}{:else}{tool.icon}{/if}</span
-							>
+							<span class="tool-btn__icon">
+								{#if SVG_ICONS[tool.icon]}
+									<!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG_ICONS is a static internal map, not user input -->
+									{@html SVG_ICONS[tool.icon]}
+								{:else}
+									{tool.icon}
+								{/if}
+							</span>
 							<span>{tool.label}</span>
 						</button>
 					{/if}
@@ -279,7 +285,10 @@
 				<!-- Stock tracker -->
 				<div class="widget-add-labeled">
 					<div class="widget-add-labeled__header">
-						<span class="tool-btn__icon">{@html SVG_ICONS["svg:stock"]}</span>
+						<span class="tool-btn__icon">
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG_ICONS is a static internal map, not user input -->
+							{@html SVG_ICONS["svg:stock"]}
+						</span>
 						<span class="widget-add-labeled__title">Stock Tracker</span>
 					</div>
 					<div class="widget-add-labeled__fields">
@@ -304,7 +313,10 @@
 				{#if builtinWidgets.find((w) => w.id === "rsu-tracker")}
 					<div class="widget-add-labeled">
 						<div class="widget-add-labeled__header">
-							<span class="tool-btn__icon">{@html SVG_ICONS["svg:rsu"]}</span>
+							<span class="tool-btn__icon">
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG_ICONS is a static internal map, not user input -->
+								{@html SVG_ICONS["svg:rsu"]}
+							</span>
 							<span class="widget-add-labeled__title">RSU Tracker</span>
 						</div>
 						<div class="widget-add-labeled__fields">
@@ -338,7 +350,10 @@
 				<!-- Upcoming schedules -->
 				{#if !items.some((s) => s.type === "widget" && s.url === "upcoming-schedules")}
 					<button class="tool-btn" onclick={() => addWidget(builtinWidgets[1])}>
-						<span class="tool-btn__icon">{@html SVG_ICONS["svg:calendar"]}</span>
+						<span class="tool-btn__icon">
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG_ICONS is a static internal map, not user input -->
+							{@html SVG_ICONS["svg:calendar"]}
+						</span>
 						<span>Upcoming Bills</span>
 					</button>
 				{/if}

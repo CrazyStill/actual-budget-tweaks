@@ -6,7 +6,6 @@
 	import Icon from "./Icon.svelte";
 	import type { IconName } from "../icons";
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const { labelText, options, setting, icon } = $props<{
 		labelText: string;
 		options: { value: string; label: string }[];

@@ -65,6 +65,13 @@ export interface CoreSetting {
 export type Setting<C extends SettingContext = SettingContext> =
 	SelectSetting<C> | CheckboxSetting<C> | CustomSetting<C> | CoreSetting;
 
+/**
+ * `label`/`description`/`icon`/`group` must be plain string literals in the
+ * object passed here, not computed expressions — `scripts/generate-features-manifest.mjs`
+ * reads them via AST parsing (to build the website's features list without
+ * importing Svelte/browser code into a Node script), and a non-literal value
+ * comes back empty with no error, silently dropping the setting from that list.
+ */
 export function defineSetting<C extends SettingContext, S extends Setting<C>>(
 	setting: S & { context: C },
 ): S {
