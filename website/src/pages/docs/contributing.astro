@@ -48,70 +48,54 @@ import Base from "../../layouts/Base.astro";
 
 		<section class="docs__section">
 			<h2>Add a feature in 5 minutes</h2>
-			<p>Scaffold it:</p>
 			<pre class="docs__code"><code>{`pnpm new-feature readability budget-warnings "Budget Warnings" checkbox`}</code></pre>
-			<p>
-				The four arguments are category, kebab-case name, display label, and type
-				(<code>checkbox</code> / <code>select</code> / <code>custom</code>). Category is one of
-				<code>layout</code>, <code>readability</code>, <code>appearance</code>, or
-				<code>workflows</code> — whichever section it belongs under in the settings panel. Add
-				<code>--component</code> if the feature needs its own Svelte component (a popover, a custom
-				editor) rather than a plain checkbox/select row:
-			</p>
+			<ul class="docs__list">
+				<li>Args: category, kebab-case name, display label, type (<code>checkbox</code> / <code>select</code> / <code>custom</code>)</li>
+				<li>Category is <code>layout</code> / <code>readability</code> / <code>appearance</code> / <code>workflows</code> — whichever settings-panel section it belongs under</li>
+				<li>Add <code>--component</code> for a feature needing its own Svelte component (popover, custom editor) instead of a plain checkbox/select row:</li>
+			</ul>
 			<pre class="docs__code"><code>{`pnpm new-feature workflows spending-trends "Spending Trends" custom --component`}</code></pre>
-			<p>
-				This creates the setting file (and component, if requested) and registers it in
-				<code>src/features/index.ts</code> for you — one import, one array entry, done. From there:
-			</p>
+			<p>Creates the setting file (+ component, if requested) and registers it in <code>src/features/index.ts</code>. From there:</p>
 			<ol class="docs__steps">
-				<li>Fill in <code>description</code>, pick a real <code>icon</code> from <code>src/lib/icons.ts</code>.</li>
-				<li>
-					Implement <code>init</code> (and <code>css</code> if you need scoped styles) — see
-					<a href="/docs/architecture">Architecture</a> for the page-gating and cleanup conventions
-					this codebase uses.
-				</li>
+				<li>Fill in <code>description</code>, pick a real <code>icon</code> from <code>src/lib/icons.ts</code></li>
+				<li>Implement <code>init</code> (and <code>css</code> for scoped styles) — see <a href="/docs/architecture">Architecture</a> for page-gating/cleanup conventions</li>
 				<li><code>pnpm format && pnpm check && pnpm lint</code></li>
 			</ol>
 		</section>
 
 		<section class="docs__section">
-			<h2>Conventions worth knowing before you open a PR</h2>
+			<h2>Conventions</h2>
 			<ul class="docs__list">
 				<li>
-					<strong>Page-gating goes inside the watcher, not around it.</strong> Register a permanent
-					<code>watchDom()</code> callback in <code>init</code> and have it check
-					<code>matchesPage()</code> itself and return early on the wrong page — don't start/stop the
-					watcher on route change. See <a href="/docs/architecture#page-gating">Architecture</a>.
+					<strong>Page-gate inside the watcher, not around it</strong> — a permanent <code>watchDom()</code>
+					callback that checks <code>matchesPage()</code> and returns early, not start/stop on route
+					change. See <a href="/docs/architecture#page-gating">Architecture</a>.
 				</li>
 				<li>
-					<strong>Cleanup is your responsibility.</strong> Whatever <code>init</code> sets up
-					(listeners, observers, injected DOM) is only undone by whatever you return from it. Toggle
-					the setting off and confirm nothing's left behind before opening a PR.
+					<strong>Cleanup is on you</strong> — only your returned cleanup undoes what <code>init</code> set
+					up. Toggle off and confirm nothing's left behind before opening a PR.
 				</li>
 				<li>
-					<strong>Prefer <code>data-testid</code> selectors over structural CSS</strong> where Actual's
-					DOM exposes one — they're less likely to break on an Actual update than
-					<code>nth-child</code>/hashed-class selectors. (Sometimes there's no other option — that's
-					fine, just know it's the more fragile choice.)
+					<strong>Prefer <code>data-testid</code> selectors over structural CSS</strong> where Actual
+					exposes one — less likely to break on an Actual update than <code>nth-child</code>/hashed
+					classes. No <code>data-testid</code>? Structural CSS is fine, just more fragile.
 				</li>
 				<li>
-					<strong>Commit messages are the changelog.</strong> This repo uses
-					<a href="https://github.com/unjs/changelogen" target="_blank" rel="noopener">changelogen</a
-					>, which builds <code>CHANGELOG.md</code> and bumps the version from commit messages on
-					every merge to <code>main</code> — use conventional commits (<code>feat:</code>,
-					<code>fix:</code>, <code>chore:</code>).
+					<strong>Conventional commits</strong> (<code>feat:</code>, <code>fix:</code>,
+					<code>chore:</code>) — <a href="https://github.com/unjs/changelogen" target="_blank" rel="noopener">changelogen</a>
+					builds <code>CHANGELOG.md</code> and bumps the version from them on every merge to
+					<code>main</code>.
 				</li>
 			</ul>
 		</section>
 
 		<section class="docs__section">
 			<h2>Before opening a PR</h2>
-			<p>
-				CI runs lint, format check, typecheck, and both builds on every PR — <code>pnpm format &&
-				pnpm check && pnpm lint</code> locally catches the same things faster. Test against a real
-				Actual instance; type checking alone doesn't catch a selector that stopped matching or a
-				popover that doesn't close. See the PR template for the full checklist.
-			</p>
+			<ul class="docs__list">
+				<li><code>pnpm format && pnpm check && pnpm lint</code> — CI runs the same, plus both builds</li>
+				<li>Test against a real Actual instance — none of the above catches a selector that stopped matching or a popover that won't close</li>
+				<li>See the PR template for the full checklist</li>
+			</ul>
 		</section>
 	</main>
 </Base>
