@@ -125,6 +125,43 @@
 		return 0;
 	}
 
+	function isoDate(d: Date): string {
+		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+	}
+
+	/**
+	 * Mirrors Actual's own paid-matching window (`getScheduleOccurrenceMatchStartDate`):
+	 * a manual schedule can be paid up to two days early, while an auto-posting or
+	 * fixed-date one always lands exactly on its date.
+	 */
+	function occurrenceMatchStart(s: Schedule, occurrenceDate: string): string {
+		if (s.posts_transaction || typeof s._date === "string") return occurrenceDate;
+		const d = new Date(`${occurrenceDate}T00:00:00`);
+		d.setDate(d.getDate() - 2);
+		return isoDate(d);
+	}
+
+	/**
+	 * Whether a past occurrence was eventually paid. Actual links a posted transaction
+	 * back to its schedule, so that link — not payee text — decides this. The month's
+	 * own transactions can't answer it alone: a bill paid late lands outside the month
+	 * being viewed, so this asks for anything linked at or after the match window.
+	 */
+	async function wasOccurrencePosted(s: Schedule, occurrenceDate: string): Promise<boolean> {
+		try {
+			const rows = await query<Transaction[]>("transactions", {
+				filter: {
+					$and: [{ schedule: s.id }, { date: { $gte: occurrenceMatchStart(s, occurrenceDate) } }],
+				},
+				select: ["id"],
+			});
+			return rows.length > 0;
+		} catch (e) {
+			console.warn("[ABT Calendar] could not check schedule posting", s.id, e);
+			return false;
+		}
+	}
+
 	/**
 	 * A schedule only carries `next_date` — its single next occurrence — so a month
 	 * further out would otherwise come up empty. Actual expands the recurrence rule
@@ -154,7 +191,7 @@
 	function dedupeTransactions(txs: DayTransaction[]): (DayTransaction & { count: number })[] {
 		const map = new Map<string, DayTransaction & { count: number }>();
 		for (const tx of txs) {
-			const key = `${tx.payee}|${tx.upcoming ? "u" : "r"}`;
+			const key = `${tx.payee}|${tx.upcoming ? "u" : tx.missed ? "m" : "r"}`;
 			const existing = map.get(key);
 			if (existing) {
 				existing.count++;
@@ -251,41 +288,62 @@
 			);
 
 			const monthPrefix = `${year}-${String(month + 1).padStart(2, "0")}-`;
-			const scheduleDays = new Map<string, Set<number>>();
-			for (const s of visibleSchedules) {
-				if (s.next_date?.startsWith(monthPrefix)) {
-					scheduleDays.set(s.id, new Set([Number(s.next_date.slice(-2))]));
-				}
+			const todayIso = isoDate(today);
+			const occurrences = new Map<string, Set<string>>();
+			function addOccurrence(id: string, date: string) {
+				const dates = occurrences.get(id) ?? new Set<string>();
+				dates.add(date);
+				occurrences.set(id, dates);
 			}
 
-			// `next_date` already covers the current month, so only a future month
-			// needs the recurrence expanded to reach occurrences beyond the next one.
+			// A `next_date` that has already passed is Actual's marker for a missed
+			// schedule — it stays parked there until the schedule is paid, completed,
+			// or deleted (the latter two are filtered out above).
+			for (const s of visibleSchedules) {
+				if (s.next_date?.startsWith(monthPrefix)) addOccurrence(s.id, s.next_date);
+			}
+
+			// `next_date` is only ever the *next* occurrence, so any month from the
+			// current one onward needs the recurrence expanded to find the rest. The
+			// expansion starts at today, so past days never gain projected entries.
 			const monthsAhead = monthsFromNow();
-			if (monthsAhead > 0) {
+			if (monthsAhead >= 0) {
 				const count = Math.min((monthsAhead + 1) * 31 + 1, 400);
 				await Promise.all(
 					visibleSchedules.map(async (s) => {
 						// A one-off schedule stores a plain date, not a recurrence to expand.
 						if (!s._date || typeof s._date === "string") return;
 						const dates = await loadUpcomingDates(s, count);
-						const days = scheduleDays.get(s.id) ?? new Set<number>();
 						for (const d of dates) {
-							if (d.startsWith(monthPrefix)) days.add(Number(d.slice(-2)));
+							if (d.startsWith(monthPrefix)) addOccurrence(s.id, d);
 						}
-						if (days.size) scheduleDays.set(s.id, days);
 					}),
 				);
 			}
 
+			// Drop past occurrences that were eventually paid, so a bill only reads as
+			// missed for as long as it actually is one.
+			const posted = new Set<string>();
+			await Promise.all(
+				visibleSchedules.flatMap((s) =>
+					Array.from(occurrences.get(s.id) ?? new Set<string>(), async (date) => {
+						if (date >= todayIso) return;
+						if (await wasOccurrencePosted(s, date)) posted.add(`${s.id}|${date}`);
+					}),
+				),
+			);
+
 			for (const s of visibleSchedules) {
-				const days = scheduleDays.get(s.id);
-				if (!days) continue;
+				const dates = occurrences.get(s.id);
+				if (!dates) continue;
 				const payeeName = s.name || (s._payee && payeeMap.get(s._payee)) || "Unknown";
-				for (const sd of days) {
+				for (const date of dates) {
+					if (posted.has(`${s.id}|${date}`)) continue;
+					const sd = Number(date.slice(-2));
 					if (!byDay.has(sd)) byDay.set(sd, []);
 					const existing = byDay.get(sd)!;
 					// Skip if a real transaction with the same payee already exists on this day
-					if (existing.some((t) => !t.upcoming && t.payee === payeeName)) continue;
+					if (existing.some((t) => !t.upcoming && !t.missed && t.payee === payeeName)) continue;
 					existing.push({
 						payee: payeeName,
 						amount: parseScheduleAmount(s._amount),
@@ -293,7 +351,7 @@
 						categoryName: "",
 						accountName: (s._account && accountMap.get(s._account)) || "",
 						notes: "",
-						upcoming: true,
+						...(date < todayIso ? { missed: true } : { upcoming: true }),
 					});
 				}
 			}
@@ -314,7 +372,7 @@
 			// Current month
 			for (let d = 1; d <= daysInMonth; d++) {
 				const txs = byDay.get(d) || [];
-				const total = txs.reduce((sum, t) => sum + t.amount, 0);
+				const total = txs.reduce((sum, t) => sum + (t.missed ? 0 : t.amount), 0);
 				grid.push({
 					date: d,
 					total,
@@ -373,7 +431,7 @@
 		cleanupPanel();
 
 		const date = new Date(year, month, day.date);
-		const total = day.transactions.reduce((s, t) => s + t.amount, 0);
+		const total = day.transactions.reduce((s, t) => s + (t.missed ? 0 : t.amount), 0);
 
 		headerContainer = document.createElement("div");
 		headerInstance = mount(DayHeader, {
@@ -547,12 +605,14 @@
 						{@const deduped = dedupeTransactions(day.transactions)}
 						<div class="cal-cell__txs">
 							{#each deduped.slice(0, 3) as tx}
-								<div class="cal-tx" class:is-upcoming={tx.upcoming}>
+								<div class="cal-tx" class:is-upcoming={tx.upcoming} class:is-missed={tx.missed}>
 									<span
 										class="cal-tx__dot"
 										style="background: {tx.upcoming
 											? 'var(--color-pageTextSubdued)'
-											: getCategoryColor(tx.categoryId)}"
+											: tx.missed
+												? 'var(--color-errorText)'
+												: getCategoryColor(tx.categoryId)}"
 									></span>
 									<span class="cal-tx__payee abt-privacy-number">{tx.payee}</span>
 									{#if tx.count > 1}
@@ -567,7 +627,7 @@
 
 						<div class="cal-cell__bars">
 							{#each Object.entries(day.transactions.reduce((acc, t) => {
-										if (t.amount < 0) {
+										if (!t.missed && t.amount < 0) {
 											acc[t.categoryId] = (acc[t.categoryId] || 0) + Math.abs(t.amount);
 										}
 										return acc;
@@ -897,6 +957,16 @@
 	.cal-tx.is-upcoming {
 		opacity: 0.45;
 		font-style: italic;
+	}
+
+	.cal-tx.is-missed {
+		opacity: 0.75;
+	}
+
+	.cal-tx.is-missed .cal-tx__payee {
+		color: var(--color-errorText);
+		text-decoration: line-through;
+		text-decoration-color: color-mix(in srgb, var(--color-errorText) 45%, transparent);
 	}
 
 	.cal-tx.is-upcoming .cal-tx__dot {
