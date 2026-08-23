@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest a new tweak or improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What should this do
+      description: What part of Actual Budget's UI or workflow is this about, and what should change?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why isn't an existing setting enough?
+    validations:
+      required: false
+  - type: dropdown
+    id: willing
+    attributes:
+      label: Would you be willing to implement this yourself?
+      description: If yes, see CONTRIBUTING.md — scaffolding a new feature takes about 5 minutes.
+      options:
+        - "Yes, I'd like to try"
+        - "Maybe, with some guidance"
+        - "No, just suggesting it"
+    validations:
+      required: true

@@ -27,21 +27,18 @@
 	}
 
 	function submitBugReport() {
-		const title = bugFeature ? `[Bug] ${bugFeature}` : "[Bug] General issue";
-		const body = [
-			bugFeature ? `**Feature:** ${bugFeature}` : "",
-			"",
-			"**Description:**",
-			bugDescription || "_No description provided._",
-			"",
-			"---",
-			"_Reported via Actual Budget Tweaks settings_",
-		]
-			.filter((line, i) => i > 0 || line)
-			.join("\n");
+		// Field names match .github/ISSUE_TEMPLATE/bug_report.yml's `id`s — the
+		// repo has issue forms configured, so /issues/new without `template=`
+		// lands on the template chooser instead of prefilling a blank issue.
+		const params = new URLSearchParams({
+			template: "bug_report.yml",
+			title: bugFeature ? `[Bug]: ${bugFeature}` : "[Bug]: ",
+			version,
+		});
+		if (bugFeature) params.set("feature", bugFeature);
+		if (bugDescription) params.set("description", bugDescription);
 
-		const url = `${REPO_URL}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=bug`;
-		window.open(url, "_blank", "noopener,noreferrer");
+		window.open(`${REPO_URL}/issues/new?${params}`, "_blank", "noopener,noreferrer");
 		closeBugReport();
 	}
 

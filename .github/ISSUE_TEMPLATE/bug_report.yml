@@ -1,0 +1,32 @@
+name: Bug report
+description: Something in the extension isn't working
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: input
+    id: feature
+    attributes:
+      label: Feature or setting
+      description: Leave blank if it's not tied to one specific toggle.
+      placeholder: e.g. Category Progress Bars
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened
+      description: What you expected instead, and any console errors (DevTools → Console).
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Extension version
+    validations:
+      required: false
+  - type: input
+    id: actual-version
+    attributes:
+      label: Actual Budget version
+    validations:
+      required: false

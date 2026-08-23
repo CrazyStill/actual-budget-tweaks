@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/aelxxs/actual-budget-tweaks/blob/main/CONTRIBUTING.md
+    about: Read this before opening an issue if you're not sure whether it's a bug or something to build yourself.
