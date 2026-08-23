@@ -11,16 +11,25 @@
 
 ## Adding a feature
 
-Scaffold it — this creates the setting file and registers it in `src/features/index.ts` for you:
+Every feature is one call to `defineSetting()` (see `src/features/types.ts`), exported as a named const and listed in `src/features/index.ts`. Scaffold one:
 
 ```
 pnpm new-feature <category> <kebab-name> "<Label>" <checkbox|select|custom> [--component]
 ```
 
-For the full walkthrough, the architecture behind `defineSetting()`/the runtime/the Actual API bridge, and the conventions this codebase expects (page-gating, cleanup, selector fragility, commit style), see the website docs:
+- `category` is `layout` / `readability` / `appearance` / `workflows` — whichever settings-panel section it belongs under.
+- `--component` generates a folder + companion `.svelte` file, for a feature that needs its own component rather than a plain checkbox/select row.
 
-- **[Contributing walkthrough](https://abt.alexis.lol/docs/contributing)**
-- **[Architecture](https://abt.alexis.lol/docs/architecture)**
+This creates the setting file and registers it in `src/features/index.ts` for you. From there, fill in `description`/`icon`, and implement `init`/`css`.
+
+## Conventions
+
+- **Page-gate inside the watcher, not around it.** Register a permanent `watchDom()` callback (`src/lib/utilities/dom-watcher.ts`) in `init` that checks `matchesPage()` (`src/lib/utilities/pages.ts`) and returns early on the wrong page — not a start/stop pair triggered by route changes.
+- **Cleanup is on you.** Whatever `init` sets up (listeners, observers, injected DOM) is only undone by whatever cleanup function you return from it. Toggle the setting off and confirm nothing's left behind before opening a PR.
+- **Prefer `data-testid` selectors over structural CSS** where Actual's DOM exposes one — less likely to break on an Actual update than `nth-child`/hashed-class selectors. No `data-testid`? Structural CSS is fine, just know it's the more fragile choice.
+- **Conventional commits** (`feat:`, `fix:`, `chore:`) — this repo uses [changelogen](https://github.com/unjs/changelogen), which builds `CHANGELOG.md` and bumps the version from commit messages on every merge to `main`.
+
+The Actual API bridge (`src/lib/utilities/actual-api.ts` — `query`/`send`/`dispatch`/`navigate`) is generic: it forwards whatever table/method name you give it. Typed autocomplete comes from `ActualTable`/`SendMethodMap` in `src/lib/types/actual-schema.ts` — needing an untyped table or method is usually a type-only change there, not a change to the runtime bridge.
 
 ## Before opening a PR
 

@@ -141,8 +141,8 @@ ${optionsField}\tcontext: {
 		/* styles go here */
 	\`,
 	init: (ctx) => {
-		// activate the feature here — see docs/architecture on the website for
-		// the page-gating (matchesPage) and cleanup conventions this codebase uses
+		// activate the feature here — see CONTRIBUTING.md for the page-gating
+		// (matchesPage) and cleanup conventions this codebase uses
 		return () => {
 			// cleanup
 		};
@@ -266,7 +266,7 @@ async function main() {
 			"Next steps:",
 			"  1. Fill in the description/icon and implement init/css.",
 			"  2. Run `pnpm format && pnpm check && pnpm lint`.",
-			"  3. See the contributor docs on the website for conventions (page-gating, cleanup, etc).",
+			"  3. See CONTRIBUTING.md for conventions (page-gating, cleanup, etc).",
 		].join("\n"),
 	);
 }
